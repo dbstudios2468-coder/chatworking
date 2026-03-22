@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Liquid Nexus v2</title>
+    <title>Liquid Mesh | Morse Edition</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <style>
         :root {
@@ -24,7 +24,7 @@
         }
 
         .container {
-            width: 95%; max-width: 450px; height: 85vh;
+            width: 95%; max-width: 420px; height: 85vh;
             background: var(--glass); backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 40px; box-shadow: var(--shadow);
@@ -33,85 +33,73 @@
 
         .screen { display: none; padding: 25px; flex-direction: column; height: 100%; box-sizing: border-box; }
         .active { display: flex; animation: slideUp 0.4s ease; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        input, textarea {
+        input {
             background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1);
             padding: 12px; border-radius: 15px; color: var(--text);
             margin-bottom: 10px; outline: none; font-size: 14px;
         }
 
         #chat-box { flex-grow: 1; overflow-y: auto; margin-bottom: 10px; padding-right: 5px; }
+
+        /* Message Styling */
         .msg { 
-            margin-bottom: 12px; padding: 12px; border-radius: 18px; 
+            margin-bottom: 12px; padding: 12px 16px; border-radius: 18px; 
             background: rgba(255,255,255,0.15); width: fit-content; max-width: 85%;
+            position: relative; cursor: help;
         }
-        .msg img { max-width: 100%; border-radius: 10px; margin-top: 5px; display: block; }
         .msg b { display: block; font-size: 0.7rem; color: var(--accent); margin-bottom: 3px; }
 
+        /* Hover Decrypt Tooltip */
+        .msg:hover::after {
+            content: "Decrypted: " attr(data-decrypt);
+            position: absolute; bottom: 110%; left: 0;
+            background: var(--accent); color: white;
+            padding: 5px 10px; border-radius: 8px; font-size: 0.8rem;
+            white-space: nowrap; z-index: 10; pointer-events: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .controls { display: flex; gap: 5px; align-items: center; }
         button {
             padding: 12px; border-radius: 15px; border: none;
             background: var(--accent); color: white; cursor: pointer; font-weight: 600;
         }
-
-        /* Morse Tool Panel */
-        #morse-panel {
-            position: absolute; bottom: -100%; left: 0; width: 100%; height: 60%;
-            background: var(--bg); border-top: 2px solid var(--accent);
-            transition: 0.4s; padding: 20px; box-sizing: border-box; z-index: 1000;
-            border-radius: 30px 30px 0 0;
-        }
-        #morse-panel.open { bottom: 0; }
+        .morse-btn { background: rgba(255,255,255,0.2); color: var(--text); border: 1px solid var(--accent); }
 
         .theme-toggle { position: absolute; top: 20px; right: 20px; cursor: pointer; font-size: 1.2rem; z-index: 100; }
-        .tool-btn { position: absolute; top: 20px; left: 20px; cursor: pointer; font-size: 1.2rem; z-index: 100; }
     </style>
 </head>
 <body>
 
-<div class="tool-btn" onclick="toggleMorse()">📟</div>
 <div class="theme-toggle" onclick="toggleTheme()">🌓</div>
 
 <div class="container">
     <div id="pw-screen" class="screen active">
-        <h2>Security</h2>
-        <input type="password" id="pw-input" placeholder="Passkey">
-        <button onclick="checkPw()">Login</button>
+        <h2>Passkey</h2>
+        <input type="password" id="pw-input" placeholder="••••">
+        <button onclick="checkPw()">Verify</button>
     </div>
 
     <div id="user-screen" class="screen">
         <h2>Identity</h2>
         <input type="text" id="username-input" placeholder="Codename">
-        <button onclick="startChat()">Join</button>
+        <button onclick="startChat()">Enter</button>
     </div>
 
     <div id="chat-screen" class="screen">
-        <div style="display:flex; justify-content:space-between; font-size:0.7rem; margin-bottom:10px;">
+        <div style="display:flex; justify-content:space-between; font-size:0.7rem; margin-bottom:10px; opacity:0.6;">
             <span id="status">Syncing...</span>
             <span id="display-name"></span>
         </div>
         <div id="chat-box"></div>
         
-        <div style="display: flex; gap: 5px; align-items: center;">
-            <label style="cursor:pointer; font-size:1.5rem;">🖼️
-                <input type="file" id="img-input" accept="image/*" style="display:none" onchange="sendImage(this)">
-            </label>
-            <input type="text" id="msg-input" placeholder="Message..." style="flex-grow:1; margin-bottom:0;">
-            <button onclick="sendText()">></button>
+        <div class="controls">
+            <input type="text" id="msg-input" placeholder="Signal..." style="flex-grow:1; margin-bottom:0;">
+            <button class="morse-btn" onclick="quickMorse()" title="Translate to Morse">[M]</button>
+            <button onclick="sendText()">Send</button>
         </div>
-    </div>
-
-    <div id="morse-panel">
-        <div style="display:flex; justify-content:space-between;">
-            <h3>Morse Translator</h3>
-            <button onclick="toggleMorse()" style="background:none; color:var(--text)">✕</button>
-        </div>
-        <textarea id="morse-input" placeholder="Type text or morse..." style="width:100%; height:80px;"></textarea>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-            <button onclick="translateToMorse()">To Morse</button>
-            <button onclick="translateFromMorse()">From Morse</button>
-        </div>
-        <p id="morse-output" style="word-break:break-all; font-family:monospace; margin-top:10px;"></p>
     </div>
 </div>
 
@@ -139,7 +127,7 @@
 
     function startChat() {
         username = document.getElementById('username-input').value.trim();
-        if(!username || ABLY_KEY.includes('YOUR')) return alert("Setup error");
+        if(!username || ABLY_KEY.includes('YOUR')) return alert("Missing API Key");
         showScreen('chat-screen');
         document.getElementById('display-name').innerText = `@${username}`;
 
@@ -151,13 +139,15 @@
             const isMe = m.clientId === username;
             const div = document.createElement('div');
             div.className = 'msg';
+            
+            // Decrypt logic for the hover effect
+            const raw = m.data.text;
+            const decrypted = raw.split(' ').map(code => revMorse[code] || code).join('');
+            
+            div.setAttribute('data-decrypt', decrypted);
             if(isMe) div.style.cssText = 'margin-left:auto; background:var(--accent); color:white;';
             
-            let content = `<b>${isMe ? 'You' : m.clientId}</b>`;
-            if(m.data.img) content += `<img src="${m.data.img}">`;
-            if(m.data.text) content += `<span>${m.data.text}</span>`;
-            
-            div.innerHTML = content;
+            div.innerHTML = `<b>${isMe ? 'You' : m.clientId}</b>${raw}`;
             box.appendChild(div);
             box.scrollTop = box.scrollHeight;
         });
@@ -168,35 +158,23 @@
         });
     }
 
+    function quickMorse() {
+        const input = document.getElementById('msg-input');
+        if(!input.value.trim()) return;
+        // Check if it's already morse (to toggle back) or convert to morse
+        const isMorse = /^[.\-\s\/]+$/.test(input.value);
+        if(!isMorse) {
+            input.value = input.value.toUpperCase().split('').map(char => morseMap[char] || char).join(' ');
+        } else {
+            input.value = input.value.trim().split(' ').map(code => revMorse[code] || code).join('');
+        }
+    }
+
     function sendText() {
         const input = document.getElementById('msg-input');
         if(!input.value.trim()) return;
         channel.publish('msg', { text: input.value });
         input.value = "";
-    }
-
-    function sendImage(input) {
-        const file = input.files[0];
-        if(!file) return;
-        if(file.size > 50000) return alert("File too large! (Max 50KB for free Ably tier)");
-        
-        const reader = new FileReader();
-        reader.onload = (e) => channel.publish('msg', { img: e.target.result });
-        reader.readAsDataURL(file);
-    }
-
-    function toggleMorse() { document.getElementById('morse-panel').classList.toggle('open'); }
-
-    function translateToMorse() {
-        const input = document.getElementById('morse-input').value.toUpperCase();
-        const out = input.split('').map(char => morseMap[char] || char).join(' ');
-        document.getElementById('morse-output').innerText = out;
-    }
-
-    function translateFromMorse() {
-        const input = document.getElementById('morse-input').value.trim();
-        const out = input.split(' ').map(code => revMorse[code] || code).join('');
-        document.getElementById('morse-output').innerText = out;
     }
 
     function toggleTheme() {
