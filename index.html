@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liquid Mesh Chat</title>
+    <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
+    <style>
+        :root {
+            --bg: #e0e5ec;
+            --glass: rgba(255, 255, 255, 0.4);
+            --text: #2d3436;
+            --accent: #6c5ce7;
+            --shadow: 20px 20px 60px #bec3c9, -20px -20px 60px #ffffff;
+        }
+
+        [data-theme="dark"] {
+            --bg: #1a1d23;
+            --glass: rgba(255, 255, 255, 0.05);
+            --text: #f1f2f6;
+            --shadow: 10px 10px 30px #0e1013, -10px -10px 30px #262a33;
+        }
+
+        body {
+            margin: 0; font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg); color: var(--text);
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; transition: all 0.5s ease;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 90%; max-width: 420px; height: 80vh;
+            background: var(--glass);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 40px; box-shadow: var(--shadow);
+            display: flex; flex-direction: column; overflow: hidden;
+            position: relative;
+        }
+
+        .screen { display: none; padding: 30px; flex-direction: column; height: 100%; box-sizing: border-box; }
+        .active { display: flex; animation: slideUp 0.4s ease-out; }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        h2 { text-align: center; font-weight: 300; letter-spacing: 1px; }
+
+        input {
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1);
+            padding: 15px; border-radius: 20px; color: var(--text);
+            margin-bottom: 15px; outline: none; transition: 0.3s;
+            font-size: 16px;
+        }
+        input:focus { background: rgba(255,255,255,0.2); border-color: var(--accent); }
+
+        #chat-box { flex-grow: 1; overflow-y: auto; margin-bottom: 15px; padding-right: 5px; }
+        
+        /* Message Bubbles */
+        .msg { 
+            margin-bottom: 12px; padding: 12px 16px; border-radius: 20px; 
+            background: rgba(255,255,255,0.15); width: fit-content; max-width: 80%;
+            line-height: 1.4; font-size: 0.95rem;
+            animation: pop 0.3s ease;
+        }
+        @keyframes pop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        .msg b { display: block; font-size: 0.7rem; color: var(--accent); margin-bottom: 3px; text-transform: uppercase; }
+
+        button {
+            padding: 15px; border-radius: 20px; border: none;
+            background: var(--accent); color: white; cursor: pointer;
+            font-weight: 600; transition: 0.3s; box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+        }
+        button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4); }
+
+        .theme-toggle { position: absolute; top: 20px; right: 20px; cursor: pointer; font-size: 1.4rem; z-index: 100; }
+        .info-bar { display: flex; justify-content: space-between; font-size: 0.75rem; opacity: 0.7; margin-bottom: 15px; }
+        
+        /* Custom Scrollbar */
+        #chat-box::-webkit-scrollbar { width: 4px; }
+        #chat-box::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="theme-toggle" onclick="toggleTheme()">🌓</div>
+
+<div class="container">
+    <div id="pw-screen" class="screen active">
+        <h2>Protocol</h2>
+        <p style="text-align:center; font-size:0.8rem; opacity:0.6;">ENTER ACCESS KEY</p>
+        <input type="password" id="pw-input" placeholder="••••••">
+        <button onclick="checkPw()">Verify</button>
+    </div>
+
+    <div id="user-screen" class="screen">
+        <h2>Identity</h2>
+        <p style="text-align:center; font-size:0.8rem; opacity:0.6;">CHOOSE A CODENAME</p>
+        <input type="text" id="username-input" placeholder="e.g. Neo">
+        <button onclick="startChat()">Initialize</button>
+    </div>
+
+    <div id="chat-screen" class="screen">
+        <div class="info-bar">
+            <span id="status">Connecting...</span>
+            <span id="display-name"></span>
+        </div>
+        <div id="chat-box"></div>
+        <div style="display: flex; gap: 8px;">
+            <input type="text" id="msg-input" placeholder="Signal..." style="flex-grow: 1; margin-bottom:0">
+            <button onclick="send()">Send</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Replace with your actual Ably Root Key
+    const ABLY_KEY = 'fVAQIA.kFtCvw:X6QXTzbh4Tbi1HUBiOQMlReiyw0uwkbOnEibDEM_VdA'; 
+    
+    let username = "";
+    let ably, channel;
+
+    function toggleTheme() {
+        const b = document.body;
+        const isDark = b.getAttribute('data-theme') === 'dark';
+        b.setAttribute('data-theme', isDark ? 'light' : 'dark');
+    }
+
+    function checkPw() {
+        if(document.getElementById('pw-input').value.toLowerCase() === 'morse') {
+            showScreen('user-screen');
+        } else {
+            alert('Incorrect Key');
+        }
+    }
+
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function startChat() {
+        username = document.getElementById('username-input').value.trim();
+        if(!username) return alert("Codename required");
+        if(ABLY_KEY.includes('YOUR_ROOT')) return alert("API Key missing! Edit the code first.");
+
+        document.getElementById('display-name').innerText = `@${username}`;
+        showScreen('chat-screen');
+
+        // Connect to Ably with the username as clientId
+        ably = new Ably.Realtime({
+            key: ABLY_KEY,
+            clientId: username 
+        });
+
+        channel = ably.channels.get('liquid-chat');
+
+        // Listen for messages
+        channel.subscribe('msg', (m) => {
+            const box = document.getElementById('chat-box');
+            const isMe = m.clientId === username; 
+            
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'msg';
+            if(isMe) msgDiv.style.cssText = 'margin-left:auto; background:var(--accent); color:white; border-bottom-right-radius:4px;';
+            else msgDiv.style.cssText = 'border-bottom-left-radius:4px;';
+
+            msgDiv.innerHTML = `<b>${isMe ? 'You' : m.clientId}</b>${m.data.text}`;
+            box.appendChild(msgDiv);
+            box.scrollTop = box.scrollHeight;
+        });
+
+        // Presence Logic (Who's online)
+        channel.presence.enter(); 
+        channel.presence.subscribe(() => {
+            channel.presence.get((err, members) => {
+                if(!err) document.getElementById('status').innerText = `Online: ${members.length}`;
+            });
+        });
+    }
+
+    function send() {
+        const input = document.getElementById('msg-input');
+        if(!input.value.trim()) return;
+        
+        channel.publish('msg', { text: input.value });
+        input.value = "";
+    }
+
+    // Enter Key Mapping
+    document.addEventListener('keypress', (e) => {
+        if(e.key === 'Enter') {
+            const current = document.querySelector('.screen.active').id;
+            if(current === 'pw-screen') checkPw();
+            else if(current === 'user-screen') startChat();
+            else if(current === 'chat-screen') send();
+        }
+    });
+</script>
+
+</body>
+</html>
