@@ -38,7 +38,7 @@
         input {
             background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1);
             padding: 12px; border-radius: 15px; color: var(--text);
-            margin-bottom: 10px; outline: none; font-size: 14px;
+            margin-bottom: 10px; outline: none; font-size: 16px;
         }
 
         #chat-box { flex-grow: 1; overflow-y: auto; margin-bottom: 10px; padding-right: 5px; }
@@ -50,15 +50,19 @@
         }
         .msg:active { background: rgba(255,255,255,0.25); }
         .msg b { display: block; font-size: 0.7rem; color: var(--accent); margin-bottom: 3px; pointer-events: none; }
-        .msg-content { pointer-events: none; word-break: break-all; }
+        .msg-content { pointer-events: none; word-break: break-all; font-family: monospace; letter-spacing: 1px; }
 
         .controls { display: flex; gap: 5px; align-items: center; }
         button {
-            padding: 12px; border-radius: 15px; border: none;
+            padding: 12px 20px; border-radius: 15px; border: none;
             background: var(--accent); color: white; cursor: pointer; font-weight: 600;
         }
 
         .theme-toggle { position: absolute; top: 20px; right: 20px; cursor: pointer; font-size: 1.2rem; z-index: 100; }
+        
+        /* Scrollbar */
+        #chat-box::-webkit-scrollbar { width: 4px; }
+        #chat-box::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -67,13 +71,13 @@
 
 <div class="container">
     <div id="pw-screen" class="screen active">
-        <h2>Passkey</h2>
+        <h2 style="text-align:center; font-weight: 300;">Passkey</h2>
         <input type="password" id="pw-input" placeholder="••••">
         <button onclick="checkPw()">Verify</button>
     </div>
 
     <div id="user-screen" class="screen">
-        <h2>Identity</h2>
+        <h2 style="text-align:center; font-weight: 300;">Identity</h2>
         <input type="text" id="username-input" placeholder="Codename">
         <button onclick="startChat()">Enter</button>
     </div>
@@ -93,7 +97,9 @@
 </div>
 
 <script>
+    // 1. PASTE YOUR ABLY ROOT KEY HERE
     const ABLY_KEY = 'fVAQIA.kFtCvw:X6QXTzbh4Tbi1HUBiOQMlReiyw0uwkbOnEibDEM_VdA';
+    
     let username = "", ably, channel;
 
     const morseMap = {
@@ -106,7 +112,11 @@
     const revMorse = Object.fromEntries(Object.entries(morseMap).map(([k, v]) => [v, k]));
 
     function checkPw() {
-        if(document.getElementById('pw-input').value.toLowerCase() === 'morse') showScreen('user-screen');
+        if(document.getElementById('pw-input').value.toLowerCase() === 'morse') {
+            showScreen('user-screen');
+        } else {
+            alert("Incorrect");
+        }
     }
 
     function showScreen(id) {
@@ -114,9 +124,17 @@
         document.getElementById(id).classList.add('active');
     }
 
+    async function initNotifications() {
+        if ("Notification" in window) {
+            await Notification.requestPermission();
+        }
+    }
+
     function startChat() {
         username = document.getElementById('username-input').value.trim();
-        if(!username || ABLY_KEY.includes('YOUR')) return alert("Missing API Key");
+        if(!username || ABLY_KEY.includes('YOUR')) return alert("Setup API Key first!");
+        
+        initNotifications();
         showScreen('chat-screen');
         document.getElementById('display-name').innerText = `@${username}`;
 
@@ -124,21 +142,32 @@
         channel = ably.channels.get('liquid-chat');
 
         channel.subscribe('msg', (m) => {
-            const box = document.getElementById('chat-box');
             const isMe = m.clientId === username;
+            const morseText = m.data.text;
+            
+            // Decrypt calculation
+            const plainText = morseText.split(' ').map(code => revMorse[code] || code).join('');
+
+            // Send notification if tab is hidden
+            if (!isMe && document.visibilityState !== 'visible') {
+                new Notification(`Signal from ${m.clientId}`, {
+                    body: "New Morse message received.",
+                    tag: 'chat-alert'
+                });
+            }
+
+            const box = document.getElementById('chat-box');
             const div = document.createElement('div');
             div.className = 'msg';
             
-            const morseText = m.data.text;
-            const plainText = morseText.split(' ').map(code => revMorse[code] || code).join('');
+            if(isMe) div.style.cssText = 'margin-left:auto; background:var(--accent); color:white;';
             
+            // Toggle Logic
             div.onclick = function() {
                 const span = this.querySelector('.msg-content');
                 span.innerText = span.innerText === morseText ? plainText : morseText;
             };
 
-            if(isMe) div.style.cssText = 'margin-left:auto; background:var(--accent); color:white;';
-            
             div.innerHTML = `<b>${isMe ? 'You' : m.clientId}</b><span class="msg-content">${morseText}</span>`;
             box.appendChild(div);
             box.scrollTop = box.scrollHeight;
@@ -155,7 +184,7 @@
         const val = input.value.trim().toUpperCase();
         if(!val) return;
 
-        // Auto-convert to morse before sending
+        // Auto-convert to morse
         const morse = val.split('').map(char => morseMap[char] || char).join(' ');
         
         channel.publish('msg', { text: morse });
