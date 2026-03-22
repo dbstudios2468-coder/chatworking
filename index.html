@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Liquid Chat</title>
+    <title>Liquid Mesh | Auto-Morse</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <style>
         :root {
@@ -33,7 +33,6 @@
 
         .screen { display: none; padding: 25px; flex-direction: column; height: 100%; box-sizing: border-box; }
         .active { display: flex; animation: slideUp 0.4s ease; }
-
         @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         input {
@@ -47,20 +46,15 @@
         .msg { 
             margin-bottom: 12px; padding: 12px 16px; border-radius: 18px; 
             background: rgba(255,255,255,0.15); width: fit-content; max-width: 85%;
-            position: relative; transition: 0.3s;
+            position: relative; cursor: pointer; transition: background 0.2s;
         }
-        .msg b { display: block; font-size: 0.7rem; color: var(--accent); margin-bottom: 3px; }
-        
-        .decode-btn {
-            font-size: 0.6rem; background: var(--accent); color: white;
-            border: none; padding: 2px 8px; border-radius: 5px;
-            margin-top: 8px; cursor: pointer; display: block;
-        }
+        .msg:active { background: rgba(255,255,255,0.25); }
+        .msg b { display: block; font-size: 0.7rem; color: var(--accent); margin-bottom: 3px; pointer-events: none; }
+        .msg-content { pointer-events: none; word-break: break-all; }
 
-        .decoded-text { font-weight: bold; color: var(--accent); display: block; margin-top: 5px; font-size: 0.9rem; }
-
-        button.send-btn {
-            padding: 12px 20px; border-radius: 15px; border: none;
+        .controls { display: flex; gap: 5px; align-items: center; }
+        button {
+            padding: 12px; border-radius: 15px; border: none;
             background: var(--accent); color: white; cursor: pointer; font-weight: 600;
         }
 
@@ -75,13 +69,13 @@
     <div id="pw-screen" class="screen active">
         <h2>Passkey</h2>
         <input type="password" id="pw-input" placeholder="••••">
-        <button class="send-btn" onclick="checkPw()">Verify</button>
+        <button onclick="checkPw()">Verify</button>
     </div>
 
     <div id="user-screen" class="screen">
         <h2>Identity</h2>
         <input type="text" id="username-input" placeholder="Codename">
-        <button class="send-btn" onclick="startChat()">Enter</button>
+        <button onclick="startChat()">Enter</button>
     </div>
 
     <div id="chat-screen" class="screen">
@@ -91,9 +85,9 @@
         </div>
         <div id="chat-box"></div>
         
-        <div style="display: flex; gap: 8px;">
-            <input type="text" id="msg-input" placeholder="Enter signal..." style="flex-grow:1; margin-bottom:0;">
-            <button class="send-btn" onclick="sendText()">Send</button>
+        <div class="controls">
+            <input type="text" id="msg-input" placeholder="Enter message..." style="flex-grow:1; margin-bottom:0;">
+            <button onclick="sendText()">Send</button>
         </div>
     </div>
 </div>
@@ -122,7 +116,7 @@
 
     function startChat() {
         username = document.getElementById('username-input').value.trim();
-        if(!username || ABLY_KEY.includes('YOUR')) return alert("Key Error");
+        if(!username || ABLY_KEY.includes('YOUR')) return alert("Missing API Key");
         showScreen('chat-screen');
         document.getElementById('display-name').innerText = `@${username}`;
 
@@ -132,19 +126,20 @@
         channel.subscribe('msg', (m) => {
             const box = document.getElementById('chat-box');
             const isMe = m.clientId === username;
-            
             const div = document.createElement('div');
             div.className = 'msg';
-            if(isMe) div.style.cssText = 'margin-left:auto; background:var(--accent); color:white;';
-
-            // Decrypt Logic
-            const decrypted = m.data.text.split(' ').map(code => revMorse[code] || code).join('');
             
-            div.innerHTML = `
-                <b>${isMe ? 'You' : m.clientId}</b>
-                <span class="morse-text">${m.data.text}</span>
-                <span class="decoded-area"></span>
-            `;
+            const morseText = m.data.text;
+            const plainText = morseText.split(' ').map(code => revMorse[code] || code).join('');
+            
+            div.onclick = function() {
+                const span = this.querySelector('.msg-content');
+                span.innerText = span.innerText === morseText ? plainText : morseText;
+            };
+
+            if(isMe) div.style.cssText = 'margin-left:auto; background:var(--accent); color:white;';
+            
+            div.innerHTML = `<b>${isMe ? 'You' : m.clientId}</b><span class="msg-content">${morseText}</span>`;
             box.appendChild(div);
             box.scrollTop = box.scrollHeight;
         });
@@ -155,18 +150,13 @@
         });
     }
 
-    function decodeMsg(btn, text) {
-        const area = btn.parentElement.querySelector('.decoded-area');
-        area.innerHTML = `<span class="decoded-text">${text}</span>`;
-        btn.style.display = 'none'; // Hide button after use
-    }
-
     function sendText() {
         const input = document.getElementById('msg-input');
-        if(!input.value.trim()) return;
-        
-        // Auto-convert to Morse before sending
-        const morse = input.value.toUpperCase().split('').map(char => morseMap[char] || char).join(' ');
+        const val = input.value.trim().toUpperCase();
+        if(!val) return;
+
+        // Auto-convert to morse before sending
+        const morse = val.split('').map(char => morseMap[char] || char).join(' ');
         
         channel.publish('msg', { text: morse });
         input.value = "";
