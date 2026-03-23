@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Liquid Nexus | AES-256</title>
+    <title>Liquid Nexus | Infinity Secure</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
@@ -35,12 +35,13 @@
 
         .container {
             width: 95%; max-width: 480px; height: 85vh;
-            background: var(--glass); backdrop-filter: blur(40px);
+            background: var(--glass); backdrop-filter: blur(50px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 45px; box-shadow: var(--shadow);
             display: flex; flex-direction: column; overflow: hidden; position: relative;
         }
 
+        /* Sidebar with Infinity Color Picker */
         #sidebar {
             position: absolute; left: -300px; top: 0; width: 280px; height: 100%;
             background: var(--bg); border-right: 1px solid rgba(255, 255, 255, 0.1);
@@ -48,6 +49,14 @@
         }
         #sidebar.open { left: 0; }
         
+        .color-area {
+            width: 100%; height: 120px; border-radius: 15px; position: relative;
+            background: linear-gradient(to bottom, transparent, #000), linear-gradient(to right, #fff, var(--accent-base, #6c5ce7));
+            cursor: crosshair; margin-bottom: 15px;
+        }
+        .picker-handle { width: 12px; height: 12px; border: 2px solid white; border-radius: 50%; position: absolute; transform: translate(-50%, -50%); pointer-events: none; }
+        .hue-slider { width: 100%; height: 10px; border-radius: 5px; appearance: none; background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00); outline: none; margin-bottom: 20px; }
+
         .screen { display: none; padding: 30px; flex-direction: column; height: 100%; box-sizing: border-box; }
         .active { display: flex; animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
@@ -56,21 +65,17 @@
         #chat-box::-webkit-scrollbar { width: 4px; }
         #chat-box::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
 
-        .msg { 
-            margin-bottom: 15px; padding: 15px 20px; border-radius: 25px; 
-            background: rgba(255, 255, 255, 0.1); width: fit-content; max-grow: 1; max-width: 85%;
-            cursor: pointer; transition: 0.3s; border: 1px solid rgba(255,255,255,0.05);
-        }
+        .msg { margin-bottom: 15px; padding: 15px 20px; border-radius: 25px; background: rgba(255, 255, 255, 0.1); width: fit-content; max-width: 85%; cursor: pointer; transition: 0.3s; border: 1px solid rgba(255,255,255,0.05); }
         .msg:hover { background: rgba(255, 255, 255, 0.2); }
         .msg b { display: block; font-size: 0.65rem; color: var(--accent); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1.5px; }
-        .msg-c { font-family: monospace; word-break: break-all; font-size: 0.9rem; }
 
         .input-area { display: flex; gap: 10px; margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; }
         input { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 20px; color: var(--text); flex-grow: 1; outline: none; }
         button { padding: 15px 25px; border-radius: 20px; border: none; background: var(--accent); color: white; cursor: pointer; font-weight: 700; }
 
         .top-icons { position: absolute; top: 25px; width: 100%; padding: 0 30px; display: flex; justify-content: space-between; z-index: 10; box-sizing: border-box; }
-        .panic-btn { position: absolute; bottom: 20px; left: 20px; opacity: 0.2; cursor: pointer; font-size: 1.2rem; }
+        .panic-btn { position: absolute; bottom: 20px; left: 20px; opacity: 0.2; cursor: pointer; font-size: 1.2rem; z-index: 50; }
+        .panic-btn:hover { opacity: 1; color: #ff4757; }
     </style>
 </head>
 <body>
@@ -79,11 +84,15 @@
 
 <div class="container">
     <div id="sidebar">
-        <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
-            <h3>Operatives</h3>
-            <span style="cursor:pointer" onclick="toggleSidebar()">✕</span>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h3>Infinity Theme</h3>
+            <span style="cursor:pointer; font-size:1.5rem;" onclick="toggleSidebar()">✕</span>
         </div>
-        <div id="member-list"></div>
+        <input type="range" min="0" max="360" value="252" class="hue-slider" oninput="updateHue(this.value)">
+        <div class="color-area" id="colorMap" onmousedown="startPick(event)">
+            <div class="picker-handle" id="handle" style="left: 50%; top: 50%;"></div>
+        </div>
+        <div id="member-list" style="margin-top:20px;"></div>
     </div>
 
     <div class="top-icons">
@@ -105,11 +114,11 @@
         <button onclick="startChat()">LINK</button>
     </div>
 
-    <div id="chat-screen" class="screen">
+    <div id="chat-screen" class="screen active">
         <div style="height:60px;"></div>
         <div id="chat-box"></div>
         <div class="input-area">
-            <input type="text" id="msg-input" placeholder="Type secure message...">
+            <input type="text" id="msg-input" placeholder="Secure signal...">
             <button onclick="sendText()">➤</button>
         </div>
     </div>
@@ -119,49 +128,63 @@
     const ABLY_KEY = 'fVAQIA.kFtCvw:X6QXTzbh4Tbi1HUBiOQMlReiyw0uwkbOnEibDEM_VdA';
     let username = "", ably, channel, secretKey = "";
 
+    // --- Color Picker Logic ---
+    let currentHue = 252;
+    function updateHue(v) {
+        currentHue = v;
+        document.documentElement.style.setProperty('--accent-base', `hsl(${v}, 100%, 50%)`);
+        updateFinalColor(document.getElementById('handle').offsetLeft, document.getElementById('handle').offsetTop);
+    }
+    function startPick(e) {
+        const colorMap = document.getElementById('colorMap');
+        const handle = document.getElementById('handle');
+        const move = (ev) => {
+            const rect = colorMap.getBoundingClientRect();
+            let x = Math.max(0, Math.min(ev.clientX - rect.left, rect.width));
+            let y = Math.max(0, Math.min(ev.clientY - rect.top, rect.height));
+            handle.style.left = x + 'px';
+            handle.style.top = y + 'px';
+            updateFinalColor(x, y);
+        };
+        move(e);
+        window.onmousemove = move;
+        window.onmouseup = () => window.onmousemove = null;
+    }
+    function updateFinalColor(x, y) {
+        const s = (x / 280) * 100;
+        const l = 100 - (y / 120) * 100;
+        document.documentElement.style.setProperty('--accent', `hsl(${currentHue}, ${s}%, ${l}%)`);
+    }
+
+    // --- Core Logic ---
     function toggleTheme() {
         const b = document.body;
         b.setAttribute('data-theme', b.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
     }
-
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
-
     function checkPw() {
         const val = document.getElementById('pw-input').value;
         if(val.toLowerCase() === 'morse') {
-            secretKey = val; // This is now used for the AES decryption
+            secretKey = val;
             showScreen('user-screen');
-        } else {
-            alert("Wrong Key");
-        }
+        } else alert("Wrong Key");
     }
-
     function showScreen(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active');
     }
-
     async function startChat() {
         username = document.getElementById('username-input').value.trim();
         if(!username || ABLY_KEY.includes('YOUR')) return;
-        
         if ("Notification" in window) await Notification.requestPermission();
-        
         showScreen('chat-screen');
         ably = new Ably.Realtime({ key: ABLY_KEY, clientId: username });
         channel = ably.channels.get('secure-nexus');
-
-        channel.history((err, page) => {
-            if(!err) page.items.reverse().forEach(m => addBubble(m.clientId, m.data.text, m.clientId === username));
-        });
-
+        channel.history((err, page) => { if(!err) page.items.reverse().forEach(m => addBubble(m.clientId, m.data.text, m.clientId === username)); });
         channel.subscribe('msg', (m) => {
-            if (m.clientId !== username && document.hidden) {
-                new Notification(`Secure Signal Received`, { body: "Encrypted data in Nexus." });
-            }
+            if (m.clientId !== username && document.hidden) new Notification(`Secure Signal Received`, { body: "Encrypted data in Nexus." });
             addBubble(m.clientId, m.data.text, m.clientId === username);
         });
-
         channel.presence.enter();
         channel.presence.subscribe(() => {
             channel.presence.get((err, members) => {
@@ -172,27 +195,19 @@
 
     function addBubble(id, encryptedData, isMe) {
         const box = document.getElementById('chat-box');
-        
-        // --- SECURE DECRYPTION ---
         let decryptedText;
         try {
             const bytes = CryptoJS.AES.decrypt(encryptedData, secretKey);
             decryptedText = bytes.toString(CryptoJS.enc.Utf8);
             if (!decryptedText) throw new Error(); 
-        } catch (e) {
-            decryptedText = "[BLOCKING ERROR: Invalid Key]";
-        }
-
+        } catch (e) { decryptedText = "[BLOCKING ERROR: Invalid Key]"; }
         const div = document.createElement('div');
         div.className = 'msg';
         if(isMe) div.style.cssText = 'margin-left:auto; background:var(--accent); color:white;';
-        
-        // Initial state is the "locked" encrypted string
         div.onclick = function() {
             const span = this.querySelector('.msg-c');
             span.innerText = span.innerText === encryptedData ? decryptedText : encryptedData;
         };
-
         div.innerHTML = `<b>${isMe ? 'You' : id}</b><span class="msg-c">${encryptedData}</span>`;
         box.appendChild(div);
         box.scrollTop = box.scrollHeight;
@@ -201,10 +216,7 @@
     function sendText() {
         const input = document.getElementById('msg-input');
         if(!input.value.trim()) return;
-
-        // --- SECURE ENCRYPTION ---
         const encrypted = CryptoJS.AES.encrypt(input.value, secretKey).toString();
-        
         channel.publish('msg', { text: encrypted });
         input.value = "";
     }
@@ -217,7 +229,6 @@
             else if(active === 'user-screen') startChat();
         }
     });
-
     showScreen('pw-screen');
 </script>
 </body>
