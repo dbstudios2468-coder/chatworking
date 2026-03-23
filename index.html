@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Liquid Chat</title>
+    <title>Nexus Prime | Command</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
@@ -17,40 +17,38 @@
             --text: #f1f2f6; --shadow: 10px 10px 30px #000000, -10px -10px 30px #1a1e24;
         }
 
-        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; transition: 0.5s; }
+        body { margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
         .blobs { position: absolute; width: 100%; height: 100%; z-index: -1; filter: blur(60px); }
         .blob { position: absolute; background: var(--accent); border-radius: 50%; opacity: 0.2; animation: move 20s infinite alternate linear; }
         @keyframes move { from { transform: translate(-10%, -10%); } to { transform: translate(20%, 20%); } }
 
         .container { width: 95%; max-width: 480px; height: 85vh; background: var(--glass); backdrop-filter: blur(50px); border-radius: 40px; border: 1px solid rgba(255, 255, 255, 0.1); display: flex; flex-direction: column; overflow: hidden; position: relative; box-shadow: var(--shadow); }
         
-        #sidebar { position: absolute; left: -300px; top: 0; width: 280px; height: 100%; background: var(--bg); transition: 0.4s ease; z-index: 1000; padding: 30px; box-sizing: border-box; border-right: 1px solid rgba(255,255,255,0.1); }
+        #sidebar { position: absolute; left: -300px; top: 0; width: 280px; height: 100%; background: var(--bg); transition: 0.4s ease; z-index: 1000; padding: 25px; box-sizing: border-box; border-right: 1px solid rgba(255,255,255,0.1); overflow-y: auto; }
         #sidebar.open { left: 0; }
 
-        .screen { display: none; padding: 25px; flex-direction: column; height: 100%; box-sizing: border-box; }
-        .active { display: flex; animation: fadeIn 0.5s ease; }
+        .screen { display: none; padding: 20px; flex-direction: column; height: 100%; box-sizing: border-box; }
+        .active { display: flex; animation: fadeIn 0.4s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        #chat-box { flex-grow: 1; overflow-y: auto; padding-right: 5px; }
-        .msg { margin-bottom: 12px; padding: 14px 18px; border-radius: 20px; background: rgba(255, 255, 255, 0.1); width: fit-content; max-width: 85%; word-wrap: break-word; position: relative; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); }
-        .msg b { display: block; font-size: 0.65rem; color: var(--accent); margin-bottom: 4px; text-transform: uppercase; }
+        #chat-box { flex-grow: 1; overflow-y: auto; padding-right: 5px; margin-top: 50px; }
+        .msg { margin-bottom: 12px; padding: 12px 16px; border-radius: 20px; background: rgba(255, 255, 255, 0.1); width: fit-content; max-width: 85%; word-wrap: break-word; position: relative; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); }
+        .msg b { display: block; font-size: 0.6rem; color: var(--accent); margin-bottom: 3px; }
         .admin-tag { color: #ff4757 !important; font-weight: 900; }
-        .announcement { width: 95% !important; background: rgba(255, 71, 87, 0.1) !important; border: 1px solid #ff4757 !important; text-align: center; margin: 20px auto !important; font-weight: bold; }
+        .announcement { width: 95% !important; background: rgba(255, 71, 87, 0.1) !important; border: 1px solid #ff4757 !important; text-align: center; margin: 15px auto !important; font-weight: bold; border-radius: 10px; }
 
-        .member-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 12px; margin-bottom: 8px; font-size: 0.8rem; }
-        .mute-btn { font-size: 0.6rem; color: #ff4757; cursor: pointer; border: 1px solid #ff4757; padding: 2px 5px; border-radius: 5px; display: none; }
-        .is-admin .mute-btn { display: block; }
-        .is-admin .admin-controls { display: flex !important; }
+        input { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 15px; color: var(--text); outline: none; margin-bottom: 10px; font-size: 14px; }
+        button { padding: 12px; border-radius: 15px; border: none; background: var(--accent); color: white; cursor: pointer; font-weight: 700; transition: 0.2s; }
+        
+        .admin-controls { display: none; margin-top: 5px; }
+        .announce-btn { background: #ff4757; font-size: 0.65rem; width: 100%; padding: 8px; }
+        .is-admin .admin-controls, .is-admin .admin-ui { display: block !important; }
 
-        input { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; color: var(--text); outline: none; margin-bottom: 10px; }
-        button { padding: 15px; border-radius: 15px; border: none; background: var(--accent); color: white; cursor: pointer; font-weight: 700; }
-        .admin-controls { display: none; gap: 5px; margin-top: 5px; }
-        .announce-btn { background: #ff4757; flex-grow: 1; font-size: 0.7rem; }
-
-        .top-icons { padding: 20px 30px; display: flex; justify-content: space-between; z-index: 10; font-size: 1.3rem; }
+        .top-icons { position: absolute; top: 15px; width: 100%; padding: 0 25px; display: flex; justify-content: space-between; z-index: 10; font-size: 1.2rem; box-sizing: border-box; }
         .panic-btn { position: absolute; bottom: 15px; left: 15px; opacity: 0.1; cursor: pointer; z-index: 50; }
-        .del-x { position: absolute; top: 5px; right: 10px; color: #ff4757; cursor: pointer; display: none; }
-        .is-admin .msg:hover .del-x { display: block; }
+        .msg-tools { position: absolute; top: 5px; right: 10px; display: none; gap: 5px; }
+        .is-admin .msg:hover .msg-tools { display: flex; }
+        .tool-icon { color: #ff4757; font-size: 0.9rem; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -59,13 +57,21 @@
 
 <div class="container">
     <div id="sidebar">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h3>Nexus Config</h3>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h3>Command Center</h3>
             <span style="cursor:pointer" onclick="toggleSidebar()">✕</span>
         </div>
+        
+        <div class="admin-ui" style="display:none; margin-bottom:20px; border:1px solid #ff4757; padding:15px; border-radius:15px;">
+            <p style="font-size:0.7rem; color:#ff4757; margin-top:0;">SYSTEM OVERRIDE</p>
+            <input type="text" id="new-login-pw" placeholder="New Login PW" style="width:100%; font-size:0.7rem;">
+            <input type="text" id="new-admin-pw" placeholder="New Admin PW" style="width:100%; font-size:0.7rem;">
+            <button onclick="updatePasswords()" style="width:100%; font-size:0.7rem; background:#ff4757;">Update All Nodes</button>
+        </div>
+
         <p style="font-size:0.7rem; opacity:0.5;">HUE</p>
         <input type="range" min="0" max="360" value="252" style="width:100%" oninput="updateHue(this.value)">
-        <p style="font-size:0.7rem; opacity:0.5; margin-top:20px;">OPERATIVES</p>
+        <p style="font-size:0.7rem; opacity:0.5; margin-top:15px;">OPERATIVES</p>
         <div id="member-list"></div>
     </div>
 
@@ -77,8 +83,8 @@
     <div class="panic-btn" onclick="location.href='https://google.com'">🚨</div>
 
     <div id="pw-screen" class="screen active" style="justify-content:center;">
-        <h2 style="text-align:center; font-weight:200;">ENTRY</h2>
-        <input type="password" id="pw-input" placeholder="Key (Required)">
+        <h2 style="text-align:center; font-weight:200;">SECURE LOGIN</h2>
+        <input type="password" id="pw-input" placeholder="Encryption Key">
         <input type="password" id="admin-input" placeholder="Admin Code (Optional)">
         <button onclick="checkPw()">VERIFY</button>
     </div>
@@ -91,13 +97,13 @@
 
     <div id="chat-screen" class="screen">
         <div id="chat-box"></div>
-        <div style="display:flex; flex-direction:column; gap:10px; margin-top:15px; border-top:1px solid rgba(255,255,255,0.1); padding-top:15px;">
-            <div style="display:flex; gap:10px;">
+        <div style="display:flex; flex-direction:column; gap:5px; margin-top:10px; border-top:1px solid rgba(255,255,255,0.1); padding-top:10px;">
+            <div style="display:flex; gap:8px;">
                 <input type="text" id="msg-input" placeholder="Signal..." style="flex-grow:1; margin-bottom:0">
-                <button onclick="sendText()">➤</button>
+                <button onclick="sendText()" style="padding:10px 20px;">➤</button>
             </div>
             <div class="admin-controls">
-                <button class="announce-btn" onclick="sendAnnouncement()">SEND BOLD ANNOUNCEMENT</button>
+                <button class="announce-btn" onclick="sendAnnouncement()">⚠️ BOLD ANNOUNCEMENT</button>
             </div>
         </div>
     </div>
@@ -105,19 +111,20 @@
 
 <script>
     const ABLY_KEY = 'fVAQIA.kFtCvw:X6QXTzbh4Tbi1HUBiOQMlReiyw0uwkbOnEibDEM_VdA';
-    let username = "", ably, channel, secretKey = "", isAdmin = false;
+    let username = "", ably, channel, secretKey = "", adminKey = "secret", isAdmin = false;
     let mutedUsers = new Set();
+    let masterPassword = "morse"; 
 
     function updateHue(v) { document.documentElement.style.setProperty('--accent', `hsl(${v}, 70%, 60%)`); }
     function toggleTheme() { document.body.setAttribute('data-theme', document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'); }
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
 
     function checkPw() {
-        const p = document.getElementById('pw-input').value;
+        const p = document.getElementById('pw-input').value.toLowerCase();
         const a = document.getElementById('admin-input').value;
-        if(p.toLowerCase() === 'morse') {
+        if(p === masterPassword) {
             secretKey = p;
-            if(a === 'secret') { isAdmin = true; document.body.classList.add('is-admin'); }
+            if(a === adminKey) { isAdmin = true; document.body.classList.add('is-admin'); }
             showScreen('user-screen');
         } else alert("Invalid Key");
     }
@@ -142,6 +149,11 @@
         channel.subscribe('cmd', (m) => {
             if(m.data.t === 'del') { const el = document.getElementById(m.data.id); if(el) el.remove(); }
             if(m.data.t === 'mute') mutedUsers.add(m.data.target);
+            if(m.data.t === 'pw-update') {
+                masterPassword = m.data.newLogin;
+                adminKey = m.data.newAdmin;
+                alert("System Alert: Passwords have been updated by an Admin.");
+            }
         });
 
         channel.presence.enter();
@@ -151,29 +163,34 @@
     function updateMembers() {
         channel.presence.get((err, members) => {
             document.getElementById('member-list').innerHTML = members.map(m => `
-                <div class="member-item">
-                    <span>${mutedUsers.has(m.clientId) ? '🚫 ' : '● '}${m.clientId}</span>
-                    <span class="mute-btn" onclick="adminMute('${m.clientId}')">MUTE</span>
-                </div>`).join('');
+                <div style="font-size:0.8rem; margin-bottom:5px;">● ${m.clientId} ${mutedUsers.has(m.clientId) ? '(MUTED)' : ''}</div>
+            `).join('');
         });
+    }
+
+    function updatePasswords() {
+        const nl = document.getElementById('new-login-pw').value;
+        const na = document.getElementById('new-admin-pw').value;
+        if(nl && na) {
+            channel.publish('cmd', { t: 'pw-update', newLogin: nl, newAdmin: na });
+            alert("Passwords updated across network.");
+        }
     }
 
     function addBubble(id, enc, mid, senderIsAdmin, isAnnounce) {
         const box = document.getElementById('chat-box');
         let dec; try { dec = CryptoJS.AES.decrypt(enc, secretKey).toString(CryptoJS.enc.Utf8); } catch(e) { dec = "[ENCRYPTED]"; }
-        
         const div = document.createElement('div');
         div.className = 'msg' + (isAnnounce ? ' announcement' : '');
         div.id = mid;
         if(id === username && !isAnnounce) div.style.cssText = 'margin-left:auto; background:var(--accent); color:white;';
-        
-        div.onclick = (e) => { 
-            if(e.target.className === 'del-x') return;
-            const s = div.querySelector('.msg-c'); s.innerText = s.innerText === enc ? dec : enc; 
-        };
+        div.onclick = (e) => { if(e.target.classList.contains('tool-icon')) return; const s = div.querySelector('.msg-c'); s.innerText = s.innerText === enc ? dec : enc; };
 
         div.innerHTML = `
-            <span class="del-x" onclick="adminDel('${mid}')">×</span>
+            <div class="msg-tools">
+                <span class="tool-icon" onclick="adminMute('${id}')" title="Mute User">🚫</span>
+                <span class="tool-icon" onclick="adminDel('${mid}')" title="Delete Message">×</span>
+            </div>
             <b>${senderIsAdmin ? '<span class="admin-tag">[Admin]</span> ' : ''}${id === username ? 'You' : id}</b>
             <span class="msg-c">${enc}</span>
         `;
@@ -195,7 +212,7 @@
     }
 
     function adminDel(id) { if(isAdmin) channel.publish('cmd', { t: 'del', id: id }); }
-    function adminMute(target) { if(isAdmin) channel.publish('cmd', { t: 'mute', target: target }); }
+    function adminMute(target) { if(isAdmin) { channel.publish('cmd', { t: 'mute', target: target }); alert(target + " muted."); } }
 
     document.addEventListener('keypress', (e) => {
         if(e.key === 'Enter' && document.getElementById('chat-screen').classList.contains('active')) sendText();
