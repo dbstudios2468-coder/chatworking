@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Liquid Mesh | Auto-Morse</title>
+    <title>Liquid Mesh | History Edition</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <style>
         :root {
@@ -48,7 +48,6 @@
             background: rgba(255,255,255,0.15); width: fit-content; max-width: 85%;
             position: relative; cursor: pointer; transition: background 0.2s;
         }
-        .msg:active { background: rgba(255,255,255,0.25); }
         .msg b { display: block; font-size: 0.7rem; color: var(--accent); margin-bottom: 3px; pointer-events: none; }
         .msg-content { pointer-events: none; word-break: break-all; font-family: monospace; letter-spacing: 1px; }
 
@@ -60,7 +59,6 @@
 
         .theme-toggle { position: absolute; top: 20px; right: 20px; cursor: pointer; font-size: 1.2rem; z-index: 100; }
         
-        /* Scrollbar */
         #chat-box::-webkit-scrollbar { width: 4px; }
         #chat-box::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
     </style>
@@ -88,7 +86,6 @@
             <span id="display-name"></span>
         </div>
         <div id="chat-box"></div>
-        
         <div class="controls">
             <input type="text" id="msg-input" placeholder="Enter message..." style="flex-grow:1; margin-bottom:0;">
             <button onclick="sendText()">Send</button>
@@ -97,9 +94,7 @@
 </div>
 
 <script>
-    // 1. PASTE YOUR ABLY ROOT KEY HERE
     const ABLY_KEY = 'fVAQIA.kFtCvw:X6QXTzbh4Tbi1HUBiOQMlReiyw0uwkbOnEibDEM_VdA';
-    
     let username = "", ably, channel;
 
     const morseMap = {
@@ -112,11 +107,7 @@
     const revMorse = Object.fromEntries(Object.entries(morseMap).map(([k, v]) => [v, k]));
 
     function checkPw() {
-        if(document.getElementById('pw-input').value.toLowerCase() === 'morse') {
-            showScreen('user-screen');
-        } else {
-            alert("Incorrect");
-        }
+        if(document.getElementById('pw-input').value.toLowerCase() === 'morse') showScreen('user-screen');
     }
 
     function showScreen(id) {
@@ -124,53 +115,49 @@
         document.getElementById(id).classList.add('active');
     }
 
-    async function initNotifications() {
-        if ("Notification" in window) {
-            await Notification.requestPermission();
-        }
+    // Function to render a message bubble
+    function renderMessage(clientId, text, isMe) {
+        const box = document.getElementById('chat-box');
+        const div = document.createElement('div');
+        div.className = 'msg';
+        
+        const morseText = text;
+        const plainText = morseText.split(' ').map(code => revMorse[code] || code).join('');
+
+        if(isMe) div.style.cssText = 'margin-left:auto; background:var(--accent); color:white;';
+        
+        div.onclick = function() {
+            const span = this.querySelector('.msg-content');
+            span.innerText = span.innerText === morseText ? plainText : morseText;
+        };
+
+        div.innerHTML = `<b>${isMe ? 'You' : clientId}</b><span class="msg-content">${morseText}</span>`;
+        box.appendChild(div);
+        box.scrollTop = box.scrollHeight;
     }
 
     function startChat() {
         username = document.getElementById('username-input').value.trim();
-        if(!username || ABLY_KEY.includes('YOUR')) return alert("Setup API Key first!");
+        if(!username || ABLY_KEY.includes('YOUR')) return alert("Fix API Key");
         
-        initNotifications();
         showScreen('chat-screen');
         document.getElementById('display-name').innerText = `@${username}`;
 
         ably = new Ably.Realtime({ key: ABLY_KEY, clientId: username });
         channel = ably.channels.get('liquid-chat');
 
+        // LOAD HISTORY
+        channel.history((err, resultPage) => {
+            if(err) return console.log(err);
+            // Result comes back in reverse order (newest first), so we flip it
+            resultPage.items.reverse().forEach(msg => {
+                renderMessage(msg.clientId, msg.data.text, msg.clientId === username);
+            });
+        });
+
+        // SUBSCRIBE TO NEW MESSAGES
         channel.subscribe('msg', (m) => {
-            const isMe = m.clientId === username;
-            const morseText = m.data.text;
-            
-            // Decrypt calculation
-            const plainText = morseText.split(' ').map(code => revMorse[code] || code).join('');
-
-            // Send notification if tab is hidden
-            if (!isMe && document.visibilityState !== 'visible') {
-                new Notification(`Signal from ${m.clientId}`, {
-                    body: "New Morse message received.",
-                    tag: 'chat-alert'
-                });
-            }
-
-            const box = document.getElementById('chat-box');
-            const div = document.createElement('div');
-            div.className = 'msg';
-            
-            if(isMe) div.style.cssText = 'margin-left:auto; background:var(--accent); color:white;';
-            
-            // Toggle Logic
-            div.onclick = function() {
-                const span = this.querySelector('.msg-content');
-                span.innerText = span.innerText === morseText ? plainText : morseText;
-            };
-
-            div.innerHTML = `<b>${isMe ? 'You' : m.clientId}</b><span class="msg-content">${morseText}</span>`;
-            box.appendChild(div);
-            box.scrollTop = box.scrollHeight;
+            renderMessage(m.clientId, m.data.text, m.clientId === username);
         });
 
         channel.presence.enter();
@@ -183,10 +170,7 @@
         const input = document.getElementById('msg-input');
         const val = input.value.trim().toUpperCase();
         if(!val) return;
-
-        // Auto-convert to morse
         const morse = val.split('').map(char => morseMap[char] || char).join(' ');
-        
         channel.publish('msg', { text: morse });
         input.value = "";
     }
