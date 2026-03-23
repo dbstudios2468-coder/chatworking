@@ -3,25 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Nexus v3 | Liquid Glass</title>
+    <title>Nexus v4 | Liquid Reflection</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;500;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         :root {
-            --accent: #74b9ff;
-            --glass: rgba(255, 255, 255, 0.08);
-            --border: rgba(255, 255, 255, 0.2);
-            --bg: #0a0a0c;
-            --blur: 40px;
+            --accent: #00d2ff;
+            --glass-base: rgba(255, 255, 255, 0.03);
+            --glass-specular: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0) 60%, rgba(255,255,255,0.1) 100%);
+            --border: rgba(255, 255, 255, 0.15);
+            --bg: #030407;
+            --blur: 50px;
         }
 
-        [data-theme="void"] { --accent: #a29bfe; --bg: #050505; }
-        [data-theme="dev"] { --accent: #55efc4; --bg: #0c100e; }
+        [data-theme="void"] { --accent: #bdc3c7; --bg: #000000; }
+        [data-theme="dev"] { --accent: #00ff88; --bg: #060b09; }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
         
         body {
             background: var(--bg);
@@ -30,333 +31,332 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            transition: background 1s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: background 1.2s ease;
         }
 
-        /* LIQUID BACKGROUND ENGINE */
-        .mesh-container {
+        /* DYNAMIC BACKGROUND REFLECTIONS */
+        .glass-environment {
             position: fixed;
             inset: 0;
             z-index: -1;
-            filter: blur(80px);
-            opacity: 0.5;
-        }
-
-        .blob {
-            position: absolute;
-            width: 50vw;
-            height: 50vw;
-            background: var(--accent);
-            border-radius: 50%;
-            animation: drift 20s infinite alternate ease-in-out;
-        }
-
-        @keyframes drift {
-            0% { transform: translate(-10%, -10%) rotate(0deg) scale(1); }
-            100% { transform: translate(30%, 20%) rotate(90deg) scale(1.2); }
-        }
-
-        /* MAIN GLASS HUB */
-        .nexus-shell {
-            width: 92vw;
-            height: 85vh;
-            max-width: 1100px;
-            display: flex;
-            gap: 20px;
-            position: relative;
-            z-index: 10;
-        }
-
-        /* NAVIGATION PILL */
-        .sidebar-pill {
-            width: 80px;
-            background: var(--glass);
-            backdrop-filter: blur(var(--blur)) saturate(150%);
-            -webkit-backdrop-filter: blur(var(--blur)) saturate(150%);
-            border: 1px solid var(--border);
-            border-radius: 100px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 30px 0;
-            gap: 25px;
-            transition: width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        .sidebar-pill:hover { width: 220px; align-items: flex-start; padding: 30px 20px; }
-
-        .nav-item {
-            width: 45px;
-            height: 45px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            color: white;
-            cursor: pointer;
-            transition: 0.3s;
-            position: relative;
-            text-decoration: none;
-            background: rgba(255,255,255,0.05);
-        }
-
-        .sidebar-pill:hover .nav-item { width: 100%; border-radius: 20px; justify-content: flex-start; padding-left: 15px; }
-
-        .nav-item i { font-size: 1.2rem; min-width: 20px; }
-        .nav-label { display: none; margin-left: 12px; font-weight: 500; font-size: 0.9rem; white-space: nowrap; }
-        .sidebar-pill:hover .nav-label { display: block; }
-
-        .nav-item.active { background: var(--accent); color: #000; box-shadow: 0 0 25px var(--accent); }
-
-        /* CONTENT STACK */
-        .main-stage {
-            flex: 1;
-            background: var(--glass);
-            backdrop-filter: blur(var(--blur)) saturate(180%);
-            -webkit-backdrop-filter: blur(var(--blur)) saturate(180%);
-            border: 1px solid var(--border);
-            border-radius: 45px;
-            display: flex;
-            flex-direction: column;
             overflow: hidden;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.4);
         }
 
-        .stage-header {
-            padding: 25px 35px;
+        .light-leak {
+            position: absolute;
+            width: 80vw;
+            height: 80vw;
+            background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
+            filter: blur(120px);
+            opacity: 0.15;
+            animation: flow 25s infinite alternate linear;
+        }
+
+        @keyframes flow {
+            0% { transform: translate(-20%, -20%) scale(1); }
+            100% { transform: translate(40%, 30%) scale(1.4); }
+        }
+
+        /* MAIN GLASS CHASSIS */
+        .nexus-wrapper {
+            width: 96vw;
+            height: 92vh;
+            max-width: 1300px;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
+            gap: 25px;
+            position: relative;
         }
 
-        .messages-flow {
-            flex: 1;
-            padding: 30px;
-            overflow-y: auto;
+        /* ENHANCED SIDEBAR PILL */
+        .sidebar-pill {
+            width: 260px; /* Bigger by default for better text space */
+            background: var(--glass-base);
+            backdrop-filter: blur(var(--blur)) saturate(200%);
+            -webkit-backdrop-filter: blur(var(--blur)) saturate(200%);
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            padding: 40px 25px;
             display: flex;
             flex-direction: column;
             gap: 15px;
-            mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+            position: relative;
+            box-shadow: inset 0 0 40px rgba(255,255,255,0.05);
         }
 
-        /* LIQUID MESSAGE BUBBLES */
-        .bubble {
-            max-width: 75%;
-            padding: 14px 20px;
-            border-radius: 28px;
-            color: white;
-            font-size: 0.95rem;
-            animation: bubbleSlide 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+        .sidebar-pill::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50px;
+            background: var(--glass-specular);
+            pointer-events: none;
+        }
+
+        .nav-item {
+            padding: 18px 25px;
+            border-radius: 30px;
+            color: rgba(255,255,255,0.6);
+            cursor: pointer;
+            transition: 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            border: 1px solid transparent;
+        }
+
+        .nav-item i { font-size: 1.3rem; }
+        .nav-item:hover { background: rgba(255,255,255,0.05); color: white; transform: translateX(5px); }
+        .nav-item.active { 
+            background: rgba(255,255,255,0.1); 
+            color: var(--accent); 
+            border-color: var(--border);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        /* CHAT INTERFACE */
+        .chat-container {
+            flex: 1;
+            background: var(--glass-base);
+            backdrop-filter: blur(var(--blur)) saturate(200%);
+            -webkit-backdrop-filter: blur(var(--blur)) saturate(200%);
+            border: 1px solid var(--border);
+            border-radius: 60px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
             position: relative;
         }
 
-        @keyframes bubbleSlide {
-            from { opacity: 0; transform: translateY(30px) scale(0.9); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
+        .chat-container::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 100px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.05), transparent);
+            pointer-events: none;
+        }
+
+        .messages-view {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            scroll-behavior: smooth;
+        }
+
+        /* REFRACTIVE BUBBLES */
+        .bubble {
+            padding: 18px 24px;
+            border-radius: 35px;
+            font-size: 1rem;
+            line-height: 1.5;
+            max-width: 65%;
+            position: relative;
+            animation: liquidRise 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+
+        @keyframes liquidRise {
+            from { opacity: 0; transform: translateY(40px) scale(0.9); filter: blur(10px); }
+            to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
         }
 
         .bubble.me {
             align-self: flex-end;
-            background: linear-gradient(135deg, var(--accent), #fff);
+            background: linear-gradient(160deg, var(--accent), #fff);
             color: #000;
-            border-bottom-right-radius: 6px;
+            font-weight: 600;
+            border-bottom-right-radius: 5px;
         }
 
         .bubble.them {
             align-self: flex-start;
-            background: rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.08);
+            color: #fff;
             border: 1px solid var(--border);
-            border-bottom-left-radius: 6px;
+            border-bottom-left-radius: 5px;
         }
 
-        /* INPUT AREA */
-        .input-bar {
-            margin: 20px 30px 30px;
+        .bubble::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: var(--glass-specular);
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        /* LIQUID INPUT */
+        .input-zone {
+            padding: 30px 40px;
+            background: rgba(0,0,0,0.2);
+        }
+
+        .liquid-input-wrapper {
             background: rgba(255,255,255,0.05);
-            border-radius: 30px;
-            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            padding: 10px 15px;
             display: flex;
             align-items: center;
-            border: 1px solid var(--border);
-            transition: 0.3s;
+            transition: 0.4s;
         }
 
-        .input-bar:focus-within { border-color: var(--accent); background: rgba(255,255,255,0.1); }
+        .liquid-input-wrapper:focus-within {
+            background: rgba(255,255,255,0.1);
+            border-color: var(--accent);
+            box-shadow: 0 0 30px rgba(0, 210, 255, 0.2);
+        }
 
-        .input-bar input {
+        .liquid-input-wrapper input {
             flex: 1;
             background: transparent;
             border: none;
-            padding: 12px 15px;
+            padding: 12px 20px;
             color: white;
             outline: none;
-            font-size: 1rem;
-        }
-
-        .send-btn {
-            background: var(--accent);
-            border: none;
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .send-btn:active { transform: scale(0.85); }
-
-        /* AUTH SCREEN */
-        #auth-gate {
-            position: fixed;
-            inset: 0;
-            z-index: 1000;
-            background: var(--bg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(100px);
-        }
-
-        .gate-card {
-            background: var(--glass);
-            padding: 50px;
-            border-radius: 50px;
-            border: 1px solid var(--border);
-            text-align: center;
-            width: 400px;
-        }
-
-        input.auth-field {
-            width: 100%;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--border);
-            padding: 18px;
-            border-radius: 20px;
-            color: white;
-            margin-bottom: 15px;
-            text-align: center;
             font-size: 1.1rem;
+        }
+
+        .send-pill {
+            background: white;
+            color: black;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 100px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .send-pill:hover { transform: scale(1.05); background: var(--accent); }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+
+        /* GATE SCREEN */
+        #gate {
+            position: fixed; inset: 0; z-index: 2000;
+            background: var(--bg); display: flex; align-items: center; justify-content: center;
         }
     </style>
 </head>
 <body>
 
-    <div class="mesh-container">
-        <div class="blob"></div>
-        <div class="blob" style="background: #ff79c6; right: 0; bottom: 0; animation-delay: -5s;"></div>
+    <div class="glass-environment">
+        <div class="light-leak"></div>
+        <div class="light-leak" style="background: #a29bfe; right: 0; bottom: 0; animation-delay: -10s;"></div>
     </div>
 
-    <div id="auth-gate">
-        <div class="gate-card">
-            <h1 style="color:white; margin-bottom:10px;">Nexus v3</h1>
-            <p style="color:var(--accent); margin-bottom:30px; opacity:0.7;">Initialize Protocol</p>
-            <input type="text" id="user-in" class="auth-field" placeholder="User Handle">
-            <input type="password" id="key-in" class="auth-field" placeholder="AES Master Key">
-            <button onclick="start()" style="width:100%; padding:20px; border-radius:20px; background:var(--accent); border:none; font-weight:700; cursor:pointer;">CONNECT</button>
+    <div id="gate">
+        <div style="text-align:center; background: rgba(255,255,255,0.03); padding: 60px; border-radius: 60px; border: 1px solid var(--border); backdrop-filter: blur(40px);">
+            <h1 style="color:white; font-size: 2.5rem; margin-bottom: 30px; font-weight: 800; letter-spacing: -1px;">Nexus Protocol</h1>
+            <input type="text" id="user-id" placeholder="Handle" style="width:100%; padding:20px; border-radius:20px; border:1px solid var(--border); background:rgba(255,255,255,0.05); color:white; margin-bottom:15px; text-align:center;">
+            <input type="password" id="key-id" placeholder="Access Key" style="width:100%; padding:20px; border-radius:20px; border:1px solid var(--border); background:rgba(255,255,255,0.05); color:white; margin-bottom:30px; text-align:center;">
+            <button onclick="boot()" style="width:100%; padding:22px; border-radius:25px; background:white; color:black; font-weight:800; border:none; cursor:pointer; font-size:1.1rem;">INITIALIZE</button>
         </div>
     </div>
 
-    <div class="nexus-shell">
-        <nav class="sidebar-pill">
-            <div class="nav-item active" onclick="changeChamber('main', this)" title="Main">
-                <i class="fas fa-home"></i><span class="nav-label">Main Nexus</span>
+    <div class="nexus-wrapper">
+        <aside class="sidebar-pill">
+            <div style="margin-bottom: 30px; padding-left: 10px;">
+                <h2 style="color:white; font-weight: 800;">Nexus <span style="color:var(--accent);">v4</span></h2>
+                <p style="color:rgba(255,255,255,0.4); font-size: 0.8rem; text-transform: uppercase;">Liquid Intelligence</p>
             </div>
-            <div class="nav-item" onclick="changeChamber('void', this)" title="Void">
-                <i class="fas fa-ghost"></i><span class="nav-label">The Void</span>
-            </div>
-            <div class="nav-item" onclick="changeChamber('dev', this)" title="Dev">
-                <i class="fas fa-terminal"></i><span class="nav-label">Dev Stream</span>
-            </div>
-        </nav>
-
-        <main class="main-stage">
-            <header class="stage-header">
-                <div>
-                    <h2 id="room-title" style="color:white;">Main Nexus</h2>
-                    <span id="status-dot" style="font-size:0.7rem; color:var(--accent);">● Encrypted</span>
+            
+            <nav style="flex:1;">
+                <div class="nav-item active" onclick="swap('main', this)">
+                    <i class="fas fa-compass"></i><span>Main Nexus</span>
                 </div>
-                <div style="opacity:0.5; color:white;"><i class="fas fa-shield-alt"></i> 256-bit</div>
-            </header>
+                <div class="nav-item" onclick="swap('void', this)">
+                    <i class="fas fa-adjust"></i><span>The Void</span>
+                </div>
+                <div class="nav-item" onclick="swap('dev', this)">
+                    <i class="fas fa-layer-group"></i><span>Dev Stream</span>
+                </div>
+            </nav>
 
-            <div class="messages-flow" id="flow">
-                <div class="bubble them">System: Initializing liquid glass environment...</div>
+            <div style="padding: 20px; background: rgba(255,255,255,0.03); border-radius: 25px; border: 1px solid var(--border);">
+                <small style="color:var(--accent); display:block; margin-bottom:5px;">SYSTEM STATUS</small>
+                <div style="color:white; font-size: 0.8rem;">● Connection: Liquid SSL</div>
+            </div>
+        </aside>
+
+        <section class="chat-container">
+            <div class="messages-view" id="view">
+                <div class="bubble them">System: Environment calibrated. Waiting for transmission...</div>
             </div>
 
-            <div class="input-bar">
-                <input type="text" id="msg-input" placeholder="Pulse a message..." onkeypress="if(event.key==='Enter') push()">
-                <button class="send-btn" onclick="push()"><i class="fas fa-arrow-up"></i></button>
+            <div class="input-zone">
+                <div class="liquid-input-wrapper">
+                    <input type="text" id="msg-in" placeholder="Type into the glass..." onkeypress="if(event.key==='Enter') transmit()">
+                    <button class="send-pill" onclick="transmit()">SEND</button>
+                </div>
             </div>
-        </main>
+        </section>
     </div>
 
     <script>
-        let client, currentChannel, user, secret;
+        let client, activeChannel, user, key;
 
-        async function start() {
-            user = document.getElementById('user-in').value;
-            secret = document.getElementById('key-in').value;
-            if(!user || !secret) return;
+        async function boot() {
+            user = document.getElementById('user-id').value;
+            key = document.getElementById('key-id').value;
+            if(!user || !key) return;
 
-            // ABly Configuration for strict school filters
             client = new Ably.Realtime({
                 key: 'fVAQIA.kFtCvw:X6QXTzbh4Tbi1HUBiOQMlReiyw0uwkbOnEibDEM_VdA',
-                transports: ['web_socket', 'xhr_streaming', 'xhr_polling'],
-                fallbackHosts: ['ably-realtime.com', 'a.ably-realtime.com']
+                transports: ['web_socket', 'xhr_streaming'],
+                useBinaryProtocol: true
             });
 
             client.connection.on('connected', () => {
-                document.getElementById('auth-gate').style.display = 'none';
-                changeChamber('main', document.querySelector('.nav-item.active'));
+                document.getElementById('gate').style.display = 'none';
+                swap('main', document.querySelector('.nav-item.active'));
             });
         }
 
-        function changeChamber(roomId, el) {
-            // UI Updates
-            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        function swap(room, el) {
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             el.classList.add('active');
-            document.getElementById('room-title').innerText = roomId.charAt(0).toUpperCase() + roomId.slice(1) + " Chamber";
-            document.body.setAttribute('data-theme', roomId);
+            document.body.setAttribute('data-theme', room);
 
-            // Channel logic
-            if(currentChannel) currentChannel.unsubscribe();
+            if(activeChannel) activeChannel.unsubscribe();
+            activeChannel = client.channels.get(`v4-${room}`);
             
-            currentChannel = client.channels.get(`nexus-v3-${roomId}`);
-            
-            currentChannel.subscribe('msg', (payload) => {
-                if(payload.data.sender !== user) {
-                    render(decrypt(payload.data.cipher), 'them', payload.data.sender);
-                }
+            activeChannel.subscribe('msg', (p) => {
+                if(p.data.u !== user) render(dec(p.data.c), 'them', p.data.u);
             });
 
-            // Clear view for new chamber
-            document.getElementById('flow').innerHTML = `<div class="bubble them">Entering ${roomId} chamber...</div>`;
+            document.getElementById('view').innerHTML = `<div class="bubble them">Protocol shifted to [${room.toUpperCase()}]. Data flow re-routing...</div>`;
         }
 
-        function push() {
-            const input = document.getElementById('msg-input');
-            if(!input.value) return;
-
-            const cipher = encrypt(input.value);
-            currentChannel.publish('msg', { sender: user, cipher: cipher });
-            
-            render(input.value, 'me', 'You');
-            input.value = '';
+        function transmit() {
+            const i = document.getElementById('msg-in');
+            if(!i.value) return;
+            activeChannel.publish('msg', { u: user, c: enc(i.value) });
+            render(i.value, 'me', 'You');
+            i.value = '';
         }
 
         function render(text, type, sender) {
-            const f = document.getElementById('flow');
-            const d = document.createElement('div');
-            d.className = `bubble ${type}`;
-            d.innerHTML = `<small style="display:block; opacity:0.6; font-size:0.65rem; margin-bottom:4px;">${sender}</small>${text}`;
-            f.appendChild(d);
-            f.scrollTop = f.scrollHeight;
+            const v = document.getElementById('view');
+            const b = document.createElement('div');
+            b.className = `bubble ${type}`;
+            b.innerHTML = `<small style="display:block; opacity:0.5; font-size:0.7rem; margin-bottom:5px;">${sender}</small>${text}`;
+            v.appendChild(b);
+            v.scrollTop = v.scrollHeight;
         }
 
-        function encrypt(t) { return CryptoJS.AES.encrypt(t, secret).toString(); }
-        function decrypt(c) { 
-            try { return CryptoJS.AES.decrypt(c, secret).toString(CryptoJS.enc.Utf8); } 
-            catch { return "[Decryption Failed]"; } 
+        function enc(t) { return CryptoJS.AES.encrypt(t, key).toString(); }
+        function dec(c) { 
+            try { return CryptoJS.AES.decrypt(c, key).toString(CryptoJS.enc.Utf8); } 
+            catch { return "[[ Corrupted Data ]]"; } 
         }
     </script>
 </body>
