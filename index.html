@@ -24,7 +24,6 @@
             height: 100vh; transition: 0.5s ease; overflow: hidden;
         }
 
-        /* Liquid Background */
         .blobs { position: absolute; width: 100%; height: 100%; z-index: -1; filter: blur(60px); }
         .blob { position: absolute; background: var(--accent); border-radius: 50%; opacity: 0.2; animation: move 20s infinite alternate linear; }
         @keyframes move { from { transform: translate(-10%, -10%); } to { transform: translate(20%, 20%); } }
@@ -37,7 +36,7 @@
             display: flex; flex-direction: column; overflow: hidden; position: relative;
         }
 
-        /* Sidebar & Admin Styles */
+        /* Sidebar */
         #sidebar {
             position: absolute; left: -300px; top: 0; width: 280px; height: 100%;
             background: var(--bg); border-right: 1px solid rgba(255, 255, 255, 0.1);
@@ -52,7 +51,7 @@
         .picker-handle { width: 10px; height: 10px; border: 2px solid white; border-radius: 50%; position: absolute; transform: translate(-50%, -50%); pointer-events: none; }
         .hue-slider { width: 100%; appearance: none; height: 8px; border-radius: 5px; background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00); margin: 15px 0; outline: none; }
 
-        /* Chat Logic */
+        /* Chat UI */
         .screen { display: none; padding: 25px; flex-direction: column; height: 100%; box-sizing: border-box; }
         .active { display: flex; animation: fadeIn 0.5s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -61,7 +60,7 @@
         .msg { 
             margin-bottom: 12px; padding: 14px 18px; border-radius: 20px; 
             background: rgba(255, 255, 255, 0.1); width: fit-content; max-width: 85%;
-            word-wrap: break-word; overflow-wrap: break-word; /* FIXED: Starts new line */
+            word-wrap: break-word; overflow-wrap: break-word; white-space: pre-wrap;
             position: relative; cursor: pointer; border: 1px solid rgba(255,255,255,0.05);
         }
         .msg b { display: block; font-size: 0.65rem; color: var(--accent); margin-bottom: 4px; text-transform: uppercase; }
@@ -70,11 +69,11 @@
 
         input { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; color: var(--text); outline: none; margin-bottom: 10px; font-size: 15px; }
         button { padding: 15px; border-radius: 15px; border: none; background: var(--accent); color: white; cursor: pointer; font-weight: 700; transition: 0.2s; }
-        button:hover { filter: brightness(1.1); }
-
+        
+        .opt-label { font-size: 0.65rem; opacity: 0.5; margin-bottom: 5px; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        
         .top-icons { padding: 20px 30px; display: flex; justify-content: space-between; z-index: 10; font-size: 1.3rem; }
         .panic-btn { position: absolute; bottom: 15px; left: 15px; opacity: 0.1; cursor: pointer; z-index: 50; }
-        .panic-btn:hover { opacity: 1; color: #ff4757; }
     </style>
 </head>
 <body>
@@ -84,14 +83,14 @@
 <div class="container">
     <div id="sidebar">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h3>Nexus Config</h3>
+            <h3>Nexus Settings</h3>
             <span style="cursor:pointer" onclick="toggleSidebar()">✕</span>
         </div>
         <p style="font-size:0.7rem; opacity:0.5;">COLOR ENGINE</p>
         <input type="range" min="0" max="360" value="252" class="hue-slider" oninput="updateHue(this.value)">
         <div class="color-area" id="colorMap" onmousedown="startPick(event)"><div class="picker-handle" id="handle" style="left:50%; top:50%;"></div></div>
         
-        <p style="font-size:0.7rem; opacity:0.5; margin-top:20px;">OPERATIVES</p>
+        <p style="font-size:0.7rem; opacity:0.5; margin-top:20px;">ACTIVE OPERATIVES</p>
         <div id="member-list"></div>
     </div>
 
@@ -103,32 +102,41 @@
     <div class="panic-btn" onclick="location.href='https://google.com'">🚨</div>
 
     <div id="pw-screen" class="screen active" style="justify-content:center;">
-        <h2 style="text-align:center; font-weight:200;">AUTHENTICATION</h2>
-        <input type="password" id="pw-input" placeholder="Encryption Key">
-        <input type="password" id="admin-input" placeholder="Admin Code">
+        <h2 style="text-align:center; font-weight:200;">ENTRY</h2>
+        
+        <div class="opt-label">Required</div>
+        <input type="password" id="pw-input" placeholder="Main Encryption Key">
+        
+        <hr style="width:100%; opacity:0.1; margin: 15px 0;">
+        
+        <div class="opt-label">Optional (Admin Only)</div>
+        <input type="password" id="admin-input" placeholder="Admin Override Code">
+        
         <button onclick="checkPw()">INITIALIZE</button>
     </div>
 
     <div id="user-screen" class="screen" style="justify-content:center;">
-        <h2 style="text-align:center; font-weight:200;">CODENAME</h2>
-        <input type="text" id="username-input" placeholder="Operative ID">
+        <h2 style="text-align:center; font-weight:200;">IDENTIFY</h2>
+        <input type="text" id="username-input" placeholder="Choose Codename">
         <button onclick="startChat()">LINK NODE</button>
     </div>
 
     <div id="chat-screen" class="screen">
         <div id="chat-box"></div>
         <div style="display:flex; gap:10px; margin-top:15px; border-top:1px solid rgba(255,255,255,0.1); padding-top:15px;">
-            <input type="text" id="msg-input" placeholder="Message..." style="flex-grow:1; margin-bottom:0">
+            <input type="text" id="msg-input" placeholder="Input secure signal..." style="flex-grow:1; margin-bottom:0">
             <button onclick="sendText()">➤</button>
         </div>
     </div>
 </div>
 
 <script>
+    // --- INSERT ABLY ROOT KEY HERE ---
     const ABLY_KEY = 'fVAQIA.kFtCvw:X6QXTzbh4Tbi1HUBiOQMlReiyw0uwkbOnEibDEM_VdA';
+    
     let username = "", ably, channel, secretKey = "", isAdmin = false;
 
-    // --- COLOR LOGIC ---
+    // --- COLOR PICKER ---
     let currentHue = 252;
     function updateHue(v) { 
         currentHue = v; 
@@ -150,7 +158,7 @@
         document.documentElement.style.setProperty('--accent', `hsl(${currentHue}, ${s}%, ${l}%)`);
     }
 
-    // --- CORE LOGIC ---
+    // --- CORE ---
     function toggleTheme() { document.body.setAttribute('data-theme', document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'); }
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
     function show(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
@@ -162,7 +170,7 @@
             secretKey = p;
             if(a === 'secret') { isAdmin = true; document.body.classList.add('is-admin'); }
             show('user-screen');
-        } else alert("Invalid Key");
+        } else alert("Invalid Encryption Key");
     }
 
     async function startChat() {
@@ -174,7 +182,7 @@
         channel = ably.channels.get('secure-nexus');
 
         channel.subscribe('msg', (m) => {
-            if (document.hidden) new Notification("Secure Signal", { body: "Incoming data..." });
+            if (document.hidden) new Notification("Signal Detected", { body: "Encrypted data received." });
             addBubble(m.clientId, m.data.text, m.id);
         });
 
@@ -186,7 +194,7 @@
         channel.presence.subscribe(() => {
             channel.presence.get((err, members) => {
                 document.getElementById('member-list').innerHTML = members.map(m => `
-                    <div style="display:flex; justify-content:space-between; padding:8px; background:rgba(255,255,255,0.05); border-radius:10px; margin-bottom:5px; font-size:0.8rem;">
+                    <div style="padding:10px; background:rgba(255,255,255,0.05); border-radius:10px; margin-bottom:5px; font-size:0.8rem;">
                         <span>● ${m.clientId}</span>
                     </div>`).join('');
             });
@@ -195,7 +203,7 @@
 
     function addBubble(id, enc, mid) {
         const box = document.getElementById('chat-box');
-        let dec; try { dec = CryptoJS.AES.decrypt(enc, secretKey).toString(CryptoJS.enc.Utf8); } catch(e) { dec = "[ERROR]"; }
+        let dec; try { dec = CryptoJS.AES.decrypt(enc, secretKey).toString(CryptoJS.enc.Utf8); } catch(e) { dec = "[DECRYPT_FAIL]"; }
         const div = document.createElement('div');
         div.className = 'msg'; div.id = mid;
         if(id === username) div.style.cssText = 'margin-left:auto; background:var(--accent); color:white;';
