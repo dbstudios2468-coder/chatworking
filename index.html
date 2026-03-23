@@ -3,188 +3,209 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Liquid Nexus | Refined</title>
+    <title>Liquid Nexus | Infinity</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <style>
         :root {
             --bg: #e0e5ec;
-            --glass: rgba(255, 255, 255, 0.25);
+            --glass: rgba(255, 255, 255, 0.2);
             --text: #2d3436;
             --accent: #6c5ce7;
             --shadow: 20px 20px 60px #bec3c9, -20px -20px 60px #ffffff;
-            --msg-bg: rgba(255, 255, 255, 0.2);
         }
 
         [data-theme="dark"] {
-            --bg: #0f1216;
-            --glass: rgba(255, 255, 255, 0.03);
+            --bg: #0a0c10;
+            --glass: rgba(255, 255, 255, 0.02);
             --text: #f1f2f6;
-            --shadow: 10px 10px 30px #050608, -10px -10px 30px #1a1e24;
-            --msg-bg: rgba(255, 255, 255, 0.07);
+            --shadow: 10px 10px 30px #000000, -10px -10px 30px #1a1e24;
         }
 
         body {
-            margin: 0; font-family: 'Segoe UI', system-ui, sans-serif;
+            margin: 0; font-family: 'Inter', system-ui, sans-serif;
             background-color: var(--bg); color: var(--text);
             display: flex; justify-content: center; align-items: center;
-            height: 100vh; transition: 0.5s; overflow: hidden;
+            height: 100vh; transition: background 0.5s ease; overflow: hidden;
         }
 
-        /* Animated Background Blobs */
-        .blobs { position: absolute; width: 100%; height: 100%; z-index: -1; overflow: hidden; filter: blur(80px); }
-        .blob { position: absolute; background: var(--accent); border-radius: 50%; opacity: 0.3; animation: float 15s infinite alternate ease-in-out; }
-        @keyframes float { 
-            0% { transform: translate(0, 0) scale(1); } 
-            100% { transform: translate(150px, 80px) scale(1.4); } 
+        /* Animated Liquid Blobs */
+        .blobs { position: absolute; width: 100%; height: 100%; z-index: -1; overflow: hidden; filter: blur(60px); }
+        .blob { 
+            position: absolute; background: var(--accent); border-radius: 50%; opacity: 0.25; 
+            animation: move 20s infinite alternate cubic-bezier(0.45, 0, 0.55, 1); 
         }
+        @keyframes move { 0% { transform: translate(-10%, -10%) rotate(0deg); } 100% { transform: translate(20%, 20%) rotate(360deg); } }
 
         .container {
             width: 95%; max-width: 480px; height: 85vh;
-            background: var(--glass); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 40px; box-shadow: var(--shadow);
+            background: var(--glass); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 45px; box-shadow: var(--shadow);
             display: flex; flex-direction: column; overflow: hidden; position: relative;
         }
 
-        /* Sidebar - Themed */
+        /* Custom Color Picker Sidebar */
         #sidebar {
-            position: absolute; left: -280px; top: 0; width: 260px; height: 100%;
-            background: var(--bg); backdrop-filter: blur(50px);
+            position: absolute; left: -300px; top: 0; width: 280px; height: 100%;
+            background: var(--bg); backdrop-filter: blur(60px);
             border-right: 1px solid rgba(255, 255, 255, 0.1);
-            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: 0.5s cubic-bezier(0.65, 0, 0.35, 1);
             z-index: 1000; padding: 30px; box-sizing: border-box;
-            box-shadow: 10px 0 30px rgba(0,0,0,0.1);
         }
         #sidebar.open { left: 0; }
-        .sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .close-btn { cursor: pointer; font-size: 1.5rem; opacity: 0.6; transition: 0.2s; }
-        .close-btn:hover { opacity: 1; color: var(--accent); }
-
-        .member-item { padding: 12px; border-radius: 15px; background: var(--msg-bg); margin-bottom: 8px; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.05); }
-
-        /* Screens */
-        .screen { display: none; padding: 30px; flex-direction: column; height: 100%; box-sizing: border-box; }
-        .active { display: flex; animation: slideUp 0.5s ease-out; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        input {
-            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1);
-            padding: 15px; border-radius: 18px; color: var(--text);
-            margin-bottom: 15px; outline: none; transition: 0.3s;
+        
+        .color-area {
+            width: 100%; height: 150px; border-radius: 15px; position: relative;
+            background: linear-gradient(to bottom, transparent, #000), linear-gradient(to right, #fff, var(--accent-base, #6c5ce7));
+            cursor: crosshair; margin-bottom: 20px;
         }
-        input:focus { border-color: var(--accent); box-shadow: 0 0 15px rgba(108, 92, 231, 0.1); }
+        .picker-handle {
+            width: 14px; height: 14px; border: 2px solid white; border-radius: 50%;
+            position: absolute; transform: translate(-50%, -50%); pointer-events: none;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+        input[type="range"].hue-slider {
+            width: 100%; height: 10px; border-radius: 5px; appearance: none;
+            background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+            outline: none; margin-bottom: 20px;
+        }
 
-        /* Scrollbar Theming */
-        #chat-box { flex-grow: 1; overflow-y: auto; padding-right: 8px; scrollbar-width: thin; scrollbar-color: var(--accent) transparent; }
-        #chat-box::-webkit-scrollbar { width: 5px; }
-        #chat-box::-webkit-scrollbar-track { background: transparent; }
-        #chat-box::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; opacity: 0.5; }
+        /* Chat UI */
+        .screen { display: none; padding: 30px; flex-direction: column; height: 100%; box-sizing: border-box; }
+        .active { display: flex; animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+
+        #chat-box { flex-grow: 1; overflow-y: auto; padding-right: 10px; }
+        #chat-box::-webkit-scrollbar { width: 4px; }
+        #chat-box::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
 
         .msg { 
-            margin-bottom: 12px; padding: 14px 18px; border-radius: 22px; 
-            background: var(--msg-bg); width: fit-content; max-width: 82%;
-            cursor: pointer; transition: 0.2s; border: 1px solid rgba(255,255,255,0.05);
+            margin-bottom: 15px; padding: 15px 20px; border-radius: 25px; 
+            background: rgba(255, 255, 255, 0.1); width: fit-content; max-width: 80%;
+            cursor: pointer; transition: 0.3s; border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
         }
-        .msg:hover { background: rgba(255,255,255,0.3); }
-        .msg b { display: block; font-size: 0.65rem; color: var(--accent); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; }
-        .msg-c { font-family: 'Courier New', Courier, monospace; letter-spacing: 1px; }
+        .msg:hover { background: rgba(255, 255, 255, 0.2); transform: translateY(-2px); }
+        .msg b { display: block; font-size: 0.65rem; color: var(--accent); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1.5px; }
+
+        .input-area { display: flex; gap: 10px; margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; }
+        input[type="text"], input[type="password"] {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            padding: 15px; border-radius: 20px; color: var(--text); flex-grow: 1; outline: none;
+        }
 
         button {
-            padding: 14px 22px; border-radius: 18px; border: none;
+            padding: 15px 25px; border-radius: 20px; border: none;
             background: var(--accent); color: white; cursor: pointer;
-            font-weight: 600; transition: 0.3s;
+            font-weight: 700; transition: 0.3s ease;
         }
-        button:hover { transform: translateY(-2px); filter: brightness(1.1); }
 
-        .top-icons { position: absolute; top: 20px; width: 100%; padding: 0 30px; display: flex; justify-content: space-between; box-sizing: border-box; z-index: 10; }
-        .icon-btn { cursor: pointer; font-size: 1.3rem; opacity: 0.6; transition: 0.3s; }
-        .icon-btn:hover { opacity: 1; transform: scale(1.1); }
-
-        .dot-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px; }
-        .dot { height: 30px; border-radius: 10px; cursor: pointer; border: 2px solid rgba(255,255,255,0.2); transition: 0.2s; }
-        .dot:hover { transform: scale(1.1); border-color: white; }
+        .top-icons { position: absolute; top: 25px; width: 100%; padding: 0 30px; display: flex; justify-content: space-between; z-index: 10; box-sizing: border-box; }
+        .panic-btn { position: absolute; bottom: 20px; left: 20px; opacity: 0.2; cursor: pointer; transition: 0.3s; font-size: 1.2rem; }
+        .panic-btn:hover { opacity: 1; color: #ff4757; }
     </style>
 </head>
 <body>
 
 <div class="blobs">
-    <div class="blob" style="width: 500px; height: 500px; top: -150px; left: -150px;"></div>
-    <div class="blob" style="width: 350px; height: 350px; bottom: -50px; right: -50px; animation-delay: -3s; background: #00cec9;"></div>
+    <div class="blob" style="width: 600px; height: 600px; top: -200px; left: -200px;"></div>
+    <div class="blob" style="width: 400px; height: 400px; bottom: -100px; right: -100px; animation-delay: -5s;"></div>
 </div>
 
 <div class="container">
     <div id="sidebar">
-        <div class="sidebar-header">
-            <h3 style="margin:0; font-weight:400;">Node Intel</h3>
-            <div class="close-btn" onclick="toggleSidebar()">✕</div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+            <h3 style="margin:0; font-weight:300;">Custom Tone</h3>
+            <span style="cursor:pointer; font-size:1.5rem;" onclick="toggleSidebar()">✕</span>
         </div>
-        <p style="font-size:0.75rem; opacity:0.5; margin-bottom:10px;">ACTIVE OPERATIVES</p>
-        <div id="member-list"></div>
         
-        <div style="margin-top:40px;">
-            <p style="font-size:0.75rem; opacity:0.5; margin-bottom:10px;">ACCENT OVERRIDE</p>
-            <div class="dot-grid">
-                <div class="dot" style="background:#6c5ce7" onclick="setAccent('#6c5ce7')"></div>
-                <div class="dot" style="background:#00cec9" onclick="setAccent('#00cec9')"></div>
-                <div class="dot" style="background:#e84393" onclick="setAccent('#e84393')"></div>
-                <div class="dot" style="background:#f9ca24" onclick="setAccent('#f9ca24')"></div>
-            </div>
+        <label style="font-size:0.7rem; opacity:0.5; display:block; margin-bottom:10px;">HUE SPECTRUM</label>
+        <input type="range" min="0" max="360" value="252" class="hue-slider" id="hueRange" oninput="updateHue(this.value)">
+        
+        <label style="font-size:0.7rem; opacity:0.5; display:block; margin-bottom:10px;">SATURATION & LIGHT</label>
+        <div class="color-area" id="colorMap" onmousedown="startPick(event)">
+            <div class="picker-handle" id="handle" style="left: 50%; top: 50%;"></div>
         </div>
+
+        <div id="member-list" style="margin-top:20px;"></div>
     </div>
 
     <div class="top-icons">
-        <div class="icon-btn" onclick="toggleSidebar()">☰</div>
-        <div class="icon-btn" onclick="toggleTheme()">🌓</div>
+        <div style="cursor:pointer;" onclick="toggleSidebar()">☰</div>
+        <div style="cursor:pointer;" onclick="toggleTheme()">🌓</div>
     </div>
 
+    <div class="panic-btn" onclick="location.href='https://google.com'">🚨</div>
+
     <div id="pw-screen" class="screen" style="justify-content:center;">
-        <h2 style="text-align:center; font-weight:300;">Encrypted Link</h2>
+        <h2 style="text-align:center; font-weight:200; letter-spacing:2px;">SECURE LINK</h2>
         <input type="password" id="pw-input" placeholder="Passkey">
-        <button onclick="checkPw()">Verify</button>
+        <button onclick="checkPw()">VERIFY</button>
     </div>
 
     <div id="user-screen" class="screen" style="justify-content:center;">
-        <h2 style="text-align:center; font-weight:300;">Assign Codename</h2>
-        <input type="text" id="username-input" placeholder="Identity...">
-        <button onclick="startChat()">Link Node</button>
+        <h2 style="text-align:center; font-weight:200;">IDENT NODE</h2>
+        <input type="text" id="username-input" placeholder="Codename">
+        <button onclick="startChat()">LINK</button>
     </div>
 
     <div id="chat-screen" class="screen active">
-        <div style="height: 60px;"></div>
+        <div style="height:60px;"></div>
         <div id="chat-box"></div>
-        <div style="display:flex; gap:10px; margin-top:15px; padding-top:10px; border-top: 1px solid rgba(255,255,255,0.1);">
-            <input type="text" id="msg-input" placeholder="Input signal..." style="flex-grow:1; margin-bottom:0">
+        <div class="input-area">
+            <input type="text" id="msg-input" placeholder="Input Signal...">
             <button onclick="sendText()">➤</button>
         </div>
     </div>
 </div>
 
 <script>
-    // --- INSERT KEY ---
     const ABLY_KEY = 'fVAQIA.kFtCvw:X6QXTzbh4Tbi1HUBiOQMlReiyw0uwkbOnEibDEM_VdA';
-    
     let username = "", ably, channel;
-
+    
+    // Morse Logic
     const morseMap = {'A':'.-','B':'-...','C':'-.-.','D':'-..','E':'.','F':'..-.','G':'--.','H':'....','I':'..','J':'.---','K':'-.-','L':'.-..','M':'--','N':'-.','O':'---','P':'.--.','Q':'--.-','R':'.-.','S':'...','T':'-','U':'..-','V':'...-','W':'.--','X':'-..-','Y':'-.--','Z':'--..','1':'.----','2':'..---','3':'...--','4':'....-','5':'.....','6':'-....','7':'--...','8':'---..','9':'----.','0':'-----',' ':'/'};
     const revMorse = Object.fromEntries(Object.entries(morseMap).map(([k,v])=>[v,k]));
 
+    // --- Color Picker Logic ---
+    let currentHue = 252;
+    function updateHue(v) {
+        currentHue = v;
+        document.documentElement.style.setProperty('--accent-base', `hsl(${v}, 100%, 50%)`);
+        updateFinalColor(document.getElementById('handle').offsetLeft, document.getElementById('handle').offsetTop);
+    }
+
+    function startPick(e) {
+        const move = (ev) => {
+            const rect = colorMap.getBoundingClientRect();
+            let x = Math.max(0, Math.min(ev.clientX - rect.left, rect.width));
+            let y = Math.max(0, Math.min(ev.clientY - rect.top, rect.height));
+            handle.style.left = x + 'px';
+            handle.style.top = y + 'px';
+            updateFinalColor(x, y);
+        };
+        move(e);
+        window.onmousemove = move;
+        window.onmouseup = () => window.onmousemove = null;
+    }
+
+    function updateFinalColor(x, y) {
+        const s = (x / 280) * 100;
+        const l = 100 - (y / 150) * 100;
+        const color = `hsl(${currentHue}, ${s}%, ${l}%)`;
+        document.documentElement.style.setProperty('--accent', color);
+    }
+
+    // --- Core Logic ---
     function toggleTheme() {
         const b = document.body;
         b.setAttribute('data-theme', b.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
     }
 
-    function setAccent(color) {
-        document.documentElement.style.setProperty('--accent', color);
-    }
-
-    function toggleSidebar() {
-        document.getElementById('sidebar').classList.toggle('open');
-    }
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
 
     function checkPw() {
-        if(document.getElementById('pw-input').value.toLowerCase() === 'morse') {
-            showScreen('user-screen');
-        } else { alert("Denied."); }
+        if(document.getElementById('pw-input').value.toLowerCase() === 'morse') showScreen('user-screen');
     }
 
     function showScreen(id) {
@@ -192,39 +213,31 @@
         document.getElementById(id).classList.add('active');
     }
 
-    async function initNotify() {
-        if ("Notification" in window) await Notification.requestPermission();
-    }
-
-    function startChat() {
+    async function startChat() {
         username = document.getElementById('username-input').value.trim();
-        if(!username || ABLY_KEY.includes('YOUR')) return alert("Key Error");
+        if(!username || ABLY_KEY.includes('YOUR')) return;
         
-        initNotify();
+        if ("Notification" in window) await Notification.requestPermission();
+        
         showScreen('chat-screen');
-
         ably = new Ably.Realtime({ key: ABLY_KEY, clientId: username });
         channel = ably.channels.get('liquid-nexus');
 
-        // History
         channel.history((err, page) => {
             if(!err) page.items.reverse().forEach(m => addBubble(m.clientId, m.data.text, m.clientId === username));
         });
 
-        // Live
         channel.subscribe('msg', (m) => {
-            if (m.clientId !== username && document.visibilityState !== 'visible') {
-                new Notification(`New Signal: ${m.clientId}`, { body: "Incoming Morse Transmission." });
+            if (m.clientId !== username && document.hidden) {
+                new Notification(`Signal: ${m.clientId}`, { body: "Incoming Morse..." });
             }
             addBubble(m.clientId, m.data.text, m.clientId === username);
         });
 
-        // Online List
         channel.presence.enter();
         channel.presence.subscribe(() => {
             channel.presence.get((err, members) => {
-                const list = document.getElementById('member-list');
-                list.innerHTML = members.map(m => `<div class="member-item">● ${m.clientId}</div>`).join('');
+                document.getElementById('member-list').innerHTML = members.map(m => `<div style="padding:10px; border-radius:10px; background:rgba(255,255,255,0.05); margin-bottom:5px; font-size:0.8rem;">● ${m.clientId}</div>`).join('');
             });
         });
     }
@@ -235,12 +248,10 @@
         const div = document.createElement('div');
         div.className = 'msg';
         if(isMe) div.style.cssText = 'margin-left:auto; background:var(--accent); color:white;';
-        
         div.onclick = function() {
             const span = this.querySelector('.msg-c');
             span.innerText = span.innerText === morse ? plain : morse;
         };
-
         div.innerHTML = `<b>${isMe ? 'You' : id}</b><span class="msg-c">${morse}</span>`;
         box.appendChild(div);
         box.scrollTop = box.scrollHeight;
@@ -264,7 +275,6 @@
         }
     });
 
-    // Default to PW screen on load
     showScreen('pw-screen');
 </script>
 </body>
