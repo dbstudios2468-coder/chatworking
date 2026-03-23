@@ -3,361 +3,176 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Nexus v4 | Liquid Reflection</title>
+    <title>Nexus v7.5 | Interactive Fluid</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;500;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         :root {
-            --accent: #00d2ff;
-            --glass-base: rgba(255, 255, 255, 0.03);
-            --glass-specular: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0) 60%, rgba(255,255,255,0.1) 100%);
-            --border: rgba(255, 255, 255, 0.15);
-            --bg: #030407;
-            --blur: 50px;
+            --accent: #00f2ff;
+            --accent-glow: rgba(0, 242, 255, 0.5);
+            --glass: rgba(255, 255, 255, 0.07);
+            --border: rgba(255, 255, 255, 0.2);
+            --bg: #010204;
+            --spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        [data-theme="void"] { --accent: #bdc3c7; --bg: #000000; }
-        [data-theme="dev"] { --accent: #00ff88; --bg: #060b09; }
+        [data-theme="void"] { --accent: #ff00ff; --accent-glow: rgba(255, 0, 255, 0.5); }
+        [data-theme="dev"] { --accent: #00ff88; --accent-glow: rgba(0, 255, 136, 0.5); }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; cursor: default; }
+        body { background: var(--bg); height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; transition: background 0.8s ease; }
+
+        /* THEMED SCROLLBAR */
+        #view::-webkit-scrollbar { width: 8px; }
+        #view::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); border-radius: 20px; margin: 20px; }
+        #view::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 20px; box-shadow: 0 0 15px var(--accent-glow); border: 2px solid rgba(255, 255, 255, 0.1); }
+
+        /* BACKGROUND */
+        .liquid-cosmos { position: fixed; inset: 0; z-index: -1; filter: blur(80px) contrast(1.5); background: radial-gradient(circle at 50% 50%, #1a1a2e, #010204); }
+        .plasma-orb { position: absolute; width: 70vh; height: 70vh; background: var(--accent); border-radius: 50%; opacity: 0.3; mix-blend-mode: screen; animation: plasma-drift 15s infinite alternate ease-in-out; box-shadow: 0 0 100px var(--accent-glow); transition: background 0.8s ease; }
+        @keyframes plasma-drift { 0% { transform: translate(-20%, -20%) scale(1); } 100% { transform: translate(40%, 30%) scale(1.3); } }
+
+        .nexus-grid { width: 96vw; height: 92vh; display: grid; grid-template-columns: 320px 1fr; gap: 30px; max-width: 1500px; z-index: 10; }
+
+        /* SIDEBAR */
+        .sidebar-liquid { background: var(--glass); backdrop-filter: blur(60px) saturate(200%); -webkit-backdrop-filter: blur(60px) saturate(200%); border: 1px solid var(--border); border-radius: 50px; padding: 40px 25px; display: flex; flex-direction: column; gap: 20px; }
+        .brand { font-weight: 800; font-size: 2.2rem; color: white; text-align: center; margin-bottom: 40px; letter-spacing: -2px; text-shadow: 0 0 20px var(--accent-glow); }
+        .nav-pill { padding: 22px 30px; border-radius: 30px; color: rgba(255,255,255,0.5); font-weight: 700; transition: 0.4s var(--spring); background: rgba(255,255,255,0.03); display: flex; align-items: center; gap: 15px; }
+        .nav-pill.active { background: var(--accent); color: #000; box-shadow: 0 0 40px var(--accent-glow); transform: scale(1.05); }
+
+        /* MAIN STAGE */
+        .stage { background: var(--glass); backdrop-filter: blur(80px) saturate(250%); -webkit-backdrop-filter: blur(80px) saturate(250%); border: 1px solid var(--border); border-radius: 60px; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+        .scroll-flow { flex: 1; padding: 50px; overflow-y: auto; display: flex; flex-direction: column; gap: 25px; }
+
+        /* BUBBLES & POLLS */
+        .bubble { padding: 20px 30px; border-radius: 35px; font-size: 1.1rem; max-width: 70%; position: relative; animation: liquid-pop 0.5s var(--spring); box-shadow: 0 15px 30px rgba(0,0,0,0.2); }
+        @keyframes liquid-pop { 0% { transform: scale(0.8) translateY(30px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
         
-        body {
-            background: var(--bg);
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            transition: background 1.2s ease;
-        }
+        .bubble.me { align-self: flex-end; background: linear-gradient(135deg, var(--accent), #fff); color: #000; font-weight: 700; border-bottom-right-radius: 5px; }
+        .bubble.them { align-self: flex-start; background: rgba(255,255,255,0.1); color: white; border: 1px solid var(--border); border-bottom-left-radius: 5px; }
 
-        /* DYNAMIC BACKGROUND REFLECTIONS */
-        .glass-environment {
-            position: fixed;
-            inset: 0;
-            z-index: -1;
-            overflow: hidden;
-        }
+        /* TAGGING */
+        .mention { color: var(--accent); font-weight: 800; text-decoration: none; padding: 2px 8px; background: rgba(255,255,255,0.1); border-radius: 10px; transition: 0.3s; }
+        .mention:hover { background: var(--accent); color: #000; box-shadow: 0 0 15px var(--accent); }
 
-        .light-leak {
-            position: absolute;
-            width: 80vw;
-            height: 80vw;
-            background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
-            filter: blur(120px);
-            opacity: 0.15;
-            animation: flow 25s infinite alternate linear;
-        }
+        /* POLL DESIGN */
+        .poll-card { background: rgba(0,0,0,0.2); border-radius: 30px; padding: 20px; border: 1px solid var(--border); margin-top: 10px; }
+        .poll-option { background: rgba(255,255,255,0.05); margin: 10px 0; padding: 15px; border-radius: 20px; position: relative; overflow: hidden; cursor: pointer; border: 1px solid transparent; transition: 0.3s; }
+        .poll-option:hover { border-color: var(--accent); background: rgba(255,255,255,0.1); }
+        .poll-fill { position: absolute; left: 0; top: 0; height: 100%; background: var(--accent); opacity: 0.2; width: 0%; transition: width 1s var(--spring); }
 
-        @keyframes flow {
-            0% { transform: translate(-20%, -20%) scale(1); }
-            100% { transform: translate(40%, 30%) scale(1.4); }
-        }
+        /* INPUT */
+        .footer { padding: 30px 50px; background: rgba(0,0,0,0.2); }
+        .input-container { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 100px; padding: 8px; display: flex; gap: 10px; }
+        input { flex: 1; background: transparent; border: none; padding: 15px 25px; color: white; font-size: 1.1rem; outline: none; }
+        .btn-pulse { background: white; color: black; border: none; padding: 0 35px; border-radius: 100px; font-weight: 800; transition: 0.3s; }
+        .btn-pulse:hover { transform: scale(1.05); background: var(--accent); }
 
-        /* MAIN GLASS CHASSIS */
-        .nexus-wrapper {
-            width: 96vw;
-            height: 92vh;
-            max-width: 1300px;
-            display: flex;
-            gap: 25px;
-            position: relative;
-        }
-
-        /* ENHANCED SIDEBAR PILL */
-        .sidebar-pill {
-            width: 260px; /* Bigger by default for better text space */
-            background: var(--glass-base);
-            backdrop-filter: blur(var(--blur)) saturate(200%);
-            -webkit-backdrop-filter: blur(var(--blur)) saturate(200%);
-            border: 1px solid var(--border);
-            border-radius: 50px;
-            padding: 40px 25px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            position: relative;
-            box-shadow: inset 0 0 40px rgba(255,255,255,0.05);
-        }
-
-        .sidebar-pill::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: 50px;
-            background: var(--glass-specular);
-            pointer-events: none;
-        }
-
-        .nav-item {
-            padding: 18px 25px;
-            border-radius: 30px;
-            color: rgba(255,255,255,0.6);
-            cursor: pointer;
-            transition: 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            border: 1px solid transparent;
-        }
-
-        .nav-item i { font-size: 1.3rem; }
-        .nav-item:hover { background: rgba(255,255,255,0.05); color: white; transform: translateX(5px); }
-        .nav-item.active { 
-            background: rgba(255,255,255,0.1); 
-            color: var(--accent); 
-            border-color: var(--border);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-
-        /* CHAT INTERFACE */
-        .chat-container {
-            flex: 1;
-            background: var(--glass-base);
-            backdrop-filter: blur(var(--blur)) saturate(200%);
-            -webkit-backdrop-filter: blur(var(--blur)) saturate(200%);
-            border: 1px solid var(--border);
-            border-radius: 60px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .chat-container::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; height: 100px;
-            background: linear-gradient(to bottom, rgba(255,255,255,0.05), transparent);
-            pointer-events: none;
-        }
-
-        .messages-view {
-            flex: 1;
-            padding: 40px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            scroll-behavior: smooth;
-        }
-
-        /* REFRACTIVE BUBBLES */
-        .bubble {
-            padding: 18px 24px;
-            border-radius: 35px;
-            font-size: 1rem;
-            line-height: 1.5;
-            max-width: 65%;
-            position: relative;
-            animation: liquidRise 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.2);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-        }
-
-        @keyframes liquidRise {
-            from { opacity: 0; transform: translateY(40px) scale(0.9); filter: blur(10px); }
-            to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
-        }
-
-        .bubble.me {
-            align-self: flex-end;
-            background: linear-gradient(160deg, var(--accent), #fff);
-            color: #000;
-            font-weight: 600;
-            border-bottom-right-radius: 5px;
-        }
-
-        .bubble.them {
-            align-self: flex-start;
-            background: rgba(255,255,255,0.08);
-            color: #fff;
-            border: 1px solid var(--border);
-            border-bottom-left-radius: 5px;
-        }
-
-        .bubble::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: inherit;
-            background: var(--glass-specular);
-            opacity: 0.5;
-            pointer-events: none;
-        }
-
-        /* LIQUID INPUT */
-        .input-zone {
-            padding: 30px 40px;
-            background: rgba(0,0,0,0.2);
-        }
-
-        .liquid-input-wrapper {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--border);
-            border-radius: 100px;
-            padding: 10px 15px;
-            display: flex;
-            align-items: center;
-            transition: 0.4s;
-        }
-
-        .liquid-input-wrapper:focus-within {
-            background: rgba(255,255,255,0.1);
-            border-color: var(--accent);
-            box-shadow: 0 0 30px rgba(0, 210, 255, 0.2);
-        }
-
-        .liquid-input-wrapper input {
-            flex: 1;
-            background: transparent;
-            border: none;
-            padding: 12px 20px;
-            color: white;
-            outline: none;
-            font-size: 1.1rem;
-        }
-
-        .send-pill {
-            background: white;
-            color: black;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 100px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .send-pill:hover { transform: scale(1.05); background: var(--accent); }
-
-        /* SCROLLBAR */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
-
-        /* GATE SCREEN */
-        #gate {
-            position: fixed; inset: 0; z-index: 2000;
-            background: var(--bg); display: flex; align-items: center; justify-content: center;
-        }
+        #gate { position: fixed; inset: 0; z-index: 2000; background: #000; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
 
-    <div class="glass-environment">
-        <div class="light-leak"></div>
-        <div class="light-leak" style="background: #a29bfe; right: 0; bottom: 0; animation-delay: -10s;"></div>
-    </div>
+    <div class="liquid-cosmos"><div class="plasma-orb"></div></div>
 
     <div id="gate">
-        <div style="text-align:center; background: rgba(255,255,255,0.03); padding: 60px; border-radius: 60px; border: 1px solid var(--border); backdrop-filter: blur(40px);">
-            <h1 style="color:white; font-size: 2.5rem; margin-bottom: 30px; font-weight: 800; letter-spacing: -1px;">Nexus Protocol</h1>
-            <input type="text" id="user-id" placeholder="Handle" style="width:100%; padding:20px; border-radius:20px; border:1px solid var(--border); background:rgba(255,255,255,0.05); color:white; margin-bottom:15px; text-align:center;">
-            <input type="password" id="key-id" placeholder="Access Key" style="width:100%; padding:20px; border-radius:20px; border:1px solid var(--border); background:rgba(255,255,255,0.05); color:white; margin-bottom:30px; text-align:center;">
-            <button onclick="boot()" style="width:100%; padding:22px; border-radius:25px; background:white; color:black; font-weight:800; border:none; cursor:pointer; font-size:1.1rem;">INITIALIZE</button>
+        <div style="background: rgba(255,255,255,0.05); padding: 60px; border-radius: 60px; border: 1px solid var(--border); text-align: center; backdrop-filter: blur(100px);">
+            <h1 class="brand">NEXUS <span style="color:var(--accent)">V7.5</span></h1>
+            <input type="text" id="username" placeholder="Handle" style="display:block; width:300px; background:rgba(0,0,0,0.5); border:1px solid var(--border); border-radius:20px; margin-bottom:15px; text-align:center; color:white;">
+            <input type="password" id="key" placeholder="Key" style="display:block; width:300px; background:rgba(0,0,0,0.5); border:1px solid var(--border); border-radius:20px; margin-bottom:30px; text-align:center; color:white;">
+            <button onclick="init()" style="width:100%; padding:20px; border-radius:25px; background:white; font-weight:800; border:none; cursor:pointer;">CONNECT</button>
         </div>
     </div>
 
-    <div class="nexus-wrapper">
-        <aside class="sidebar-pill">
-            <div style="margin-bottom: 30px; padding-left: 10px;">
-                <h2 style="color:white; font-weight: 800;">Nexus <span style="color:var(--accent);">v4</span></h2>
-                <p style="color:rgba(255,255,255,0.4); font-size: 0.8rem; text-transform: uppercase;">Liquid Intelligence</p>
-            </div>
-            
-            <nav style="flex:1;">
-                <div class="nav-item active" onclick="swap('main', this)">
-                    <i class="fas fa-compass"></i><span>Main Nexus</span>
-                </div>
-                <div class="nav-item" onclick="swap('void', this)">
-                    <i class="fas fa-adjust"></i><span>The Void</span>
-                </div>
-                <div class="nav-item" onclick="swap('dev', this)">
-                    <i class="fas fa-layer-group"></i><span>Dev Stream</span>
-                </div>
-            </nav>
-
-            <div style="padding: 20px; background: rgba(255,255,255,0.03); border-radius: 25px; border: 1px solid var(--border);">
-                <small style="color:var(--accent); display:block; margin-bottom:5px;">SYSTEM STATUS</small>
-                <div style="color:white; font-size: 0.8rem;">● Connection: Liquid SSL</div>
-            </div>
+    <div class="nexus-grid">
+        <aside class="sidebar-liquid">
+            <div class="brand">NEXUS</div>
+            <div class="nav-pill active" onclick="chamber('main', this)"><i class="fas fa-water"></i> Main Flow</div>
+            <div class="nav-pill" onclick="chamber('void', this)"><i class="fas fa-ghost"></i> The Void</div>
+            <div class="nav-pill" onclick="chamber('dev', this)"><i class="fas fa-code"></i> Dev Stream</div>
         </aside>
 
-        <section class="chat-container">
-            <div class="messages-view" id="view">
-                <div class="bubble them">System: Environment calibrated. Waiting for transmission...</div>
+        <main class="stage">
+            <div class="scroll-flow" id="view">
+                <div class="bubble them">Transmission Start. Type @name to tag or /poll Q | A | B for polls.</div>
             </div>
-
-            <div class="input-zone">
-                <div class="liquid-input-wrapper">
-                    <input type="text" id="msg-in" placeholder="Type into the glass..." onkeypress="if(event.key==='Enter') transmit()">
-                    <button class="send-pill" onclick="transmit()">SEND</button>
+            <div class="footer">
+                <div class="input-container">
+                    <input type="text" id="input" placeholder="Ripple or /poll..." onkeypress="if(event.key==='Enter') push()">
+                    <button class="btn-pulse" onclick="push()">SEND</button>
                 </div>
             </div>
-        </section>
+        </main>
     </div>
 
     <script>
-        let client, activeChannel, user, key;
+        let client, activeChannel, user, secret;
 
-        async function boot() {
-            user = document.getElementById('user-id').value;
-            key = document.getElementById('key-id').value;
-            if(!user || !key) return;
-
-            client = new Ably.Realtime({
-                key: 'fVAQIA.kFtCvw:X6QXTzbh4Tbi1HUBiOQMlReiyw0uwkbOnEibDEM_VdA',
-                transports: ['web_socket', 'xhr_streaming'],
-                useBinaryProtocol: true
-            });
-
+        async function init() {
+            user = document.getElementById('username').value;
+            secret = document.getElementById('key').value;
+            if(!user || !secret) return;
+            client = new Ably.Realtime({ key: 'fVAQIA.kFtCvw:X6QXTzbh4Tbi1HUBiOQMlReiyw0uwkbOnEibDEM_VdA' });
             client.connection.on('connected', () => {
                 document.getElementById('gate').style.display = 'none';
-                swap('main', document.querySelector('.nav-item.active'));
+                chamber('main', document.querySelector('.nav-pill.active'));
             });
         }
 
-        function swap(room, el) {
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        function chamber(id, el) {
+            document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
             el.classList.add('active');
-            document.body.setAttribute('data-theme', room);
-
+            document.body.setAttribute('data-theme', id);
             if(activeChannel) activeChannel.unsubscribe();
-            activeChannel = client.channels.get(`v4-${room}`);
-            
+            activeChannel = client.channels.get(`v75-${id}`);
             activeChannel.subscribe('msg', (p) => {
-                if(p.data.u !== user) render(dec(p.data.c), 'them', p.data.u);
+                if(p.data.u !== user) render(dec(p.data.c), 'them', p.data.u, p.data.isPoll);
             });
-
-            document.getElementById('view').innerHTML = `<div class="bubble them">Protocol shifted to [${room.toUpperCase()}]. Data flow re-routing...</div>`;
         }
 
-        function transmit() {
-            const i = document.getElementById('msg-in');
+        function push() {
+            const i = document.getElementById('input');
             if(!i.value) return;
-            activeChannel.publish('msg', { u: user, c: enc(i.value) });
-            render(i.value, 'me', 'You');
+            let isPoll = i.value.startsWith('/poll');
+            activeChannel.publish('msg', { u: user, c: enc(i.value), isPoll: isPoll });
+            render(i.value, 'me', 'You', isPoll);
             i.value = '';
         }
 
-        function render(text, type, sender) {
+        function render(text, type, sender, isPoll) {
             const v = document.getElementById('view');
             const b = document.createElement('div');
             b.className = `bubble ${type}`;
-            b.innerHTML = `<small style="display:block; opacity:0.5; font-size:0.7rem; margin-bottom:5px;">${sender}</small>${text}`;
+            
+            if(isPoll) {
+                let parts = text.replace('/poll ', '').split('|');
+                let html = `<strong>Poll: ${parts[0]}</strong><div class="poll-card">`;
+                for(let j=1; j<parts.length; j++) {
+                    html += `<div class="poll-option" onclick="vote(this)"><div class="poll-fill"></div>${parts[j]}</div>`;
+                }
+                html += `</div>`;
+                b.innerHTML = html;
+            } else {
+                // Highlight mentions
+                let processedText = text.replace(/@(\w+)/g, '<span class="mention">@$1</span>');
+                b.innerHTML = `<small style="display:block; opacity:0.5; font-size:0.7rem; margin-bottom:8px;">${sender}</small>${processedText}`;
+            }
+            
             v.appendChild(b);
             v.scrollTop = v.scrollHeight;
         }
 
-        function enc(t) { return CryptoJS.AES.encrypt(t, key).toString(); }
-        function dec(c) { 
-            try { return CryptoJS.AES.decrypt(c, key).toString(CryptoJS.enc.Utf8); } 
-            catch { return "[[ Corrupted Data ]]"; } 
+        function vote(el) {
+            let fill = el.querySelector('.poll-fill');
+            fill.style.width = Math.floor(Math.random() * 60 + 40) + "%";
+            el.style.borderColor = 'var(--accent)';
         }
+
+        function enc(t) { return CryptoJS.AES.encrypt(t, secret).toString(); }
+        function dec(c) { try { return CryptoJS.AES.decrypt(c, secret).toString(CryptoJS.enc.Utf8); } catch { return "[Encrypted]"; } }
     </script>
 </body>
 </html>
