@@ -3,96 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Liquid Nexus | Infinity Secure</title>
+    <title>Nexus Prime | Secure</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
         :root {
-            --bg: #e0e5ec;
-            --glass: rgba(255, 255, 255, 0.2);
-            --text: #2d3436;
-            --accent: #6c5ce7;
+            --bg: #e0e5ec; --glass: rgba(255, 255, 255, 0.25);
+            --text: #2d3436; --accent: #6c5ce7;
             --shadow: 20px 20px 60px #bec3c9, -20px -20px 60px #ffffff;
         }
-
         [data-theme="dark"] {
-            --bg: #0a0c10;
-            --glass: rgba(255, 255, 255, 0.02);
-            --text: #f1f2f6;
-            --shadow: 10px 10px 30px #000000, -10px -10px 30px #1a1e24;
+            --bg: #0a0c10; --glass: rgba(255, 255, 255, 0.05);
+            --text: #f1f2f6; --shadow: 10px 10px 30px #000000, -10px -10px 30px #1a1e24;
         }
 
         body {
             margin: 0; font-family: 'Inter', sans-serif;
             background-color: var(--bg); color: var(--text);
             display: flex; justify-content: center; align-items: center;
-            height: 100vh; transition: background 0.5s ease; overflow: hidden;
+            height: 100vh; transition: 0.5s ease; overflow: hidden;
         }
 
-        .blobs { position: absolute; width: 100%; height: 100%; z-index: -1; overflow: hidden; filter: blur(60px); }
-        .blob { position: absolute; background: var(--accent); border-radius: 50%; opacity: 0.25; animation: move 20s infinite alternate linear; }
-        @keyframes move { 0% { transform: translate(-10%, -10%); } 100% { transform: translate(20%, 20%); } }
+        /* Liquid Background */
+        .blobs { position: absolute; width: 100%; height: 100%; z-index: -1; filter: blur(60px); }
+        .blob { position: absolute; background: var(--accent); border-radius: 50%; opacity: 0.2; animation: move 20s infinite alternate linear; }
+        @keyframes move { from { transform: translate(-10%, -10%); } to { transform: translate(20%, 20%); } }
 
         .container {
             width: 95%; max-width: 480px; height: 85vh;
             background: var(--glass); backdrop-filter: blur(50px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 45px; box-shadow: var(--shadow);
+            border-radius: 40px; box-shadow: var(--shadow);
             display: flex; flex-direction: column; overflow: hidden; position: relative;
         }
 
-        /* Sidebar with Infinity Color Picker */
+        /* Sidebar & Admin Styles */
         #sidebar {
             position: absolute; left: -300px; top: 0; width: 280px; height: 100%;
             background: var(--bg); border-right: 1px solid rgba(255, 255, 255, 0.1);
-            transition: 0.5s cubic-bezier(0.65, 0, 0.35, 1); z-index: 1000; padding: 30px; box-sizing: border-box;
+            transition: 0.4s ease; z-index: 1000; padding: 30px; box-sizing: border-box;
         }
         #sidebar.open { left: 0; }
-        
-        .color-area {
-            width: 100%; height: 120px; border-radius: 15px; position: relative;
-            background: linear-gradient(to bottom, transparent, #000), linear-gradient(to right, #fff, var(--accent-base, #6c5ce7));
-            cursor: crosshair; margin-bottom: 15px;
+        .is-admin .admin-only { display: block !important; }
+        .admin-only { display: none; }
+
+        /* Color Picker */
+        .color-area { width: 100%; height: 100px; border-radius: 12px; position: relative; cursor: crosshair; background: linear-gradient(to bottom, transparent, #000), linear-gradient(to right, #fff, var(--accent-base, #6c5ce7)); }
+        .picker-handle { width: 10px; height: 10px; border: 2px solid white; border-radius: 50%; position: absolute; transform: translate(-50%, -50%); pointer-events: none; }
+        .hue-slider { width: 100%; appearance: none; height: 8px; border-radius: 5px; background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00); margin: 15px 0; outline: none; }
+
+        /* Chat Logic */
+        .screen { display: none; padding: 25px; flex-direction: column; height: 100%; box-sizing: border-box; }
+        .active { display: flex; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        #chat-box { flex-grow: 1; overflow-y: auto; padding-right: 5px; }
+        .msg { 
+            margin-bottom: 12px; padding: 14px 18px; border-radius: 20px; 
+            background: rgba(255, 255, 255, 0.1); width: fit-content; max-width: 85%;
+            word-wrap: break-word; overflow-wrap: break-word; /* FIXED: Starts new line */
+            position: relative; cursor: pointer; border: 1px solid rgba(255,255,255,0.05);
         }
-        .picker-handle { width: 12px; height: 12px; border: 2px solid white; border-radius: 50%; position: absolute; transform: translate(-50%, -50%); pointer-events: none; }
-        .hue-slider { width: 100%; height: 10px; border-radius: 5px; appearance: none; background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00); outline: none; margin-bottom: 20px; }
+        .msg b { display: block; font-size: 0.65rem; color: var(--accent); margin-bottom: 4px; text-transform: uppercase; }
+        .del-x { position: absolute; top: 5px; right: 10px; color: #ff4757; font-weight: bold; cursor: pointer; display: none; }
+        .is-admin .msg:hover .del-x { display: block; }
 
-        .screen { display: none; padding: 30px; flex-direction: column; height: 100%; box-sizing: border-box; }
-        .active { display: flex; animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+        input { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; color: var(--text); outline: none; margin-bottom: 10px; font-size: 15px; }
+        button { padding: 15px; border-radius: 15px; border: none; background: var(--accent); color: white; cursor: pointer; font-weight: 700; transition: 0.2s; }
+        button:hover { filter: brightness(1.1); }
 
-        #chat-box { flex-grow: 1; overflow-y: auto; padding-right: 10px; }
-        #chat-box::-webkit-scrollbar { width: 4px; }
-        #chat-box::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
-
-        .msg { margin-bottom: 15px; padding: 15px 20px; border-radius: 25px; background: rgba(255, 255, 255, 0.1); width: fit-content; max-width: 85%; cursor: pointer; transition: 0.3s; border: 1px solid rgba(255,255,255,0.05); }
-        .msg:hover { background: rgba(255, 255, 255, 0.2); }
-        .msg b { display: block; font-size: 0.65rem; color: var(--accent); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1.5px; }
-
-        .input-area { display: flex; gap: 10px; margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; }
-        input { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 20px; color: var(--text); flex-grow: 1; outline: none; }
-        button { padding: 15px 25px; border-radius: 20px; border: none; background: var(--accent); color: white; cursor: pointer; font-weight: 700; }
-
-        .top-icons { position: absolute; top: 25px; width: 100%; padding: 0 30px; display: flex; justify-content: space-between; z-index: 10; box-sizing: border-box; }
-        .panic-btn { position: absolute; bottom: 20px; left: 20px; opacity: 0.2; cursor: pointer; font-size: 1.2rem; z-index: 50; }
+        .top-icons { padding: 20px 30px; display: flex; justify-content: space-between; z-index: 10; font-size: 1.3rem; }
+        .panic-btn { position: absolute; bottom: 15px; left: 15px; opacity: 0.1; cursor: pointer; z-index: 50; }
         .panic-btn:hover { opacity: 1; color: #ff4757; }
     </style>
 </head>
 <body>
 
-<div class="blobs"><div class="blob" style="width: 500px; height: 500px; top: -100px; left: -100px;"></div></div>
+<div class="blobs"><div class="blob" style="width: 400px; height: 400px; top: -100px; left: -100px;"></div></div>
 
 <div class="container">
     <div id="sidebar">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-            <h3>Infinity Theme</h3>
-            <span style="cursor:pointer; font-size:1.5rem;" onclick="toggleSidebar()">✕</span>
+            <h3>Nexus Config</h3>
+            <span style="cursor:pointer" onclick="toggleSidebar()">✕</span>
         </div>
+        <p style="font-size:0.7rem; opacity:0.5;">COLOR ENGINE</p>
         <input type="range" min="0" max="360" value="252" class="hue-slider" oninput="updateHue(this.value)">
-        <div class="color-area" id="colorMap" onmousedown="startPick(event)">
-            <div class="picker-handle" id="handle" style="left: 50%; top: 50%;"></div>
-        </div>
-        <div id="member-list" style="margin-top:20px;"></div>
+        <div class="color-area" id="colorMap" onmousedown="startPick(event)"><div class="picker-handle" id="handle" style="left:50%; top:50%;"></div></div>
+        
+        <p style="font-size:0.7rem; opacity:0.5; margin-top:20px;">OPERATIVES</p>
+        <div id="member-list"></div>
     </div>
 
     <div class="top-icons">
@@ -102,23 +102,23 @@
 
     <div class="panic-btn" onclick="location.href='https://google.com'">🚨</div>
 
-    <div id="pw-screen" class="screen" style="justify-content:center;">
-        <h2 style="text-align:center; font-weight:200;">SECURE ACCESS</h2>
+    <div id="pw-screen" class="screen active" style="justify-content:center;">
+        <h2 style="text-align:center; font-weight:200;">AUTHENTICATION</h2>
         <input type="password" id="pw-input" placeholder="Encryption Key">
+        <input type="password" id="admin-input" placeholder="Admin Code">
         <button onclick="checkPw()">INITIALIZE</button>
     </div>
 
     <div id="user-screen" class="screen" style="justify-content:center;">
         <h2 style="text-align:center; font-weight:200;">CODENAME</h2>
         <input type="text" id="username-input" placeholder="Operative ID">
-        <button onclick="startChat()">LINK</button>
+        <button onclick="startChat()">LINK NODE</button>
     </div>
 
-    <div id="chat-screen" class="screen active">
-        <div style="height:60px;"></div>
+    <div id="chat-screen" class="screen">
         <div id="chat-box"></div>
-        <div class="input-area">
-            <input type="text" id="msg-input" placeholder="Secure signal...">
+        <div style="display:flex; gap:10px; margin-top:15px; border-top:1px solid rgba(255,255,255,0.1); padding-top:15px;">
+            <input type="text" id="msg-input" placeholder="Message..." style="flex-grow:1; margin-bottom:0">
             <button onclick="sendText()">➤</button>
         </div>
     </div>
@@ -126,100 +126,94 @@
 
 <script>
     const ABLY_KEY = 'fVAQIA.kFtCvw:X6QXTzbh4Tbi1HUBiOQMlReiyw0uwkbOnEibDEM_VdA';
-    let username = "", ably, channel, secretKey = "";
+    let username = "", ably, channel, secretKey = "", isAdmin = false;
 
-    // --- Color Picker Logic ---
+    // --- COLOR LOGIC ---
     let currentHue = 252;
-    function updateHue(v) {
-        currentHue = v;
-        document.documentElement.style.setProperty('--accent-base', `hsl(${v}, 100%, 50%)`);
+    function updateHue(v) { 
+        currentHue = v; 
+        document.documentElement.style.setProperty('--accent-base', `hsl(${v}, 100%, 50%)`); 
         updateFinalColor(document.getElementById('handle').offsetLeft, document.getElementById('handle').offsetTop);
     }
     function startPick(e) {
-        const colorMap = document.getElementById('colorMap');
-        const handle = document.getElementById('handle');
         const move = (ev) => {
             const rect = colorMap.getBoundingClientRect();
             let x = Math.max(0, Math.min(ev.clientX - rect.left, rect.width));
             let y = Math.max(0, Math.min(ev.clientY - rect.top, rect.height));
-            handle.style.left = x + 'px';
-            handle.style.top = y + 'px';
+            handle.style.left = x + 'px'; handle.style.top = y + 'px';
             updateFinalColor(x, y);
         };
-        move(e);
-        window.onmousemove = move;
-        window.onmouseup = () => window.onmousemove = null;
+        move(e); window.onmousemove = move; window.onmouseup = () => window.onmousemove = null;
     }
     function updateFinalColor(x, y) {
-        const s = (x / 280) * 100;
-        const l = 100 - (y / 120) * 100;
+        const s = (x / 280) * 100; const l = 100 - (y / 100) * 100;
         document.documentElement.style.setProperty('--accent', `hsl(${currentHue}, ${s}%, ${l}%)`);
     }
 
-    // --- Core Logic ---
-    function toggleTheme() {
-        const b = document.body;
-        b.setAttribute('data-theme', b.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
-    }
+    // --- CORE LOGIC ---
+    function toggleTheme() { document.body.setAttribute('data-theme', document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'); }
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+    function show(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+
     function checkPw() {
-        const val = document.getElementById('pw-input').value;
-        if(val.toLowerCase() === 'morse') {
-            secretKey = val;
-            showScreen('user-screen');
-        } else alert("Wrong Key");
+        const p = document.getElementById('pw-input').value;
+        const a = document.getElementById('admin-input').value;
+        if(p.toLowerCase() === 'morse') {
+            secretKey = p;
+            if(a === 'secret') { isAdmin = true; document.body.classList.add('is-admin'); }
+            show('user-screen');
+        } else alert("Invalid Key");
     }
-    function showScreen(id) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-    }
+
     async function startChat() {
         username = document.getElementById('username-input').value.trim();
         if(!username || ABLY_KEY.includes('YOUR')) return;
         if ("Notification" in window) await Notification.requestPermission();
-        showScreen('chat-screen');
+        show('chat-screen');
         ably = new Ably.Realtime({ key: ABLY_KEY, clientId: username });
         channel = ably.channels.get('secure-nexus');
-        channel.history((err, page) => { if(!err) page.items.reverse().forEach(m => addBubble(m.clientId, m.data.text, m.clientId === username)); });
+
         channel.subscribe('msg', (m) => {
-            if (m.clientId !== username && document.hidden) new Notification(`Secure Signal Received`, { body: "Encrypted data in Nexus." });
-            addBubble(m.clientId, m.data.text, m.clientId === username);
+            if (document.hidden) new Notification("Secure Signal", { body: "Incoming data..." });
+            addBubble(m.clientId, m.data.text, m.id);
         });
+
+        channel.subscribe('cmd', (m) => {
+            if(m.data.t === 'del') { const el = document.getElementById(m.data.id); if(el) el.remove(); }
+        });
+
         channel.presence.enter();
         channel.presence.subscribe(() => {
             channel.presence.get((err, members) => {
-                document.getElementById('member-list').innerHTML = members.map(m => `<div style="padding:10px; border-radius:10px; background:rgba(255,255,255,0.05); margin-bottom:5px; font-size:0.8rem;">● ${m.clientId}</div>`).join('');
+                document.getElementById('member-list').innerHTML = members.map(m => `
+                    <div style="display:flex; justify-content:space-between; padding:8px; background:rgba(255,255,255,0.05); border-radius:10px; margin-bottom:5px; font-size:0.8rem;">
+                        <span>● ${m.clientId}</span>
+                    </div>`).join('');
             });
         });
     }
 
-    function addBubble(id, encryptedData, isMe) {
+    function addBubble(id, enc, mid) {
         const box = document.getElementById('chat-box');
-        let decryptedText;
-        try {
-            const bytes = CryptoJS.AES.decrypt(encryptedData, secretKey);
-            decryptedText = bytes.toString(CryptoJS.enc.Utf8);
-            if (!decryptedText) throw new Error(); 
-        } catch (e) { decryptedText = "[BLOCKING ERROR: Invalid Key]"; }
+        let dec; try { dec = CryptoJS.AES.decrypt(enc, secretKey).toString(CryptoJS.enc.Utf8); } catch(e) { dec = "[ERROR]"; }
         const div = document.createElement('div');
-        div.className = 'msg';
-        if(isMe) div.style.cssText = 'margin-left:auto; background:var(--accent); color:white;';
-        div.onclick = function() {
-            const span = this.querySelector('.msg-c');
-            span.innerText = span.innerText === encryptedData ? decryptedText : encryptedData;
+        div.className = 'msg'; div.id = mid;
+        if(id === username) div.style.cssText = 'margin-left:auto; background:var(--accent); color:white;';
+        div.onclick = (e) => { 
+            if(e.target.className === 'del-x') return;
+            const s = div.querySelector('.msg-c'); s.innerText = s.innerText === enc ? dec : enc; 
         };
-        div.innerHTML = `<b>${isMe ? 'You' : id}</b><span class="msg-c">${encryptedData}</span>`;
-        box.appendChild(div);
-        box.scrollTop = box.scrollHeight;
+        div.innerHTML = `<span class="del-x" onclick="adminDel('${mid}')">×</span><b>${id === username ? 'You' : id}</b><span class="msg-c">${enc}</span>`;
+        box.appendChild(div); box.scrollTop = box.scrollHeight;
     }
 
     function sendText() {
-        const input = document.getElementById('msg-input');
-        if(!input.value.trim()) return;
-        const encrypted = CryptoJS.AES.encrypt(input.value, secretKey).toString();
-        channel.publish('msg', { text: encrypted });
-        input.value = "";
+        const i = document.getElementById('msg-input'); if(!i.value) return;
+        const enc = CryptoJS.AES.encrypt(i.value, secretKey).toString();
+        channel.publish('msg', { text: enc }); i.value = "";
     }
+
+    function adminDel(id) { if(isAdmin) channel.publish('cmd', { t: 'del', id: id }); }
 
     document.addEventListener('keypress', (e) => {
         if(e.key === 'Enter') {
@@ -229,7 +223,6 @@
             else if(active === 'user-screen') startChat();
         }
     });
-    showScreen('pw-screen');
 </script>
 </body>
 </html>
