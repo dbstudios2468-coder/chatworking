@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Nexus v7.5 | Interactive Fluid</title>
+    <title>Nexus v8 | Persistent Fluid</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap" rel="stylesheet">
@@ -13,8 +13,8 @@
         :root {
             --accent: #00f2ff;
             --accent-glow: rgba(0, 242, 255, 0.5);
-            --glass: rgba(255, 255, 255, 0.07);
-            --border: rgba(255, 255, 255, 0.2);
+            --glass: rgba(255, 255, 255, 0.06);
+            --border: rgba(255, 255, 255, 0.15);
             --bg: #010204;
             --spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
@@ -22,54 +22,70 @@
         [data-theme="void"] { --accent: #ff00ff; --accent-glow: rgba(255, 0, 255, 0.5); }
         [data-theme="dev"] { --accent: #00ff88; --accent-glow: rgba(0, 255, 136, 0.5); }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; cursor: default; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
         body { background: var(--bg); height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; transition: background 0.8s ease; }
 
-        /* THEMED SCROLLBAR */
-        #view::-webkit-scrollbar { width: 8px; }
-        #view::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); border-radius: 20px; margin: 20px; }
-        #view::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 20px; box-shadow: 0 0 15px var(--accent-glow); border: 2px solid rgba(255, 255, 255, 0.1); }
+        /* SCROLLBAR THEME */
+        #view::-webkit-scrollbar { width: 6px; }
+        #view::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 20px; box-shadow: 0 0 10px var(--accent-glow); }
 
-        /* BACKGROUND */
-        .liquid-cosmos { position: fixed; inset: 0; z-index: -1; filter: blur(80px) contrast(1.5); background: radial-gradient(circle at 50% 50%, #1a1a2e, #010204); }
-        .plasma-orb { position: absolute; width: 70vh; height: 70vh; background: var(--accent); border-radius: 50%; opacity: 0.3; mix-blend-mode: screen; animation: plasma-drift 15s infinite alternate ease-in-out; box-shadow: 0 0 100px var(--accent-glow); transition: background 0.8s ease; }
-        @keyframes plasma-drift { 0% { transform: translate(-20%, -20%) scale(1); } 100% { transform: translate(40%, 30%) scale(1.3); } }
+        .liquid-cosmos { position: fixed; inset: 0; z-index: -1; filter: blur(80px) contrast(1.5); background: radial-gradient(circle at 50% 50%, #121225, #010204); }
+        .plasma-orb { position: absolute; width: 60vh; height: 60vh; background: var(--accent); border-radius: 50%; opacity: 0.25; animation: plasma-drift 20s infinite alternate linear; }
+        @keyframes plasma-drift { 0% { transform: translate(-10%, -10%); } 100% { transform: translate(30%, 30%); } }
 
-        .nexus-grid { width: 96vw; height: 92vh; display: grid; grid-template-columns: 320px 1fr; gap: 30px; max-width: 1500px; z-index: 10; }
+        /* TRI-PANEL LAYOUT */
+        .nexus-grid { 
+            width: 98vw; height: 94vh; 
+            display: grid; 
+            grid-template-columns: 280px 1fr 240px; 
+            gap: 20px; 
+            max-width: 1800px; 
+        }
 
-        /* SIDEBAR */
-        .sidebar-liquid { background: var(--glass); backdrop-filter: blur(60px) saturate(200%); -webkit-backdrop-filter: blur(60px) saturate(200%); border: 1px solid var(--border); border-radius: 50px; padding: 40px 25px; display: flex; flex-direction: column; gap: 20px; }
-        .brand { font-weight: 800; font-size: 2.2rem; color: white; text-align: center; margin-bottom: 40px; letter-spacing: -2px; text-shadow: 0 0 20px var(--accent-glow); }
-        .nav-pill { padding: 22px 30px; border-radius: 30px; color: rgba(255,255,255,0.5); font-weight: 700; transition: 0.4s var(--spring); background: rgba(255,255,255,0.03); display: flex; align-items: center; gap: 15px; }
-        .nav-pill.active { background: var(--accent); color: #000; box-shadow: 0 0 40px var(--accent-glow); transform: scale(1.05); }
+        /* GLASS PANELS */
+        .glass-panel {
+            background: var(--glass);
+            backdrop-filter: blur(50px) saturate(200%);
+            -webkit-backdrop-filter: blur(50px) saturate(200%);
+            border: 1px solid var(--border);
+            border-radius: 40px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
 
-        /* MAIN STAGE */
-        .stage { background: var(--glass); backdrop-filter: blur(80px) saturate(250%); -webkit-backdrop-filter: blur(80px) saturate(250%); border: 1px solid var(--border); border-radius: 60px; display: flex; flex-direction: column; overflow: hidden; position: relative; }
-        .scroll-flow { flex: 1; padding: 50px; overflow-y: auto; display: flex; flex-direction: column; gap: 25px; }
+        .sidebar-header { padding: 30px; text-align: center; font-weight: 800; color: white; border-bottom: 1px solid var(--border); letter-spacing: 1px; }
 
-        /* BUBBLES & POLLS */
-        .bubble { padding: 20px 30px; border-radius: 35px; font-size: 1.1rem; max-width: 70%; position: relative; animation: liquid-pop 0.5s var(--spring); box-shadow: 0 15px 30px rgba(0,0,0,0.2); }
-        @keyframes liquid-pop { 0% { transform: scale(0.8) translateY(30px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
-        
-        .bubble.me { align-self: flex-end; background: linear-gradient(135deg, var(--accent), #fff); color: #000; font-weight: 700; border-bottom-right-radius: 5px; }
-        .bubble.them { align-self: flex-start; background: rgba(255,255,255,0.1); color: white; border: 1px solid var(--border); border-bottom-left-radius: 5px; }
+        /* NAVIGATION */
+        .nav-list { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .nav-pill { padding: 18px 25px; border-radius: 25px; color: rgba(255,255,255,0.4); font-weight: 700; transition: 0.3s; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        .nav-pill.active { background: var(--accent); color: #000; box-shadow: 0 0 30px var(--accent-glow); }
 
-        /* TAGGING */
-        .mention { color: var(--accent); font-weight: 800; text-decoration: none; padding: 2px 8px; background: rgba(255,255,255,0.1); border-radius: 10px; transition: 0.3s; }
-        .mention:hover { background: var(--accent); color: #000; box-shadow: 0 0 15px var(--accent); }
+        /* VITALITY MONITOR (RIGHT SIDEBAR) */
+        .user-list { padding: 20px; flex: 1; overflow-y: auto; }
+        .user-card { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 20px; background: rgba(255,255,255,0.03); margin-bottom: 10px; transition: 0.3s; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #55ff55; box-shadow: 0 0 10px #55ff55; }
+        .status-dot.offline { background: #ff5555; box-shadow: none; opacity: 0.5; }
 
-        /* POLL DESIGN */
-        .poll-card { background: rgba(0,0,0,0.2); border-radius: 30px; padding: 20px; border: 1px solid var(--border); margin-top: 10px; }
-        .poll-option { background: rgba(255,255,255,0.05); margin: 10px 0; padding: 15px; border-radius: 20px; position: relative; overflow: hidden; cursor: pointer; border: 1px solid transparent; transition: 0.3s; }
-        .poll-option:hover { border-color: var(--accent); background: rgba(255,255,255,0.1); }
-        .poll-fill { position: absolute; left: 0; top: 0; height: 100%; background: var(--accent); opacity: 0.2; width: 0%; transition: width 1s var(--spring); }
+        /* MESSAGING CORE */
+        .scroll-flow { flex: 1; padding: 40px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
+        .bubble { padding: 18px 25px; border-radius: 30px; font-size: 1rem; max-width: 75%; position: relative; animation: pop 0.4s var(--spring); }
+        @keyframes pop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .bubble.me { align-self: flex-end; background: linear-gradient(135deg, var(--accent), #fff); color: #000; font-weight: 700; }
+        .bubble.them { align-self: flex-start; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid var(--border); }
+
+        /* POLLS */
+        .poll-box { background: rgba(0,0,0,0.3); padding: 20px; border-radius: 25px; border: 1px solid var(--border); margin-top: 8px; width: 260px; }
+        .poll-opt { background: rgba(255,255,255,0.05); margin-top: 10px; padding: 12px; border-radius: 15px; cursor: pointer; position: relative; overflow: hidden; }
+        .poll-bar { position: absolute; left: 0; top: 0; height: 100%; background: var(--accent); opacity: 0.3; width: 0%; transition: 1s ease; }
 
         /* INPUT */
-        .footer { padding: 30px 50px; background: rgba(0,0,0,0.2); }
-        .input-container { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 100px; padding: 8px; display: flex; gap: 10px; }
-        input { flex: 1; background: transparent; border: none; padding: 15px 25px; color: white; font-size: 1.1rem; outline: none; }
-        .btn-pulse { background: white; color: black; border: none; padding: 0 35px; border-radius: 100px; font-weight: 800; transition: 0.3s; }
-        .btn-pulse:hover { transform: scale(1.05); background: var(--accent); }
+        .input-wrap { padding: 25px 40px; background: rgba(0,0,0,0.2); }
+        .glass-input { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 100px; padding: 8px; display: flex; gap: 10px; }
+        input { flex: 1; background: transparent; border: none; padding: 12px 20px; color: white; font-size: 1.1rem; outline: none; }
+        .send-btn { background: #fff; border: none; padding: 0 25px; border-radius: 100px; font-weight: 800; cursor: pointer; transition: 0.3s; }
+        .send-btn:hover { background: var(--accent); transform: scale(1.05); }
 
         #gate { position: fixed; inset: 0; z-index: 2000; background: #000; display: flex; align-items: center; justify-content: center; }
     </style>
@@ -79,96 +95,122 @@
     <div class="liquid-cosmos"><div class="plasma-orb"></div></div>
 
     <div id="gate">
-        <div style="background: rgba(255,255,255,0.05); padding: 60px; border-radius: 60px; border: 1px solid var(--border); text-align: center; backdrop-filter: blur(100px);">
-            <h1 class="brand">NEXUS <span style="color:var(--accent)">V7.5</span></h1>
-            <input type="text" id="username" placeholder="Handle" style="display:block; width:300px; background:rgba(0,0,0,0.5); border:1px solid var(--border); border-radius:20px; margin-bottom:15px; text-align:center; color:white;">
-            <input type="password" id="key" placeholder="Key" style="display:block; width:300px; background:rgba(0,0,0,0.5); border:1px solid var(--border); border-radius:20px; margin-bottom:30px; text-align:center; color:white;">
-            <button onclick="init()" style="width:100%; padding:20px; border-radius:25px; background:white; font-weight:800; border:none; cursor:pointer;">CONNECT</button>
+        <div style="background: rgba(255,255,255,0.05); padding: 60px; border-radius: 50px; border: 1px solid var(--border); text-align: center; backdrop-filter: blur(80px);">
+            <h1 style="color:white; font-size: 2.5rem; margin-bottom: 30px;">NEXUS <span style="color:var(--accent)">V8</span></h1>
+            <input type="text" id="username" placeholder="Codename" style="display:block; width:300px; background:rgba(0,0,0,0.4); border:1px solid var(--border); border-radius:15px; margin-bottom:12px; text-align:center; color:white; padding:15px;">
+            <input type="password" id="key" placeholder="Encryption Key" style="display:block; width:300px; background:rgba(0,0,0,0.4); border:1px solid var(--border); border-radius:15px; margin-bottom:30px; text-align:center; color:white; padding:15px;">
+            <button onclick="init()" style="width:100%; padding:18px; border-radius:20px; background:white; font-weight:800; border:none; cursor:pointer;">CONNECT</button>
         </div>
     </div>
 
     <div class="nexus-grid">
-        <aside class="sidebar-liquid">
-            <div class="brand">NEXUS</div>
-            <div class="nav-pill active" onclick="chamber('main', this)"><i class="fas fa-water"></i> Main Flow</div>
-            <div class="nav-pill" onclick="chamber('void', this)"><i class="fas fa-ghost"></i> The Void</div>
-            <div class="nav-pill" onclick="chamber('dev', this)"><i class="fas fa-code"></i> Dev Stream</div>
+        <aside class="glass-panel">
+            <div class="sidebar-header">CHAMBERS</div>
+            <nav class="nav-list">
+                <div class="nav-pill active" onclick="switchRoom('main', this)"><i class="fas fa-water"></i> Main Flow</div>
+                <div class="nav-pill" onclick="switchRoom('void', this)"><i class="fas fa-ghost"></i> The Void</div>
+                <div class="nav-pill" onclick="switchRoom('dev', this)"><i class="fas fa-code"></i> Dev Stream</div>
+            </nav>
         </aside>
 
-        <main class="stage">
-            <div class="scroll-flow" id="view">
-                <div class="bubble them">Transmission Start. Type @name to tag or /poll Q | A | B for polls.</div>
-            </div>
-            <div class="footer">
-                <div class="input-container">
-                    <input type="text" id="input" placeholder="Ripple or /poll..." onkeypress="if(event.key==='Enter') push()">
-                    <button class="btn-pulse" onclick="push()">SEND</button>
+        <main class="glass-panel">
+            <div class="scroll-flow" id="view"></div>
+            <div class="input-wrap">
+                <div class="glass-input">
+                    <input type="text" id="input" placeholder="Transmit..." onkeypress="if(event.key==='Enter') push()">
+                    <button class="send-btn" onclick="push()">SEND</button>
                 </div>
             </div>
         </main>
+
+        <aside class="glass-panel">
+            <div class="sidebar-header">VITALITY</div>
+            <div class="user-list" id="users">
+                </div>
+        </aside>
     </div>
 
     <script>
-        let client, activeChannel, user, secret;
+        let client, activeChannel, user, secret, currentRoom = 'main';
 
         async function init() {
             user = document.getElementById('username').value;
             secret = document.getElementById('key').value;
             if(!user || !secret) return;
+
             client = new Ably.Realtime({ key: 'fVAQIA.kFtCvw:X6QXTzbh4Tbi1HUBiOQMlReiyw0uwkbOnEibDEM_VdA' });
+            
             client.connection.on('connected', () => {
                 document.getElementById('gate').style.display = 'none';
-                chamber('main', document.querySelector('.nav-pill.active'));
+                switchRoom('main', document.querySelector('.nav-pill.active'));
+                loadHistory();
+                updateVitality();
             });
         }
 
-        function chamber(id, el) {
+        function switchRoom(id, el) {
             document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
             el.classList.add('active');
             document.body.setAttribute('data-theme', id);
+            currentRoom = id;
+
             if(activeChannel) activeChannel.unsubscribe();
-            activeChannel = client.channels.get(`v75-${id}`);
+            activeChannel = client.channels.get(`v8-${id}`);
             activeChannel.subscribe('msg', (p) => {
-                if(p.data.u !== user) render(dec(p.data.c), 'them', p.data.u, p.data.isPoll);
+                if(p.data.u !== user) render(dec(p.data.c), 'them', p.data.u, p.data.isP);
             });
+            
+            document.getElementById('view').innerHTML = '';
+            loadHistory();
         }
 
         function push() {
             const i = document.getElementById('input');
             if(!i.value) return;
-            let isPoll = i.value.startsWith('/poll');
-            activeChannel.publish('msg', { u: user, c: enc(i.value), isPoll: isPoll });
-            render(i.value, 'me', 'You', isPoll);
+            let isP = i.value.startsWith('/poll');
+            let data = { u: user, c: enc(i.value), isP: isP, t: Date.now() };
+            activeChannel.publish('msg', data);
+            saveLocal(data);
+            render(i.value, 'me', 'You', isP);
             i.value = '';
         }
 
-        function render(text, type, sender, isPoll) {
+        function render(text, type, sender, isP) {
             const v = document.getElementById('view');
             const b = document.createElement('div');
             b.className = `bubble ${type}`;
             
-            if(isPoll) {
-                let parts = text.replace('/poll ', '').split('|');
-                let html = `<strong>Poll: ${parts[0]}</strong><div class="poll-card">`;
-                for(let j=1; j<parts.length; j++) {
-                    html += `<div class="poll-option" onclick="vote(this)"><div class="poll-fill"></div>${parts[j]}</div>`;
-                }
-                html += `</div>`;
-                b.innerHTML = html;
+            if(isP) {
+                let p = text.replace('/poll ', '').split('|');
+                let h = `<strong>Poll: ${p[0]}</strong><div class="poll-box">`;
+                for(let j=1; j<p.length; j++) h += `<div class="poll-opt" onclick="vote(this)"><div class="poll-bar"></div>${p[j]}</div>`;
+                b.innerHTML = h + `</div>`;
             } else {
-                // Highlight mentions
-                let processedText = text.replace(/@(\w+)/g, '<span class="mention">@$1</span>');
-                b.innerHTML = `<small style="display:block; opacity:0.5; font-size:0.7rem; margin-bottom:8px;">${sender}</small>${processedText}`;
+                let txt = text.replace(/@(\w+)/g, '<span style="color:var(--accent);font-weight:800;">@$1</span>');
+                b.innerHTML = `<small style="display:block;opacity:0.5;font-size:0.7rem;margin-bottom:5px;">${sender}</small>${txt}`;
             }
-            
             v.appendChild(b);
             v.scrollTop = v.scrollHeight;
         }
 
-        function vote(el) {
-            let fill = el.querySelector('.poll-fill');
-            fill.style.width = Math.floor(Math.random() * 60 + 40) + "%";
-            el.style.borderColor = 'var(--accent)';
+        function vote(el) { el.querySelector('.poll-bar').style.width = "75%"; }
+
+        // PERSISTENCE LOGIC
+        function saveLocal(data) {
+            let hist = JSON.parse(localStorage.getItem(`nexus_v8_${currentRoom}`) || '[]');
+            hist.push(data);
+            localStorage.setItem(`nexus_v8_${currentRoom}`, JSON.stringify(hist.slice(-50))); // Save last 50
+        }
+
+        function loadHistory() {
+            let hist = JSON.parse(localStorage.getItem(`nexus_v8_${currentRoom}`) || '[]');
+            hist.forEach(d => render(dec(d.c), d.u === user ? 'me' : 'them', d.u === user ? 'You' : d.u, d.isP));
+        }
+
+        function updateVitality() {
+            const uList = document.getElementById('users');
+            uList.innerHTML = `<div class="user-card"><div class="status-dot"></div><span style="color:white;font-weight:700;">${user} (You)</span></div>`;
+            // Note: True global presence requires Ably Presence API, but this shows you are online locally.
         }
 
         function enc(t) { return CryptoJS.AES.encrypt(t, secret).toString(); }
