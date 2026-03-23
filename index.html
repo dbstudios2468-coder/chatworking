@@ -3,92 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Liquid Chat</title>
+    <title>Liquid Mesh | Ultra</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <style>
         :root {
-            --bg: #e0e5ec; --glass: rgba(255, 255, 255, 0.4);
-            --text: #2d3436; --accent: #6c5ce7;
+            --bg: #e0e5ec;
+            --glass: rgba(255, 255, 255, 0.25);
+            --text: #2d3436;
+            --accent: #6c5ce7;
             --shadow: 20px 20px 60px #bec3c9, -20px -20px 60px #ffffff;
+            --msg-bg: rgba(255, 255, 255, 0.2);
         }
+
         [data-theme="dark"] {
-            --bg: #1a1d23; --glass: rgba(255, 255, 255, 0.05);
-            --text: #f1f2f6; --shadow: 10px 10px 30px #0e1013, -10px -10px 30px #262a33;
+            --bg: #0f1216;
+            --glass: rgba(255, 255, 255, 0.03);
+            --text: #f1f2f6;
+            --shadow: 10px 10px 30px #050608, -10px -10px 30px #1a1e24;
+            --msg-bg: rgba(255, 255, 255, 0.07);
         }
 
         body {
-            margin: 0; font-family: 'Segoe UI', sans-serif;
+            margin: 0; font-family: 'Segoe UI', system-ui, sans-serif;
             background-color: var(--bg); color: var(--text);
             display: flex; justify-content: center; align-items: center;
             height: 100vh; transition: 0.5s; overflow: hidden;
         }
 
+        /* Animated Background Liquid Blobs */
+        .blobs { position: absolute; width: 100%; height: 100%; z-index: -1; overflow: hidden; filter: blur(80px); }
+        .blob { position: absolute; background: var(--accent); border-radius: 50%; opacity: 0.4; animation: float 20s infinite alternate; }
+        @keyframes float { 
+            0% { transform: translate(0, 0) scale(1); } 
+            100% { transform: translate(100px, 100px) scale(1.5); } 
+        }
+
         .container {
-            width: 95%; max-width: 420px; height: 85vh;
-            background: var(--glass); backdrop-filter: blur(20px);
+            width: 95%; max-width: 500px; height: 85vh;
+            background: var(--glass); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 40px; box-shadow: var(--shadow);
+            border-radius: 50px; box-shadow: var(--shadow);
             display: flex; flex-direction: column; overflow: hidden; position: relative;
         }
 
-        .screen { display: none; padding: 25px; flex-direction: column; height: 100%; box-sizing: border-box; }
-        .active { display: flex; animation: slideUp 0.4s ease; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Sidebar */
+        #sidebar {
+            position: absolute; left: -250px; top: 0; width: 220px; height: 100%;
+            background: var(--glass); backdrop-filter: blur(40px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 100; padding: 20px; box-sizing: border-box;
+        }
+        #sidebar.open { left: 0; }
+        .member-item { padding: 10px; border-radius: 15px; background: var(--msg-bg); margin-bottom: 8px; font-size: 0.9rem; animation: slideIn 0.3s ease; }
+
+        .screen { display: none; padding: 30px; flex-direction: column; height: 100%; box-sizing: border-box; }
+        .active { display: flex; animation: slideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1); }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
 
         input {
-            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1);
-            padding: 12px; border-radius: 15px; color: var(--text);
-            margin-bottom: 10px; outline: none; font-size: 16px;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            padding: 15px; border-radius: 20px; color: var(--text);
+            margin-bottom: 15px; outline: none; transition: 0.3s;
         }
+        input:focus { border-color: var(--accent); background: rgba(255,255,255,0.1); }
 
-        #chat-box { flex-grow: 1; overflow-y: auto; margin-bottom: 10px; padding-right: 5px; }
+        #chat-box { flex-grow: 1; overflow-y: auto; padding-right: 10px; scroll-behavior: smooth; }
 
         .msg { 
-            margin-bottom: 12px; padding: 12px 16px; border-radius: 18px; 
-            background: rgba(255,255,255,0.15); width: fit-content; max-width: 85%;
-            position: relative; cursor: pointer; transition: background 0.2s;
+            margin-bottom: 15px; padding: 14px 20px; border-radius: 25px; 
+            background: var(--msg-bg); width: fit-content; max-width: 80%;
+            cursor: pointer; transition: 0.3s; border: 1px solid rgba(255,255,255,0.05);
         }
-        .msg b { display: block; font-size: 0.7rem; color: var(--accent); margin-bottom: 3px; pointer-events: none; }
-        .msg-content { pointer-events: none; word-break: break-all; font-family: monospace; letter-spacing: 1px; }
+        .msg:hover { transform: scale(1.02); background: rgba(255,255,255,0.3); }
+        .msg b { display: block; font-size: 0.7rem; color: var(--accent); margin-bottom: 4px; letter-spacing: 1px; }
 
-        .controls { display: flex; gap: 5px; align-items: center; }
         button {
-            padding: 12px 20px; border-radius: 15px; border: none;
-            background: var(--accent); color: white; cursor: pointer; font-weight: 600;
+            padding: 15px 25px; border-radius: 20px; border: none;
+            background: var(--accent); color: white; cursor: pointer;
+            font-weight: 700; transition: 0.3s;
         }
+        button:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
 
-        .theme-toggle { position: absolute; top: 20px; right: 20px; cursor: pointer; font-size: 1.2rem; z-index: 100; }
-        
-        #chat-box::-webkit-scrollbar { width: 4px; }
-        #chat-box::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
+        /* Top Bar Icons */
+        .top-icons { position: absolute; top: 20px; width: 100%; padding: 0 25px; display: flex; justify-content: space-between; box-sizing: border-box; z-index: 10; }
+        .icon-btn { cursor: pointer; font-size: 1.4rem; opacity: 0.7; transition: 0.3s; }
+        .icon-btn:hover { opacity: 1; transform: scale(1.1); }
+
+        /* Color Picker */
+        .color-dots { display: flex; gap: 8px; margin-top: 10px; }
+        .dot { width: 20px; height: 20px; border-radius: 50%; cursor: pointer; border: 2px solid white; }
     </style>
 </head>
 <body>
 
-<div class="theme-toggle" onclick="toggleTheme()">🌓</div>
+<div class="blobs">
+    <div class="blob" style="width: 400px; height: 400px; top: -100px; left: -100px;"></div>
+    <div class="blob" style="width: 300px; height: 300px; bottom: -50px; right: -50px; animation-delay: -5s; background: #ff7675;"></div>
+</div>
 
 <div class="container">
-    <div id="pw-screen" class="screen active">
-        <h2 style="text-align:center; font-weight: 300;">Passkey</h2>
-        <input type="password" id="pw-input" placeholder="••••">
+    <div id="sidebar">
+        <h3>Active Node</h3>
+        <div id="member-list"></div>
+        <hr style="opacity:0.1; margin: 20px 0;">
+        <p style="font-size:0.8rem">Accent Color</p>
+        <div class="color-dots">
+            <div class="dot" style="background:#6c5ce7" onclick="setAccent('#6c5ce7')"></div>
+            <div class="dot" style="background:#00cec9" onclick="setAccent('#00cec9')"></div>
+            <div class="dot" style="background:#ff7675" onclick="setAccent('#ff7675')"></div>
+            <div class="dot" style="background:#fdcb6e" onclick="setAccent('#fdcb6e')"></div>
+        </div>
+    </div>
+
+    <div class="top-icons">
+        <div class="icon-btn" onclick="toggleSidebar()">☰</div>
+        <div class="icon-btn" onclick="toggleTheme()">🌓</div>
+    </div>
+
+    <div id="pw-screen" class="screen active" style="justify-content:center;">
+        <h2 style="text-align:center">Signal Access</h2>
+        <input type="password" id="pw-input" placeholder="Passkey">
         <button onclick="checkPw()">Verify</button>
     </div>
 
-    <div id="user-screen" class="screen">
-        <h2 style="text-align:center; font-weight: 300;">Identity</h2>
+    <div id="user-screen" class="screen" style="justify-content:center;">
+        <h2 style="text-align:center">Identity</h2>
         <input type="text" id="username-input" placeholder="Codename">
-        <button onclick="startChat()">Enter</button>
+        <button onclick="startChat()">Initialize</button>
     </div>
 
     <div id="chat-screen" class="screen">
-        <div style="display:flex; justify-content:space-between; font-size:0.7rem; margin-bottom:10px; opacity:0.6;">
-            <span id="status">Syncing...</span>
-            <span id="display-name"></span>
-        </div>
-        <div id="chat-box"></div>
-        <div class="controls">
-            <input type="text" id="msg-input" placeholder="Enter message..." style="flex-grow:1; margin-bottom:0;">
-            <button onclick="sendText()">Send</button>
+        <div style="height: 50px;"></div> <div id="chat-box"></div>
+        <div style="display:flex; gap:10px; margin-top:10px;">
+            <input type="text" id="msg-input" placeholder="Message..." style="flex-grow:1; margin-bottom:0">
+            <button onclick="sendText()">➤</button>
         </div>
     </div>
 </div>
@@ -106,6 +157,19 @@
     };
     const revMorse = Object.fromEntries(Object.entries(morseMap).map(([k, v]) => [v, k]));
 
+    function toggleTheme() {
+        const b = document.body;
+        b.setAttribute('data-theme', b.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+    }
+
+    function setAccent(color) {
+        document.documentElement.style.setProperty('--accent', color);
+    }
+
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('open');
+    }
+
     function checkPw() {
         if(document.getElementById('pw-input').value.toLowerCase() === 'morse') showScreen('user-screen');
     }
@@ -115,55 +179,47 @@
         document.getElementById(id).classList.add('active');
     }
 
-    // Function to render a message bubble
-    function renderMessage(clientId, text, isMe) {
+    function startChat() {
+        username = document.getElementById('username-input').value.trim();
+        if(!username || ABLY_KEY.includes('YOUR')) return alert("API Key Error");
+        showScreen('chat-screen');
+
+        ably = new Ably.Realtime({ key: ABLY_KEY, clientId: username });
+        channel = ably.channels.get('liquid-nexus');
+
+        // History
+        channel.history((err, page) => {
+            if(!err) page.items.reverse().forEach(m => addBubble(m.clientId, m.data.text, m.clientId === username));
+        });
+
+        // Live
+        channel.subscribe('msg', (m) => addBubble(m.clientId, m.data.text, m.clientId === username));
+
+        // Presence (Sidebar List)
+        channel.presence.enter();
+        channel.presence.subscribe(() => {
+            channel.presence.get((err, members) => {
+                const list = document.getElementById('member-list');
+                list.innerHTML = members.map(m => `<div class="member-item">● ${m.clientId}</div>`).join('');
+            });
+        });
+    }
+
+    function addBubble(id, morse, isMe) {
         const box = document.getElementById('chat-box');
+        const plain = morse.split(' ').map(code => revMorse[code] || code).join('');
         const div = document.createElement('div');
         div.className = 'msg';
-        
-        const morseText = text;
-        const plainText = morseText.split(' ').map(code => revMorse[code] || code).join('');
-
         if(isMe) div.style.cssText = 'margin-left:auto; background:var(--accent); color:white;';
         
         div.onclick = function() {
-            const span = this.querySelector('.msg-content');
-            span.innerText = span.innerText === morseText ? plainText : morseText;
+            const span = this.querySelector('.msg-c');
+            span.innerText = span.innerText === morse ? plain : morse;
         };
 
-        div.innerHTML = `<b>${isMe ? 'You' : clientId}</b><span class="msg-content">${morseText}</span>`;
+        div.innerHTML = `<b>${isMe ? 'You' : id}</b><span class="msg-c">${morse}</span>`;
         box.appendChild(div);
         box.scrollTop = box.scrollHeight;
-    }
-
-    function startChat() {
-        username = document.getElementById('username-input').value.trim();
-        if(!username || ABLY_KEY.includes('YOUR')) return alert("Fix API Key");
-        
-        showScreen('chat-screen');
-        document.getElementById('display-name').innerText = `@${username}`;
-
-        ably = new Ably.Realtime({ key: ABLY_KEY, clientId: username });
-        channel = ably.channels.get('liquid-chat');
-
-        // LOAD HISTORY
-        channel.history((err, resultPage) => {
-            if(err) return console.log(err);
-            // Result comes back in reverse order (newest first), so we flip it
-            resultPage.items.reverse().forEach(msg => {
-                renderMessage(msg.clientId, msg.data.text, msg.clientId === username);
-            });
-        });
-
-        // SUBSCRIBE TO NEW MESSAGES
-        channel.subscribe('msg', (m) => {
-            renderMessage(m.clientId, m.data.text, m.clientId === username);
-        });
-
-        channel.presence.enter();
-        channel.presence.subscribe(() => {
-            channel.presence.get((e, m) => document.getElementById('status').innerText = `Online: ${m.length}`);
-        });
     }
 
     function sendText() {
@@ -173,11 +229,6 @@
         const morse = val.split('').map(char => morseMap[char] || char).join(' ');
         channel.publish('msg', { text: morse });
         input.value = "";
-    }
-
-    function toggleTheme() {
-        const b = document.body;
-        b.setAttribute('data-theme', b.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
     }
 
     document.addEventListener('keypress', (e) => {
