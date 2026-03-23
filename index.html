@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Nexus v2 | Liquid Glass</title>
+    <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --accent: #6c5ce7;
+            --glass-bg: rgba(255, 255, 255, 0.12);
+            --glass-border: rgba(255, 255, 255, 0.25);
+            --text: #ffffff;
+            --blur: 40px;
+            --bg-gradient: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+        }
+
+        [data-theme="solar"] {
+            --accent: #f9ca24;
+            --bg-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        [data-theme="sea"] {
+            --accent: #00d2d3;
+            --bg-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        
+        body {
+            background: var(--bg-gradient);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            transition: all 0.8s ease;
+        }
+
+        /* iOS 26 LIQUID ORBS */
+        .orb {
+            position: absolute;
+            filter: blur(100px);
+            border-radius: 50%;
+            z-index: 0;
+            animation: move 20s infinite alternate;
+            opacity: 0.6;
+        }
+
+        @keyframes move {
+            from { transform: translate(-10%, -10%); }
+            to { transform: translate(20%, 20%); }
+        }
+
+        /* MAIN HUD */
+        .nexus-container {
+            width: 95vw;
+            height: 90vh;
+            max-width: 1200px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--blur)) saturate(180%);
+            -webkit-backdrop-filter: blur(var(--blur)) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: 40px;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+            overflow: hidden;
+        }
+
+        /* SIDEBAR / CHAMBERS */
+        .sidebar {
+            background: rgba(0, 0, 0, 0.2);
+            border-right: 1px solid var(--glass-border);
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .chamber-btn {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chamber-btn.active {
+            background: var(--accent);
+            box-shadow: 0 0 20px var(--accent);
+        }
+
+        /* CHAT BUBBLES */
+        .chat-window {
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            position: relative;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 80px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .msg {
+            max-width: 70%;
+            padding: 14px 20px;
+            border-radius: 25px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            backdrop-filter: blur(10px);
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.8) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .msg.sent {
+            align-self: flex-end;
+            background: var(--accent);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .msg.received {
+            align-self: flex-start;
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border-bottom-left-radius: 5px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* FLOATING INPUT */
+        .input-hub {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 50px;
+            padding: 8px 10px;
+            display: flex;
+            gap: 10px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .input-hub input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 10px 20px;
+            color: white;
+            outline: none;
+            font-size: 1rem;
+        }
+
+        .input-hub button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        /* THEME PICKER */
+        .theme-tray {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .theme-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid white;
+        }
+
+        /* AUTH OVERLAY */
+        #auth-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(50px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .auth-card {
+            background: rgba(255,255,255,0.1);
+            padding: 40px;
+            border-radius: 30px;
+            text-align: center;
+            border: 1px solid var(--glass-border);
+            width: 350px;
+        }
+
+        .auth-card input {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 15px;
+            border: none;
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+    </style>
+</head>
+<body data-theme="default">
+
+    <div class="orb" style="width: 400px; height: 400px; background: var(--accent); top: -100px; left: -100px;"></div>
+    <div class="orb" style="width: 300px; height: 300px; background: #ff00ff; bottom: -50px; right: -50px; animation-delay: -5s;"></div>
+
+    <div id="auth-overlay">
+        <div class="auth-card">
+            <h2 style="color:white; margin-bottom:20px;">Nexus Protocol</h2>
+            <input type="text" id="username" placeholder="Codename">
+            <input type="password" id="key" placeholder="Encryption Key">
+            <button onclick="initNexus()" style="width:100%; padding:15px; border-radius:15px; background:var(--accent); color:white; border:none; cursor:pointer;">Initialize</button>
+        </div>
+    </div>
+
+    <div class="theme-tray">
+        <div class="theme-dot" style="background:#6c5ce7" onclick="setTheme('default')"></div>
+        <div class="theme-dot" style="background:#f9ca24" onclick="setTheme('solar')"></div>
+        <div class="theme-dot" style="background:#00d2d3" onclick="setTheme('sea')"></div>
+    </div>
+
+    <div class="nexus-container">
+        <div class="sidebar">
+            <h3 style="color:white; opacity:0.5; font-size:0.8rem; text-transform:uppercase; letter-spacing:2px;">Liquid Chambers</h3>
+            <div class="chamber-btn active" onclick="switchRoom('main')"><i class="fas fa-layer-group"></i> Main Nexus</div>
+            <div class="chamber-btn" onclick="switchRoom('void')"><i class="fas fa-ghost"></i> The Void</div>
+            <div class="chamber-btn" onclick="switchRoom('dev')"><i class="fas fa-code"></i> Dev Stream</div>
+        </div>
+
+        <div class="chat-window">
+            <div class="messages" id="msg-container">
+                <div class="msg received">Welcome to the Nexus. Connection encrypted.</div>
+            </div>
+
+            <div class="input-hub">
+                <input type="text" id="chat-input" placeholder="Transmission..." onkeypress="if(event.key==='Enter') send()">
+                <button onclick="send()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let client, channel, user, secret;
+
+        async function initNexus() {
+            user = document.getElementById('username').value;
+            secret = document.getElementById('key').value;
+            
+            if(!user || !secret) return alert("Credentials required.");
+
+            // SCHOOL WIFI BYPASS: Force multiple transports and use port 443 via SSL
+            client = new Ably.Realtime({
+                key: 'fVAQIA.kFtCvw:X6QXTzbh4Tbi1HUBiOQMlReiyw0uwkbOnEibDEM_VdA',
+                transports: ['web_socket', 'xhr_streaming', 'xhr_polling', 'jsonp'],
+                useBinaryProtocol: true,
+                tls: true
+            });
+
+            channel = client.channels.get('nexus-main');
+            
+            channel.subscribe('msg', (payload) => {
+                const data = payload.data;
+                if(data.sender !== user) {
+                    displayMsg(decrypt(data.text), 'received', data.sender);
+                }
+            });
+
+            document.getElementById('auth-overlay').style.display = 'none';
+        }
+
+        function setTheme(theme) {
+            document.body.setAttribute('data-theme', theme);
+        }
+
+        function encrypt(text) {
+            return CryptoJS.AES.encrypt(text, secret).toString();
+        }
+
+        function decrypt(cipher) {
+            try {
+                return CryptoJS.AES.decrypt(cipher, secret).toString(CryptoJS.enc.Utf8);
+            } catch(e) { return "[[ Decryption Failed ]]"; }
+        }
+
+        function send() {
+            const input = document.getElementById('chat-input');
+            if(!input.value) return;
+
+            const encrypted = encrypt(input.value);
+            channel.publish('msg', { sender: user, text: encrypted });
+            displayMsg(input.value, 'sent', 'You');
+            input.value = '';
+        }
+
+        function displayMsg(text, type, sender) {
+            const container = document.getElementById('msg-container');
+            const div = document.createElement('div');
+            div.className = `msg ${type}`;
+            div.innerHTML = `<small style="display:block; opacity:0.5; font-size:0.7rem">${sender}</small>${text}`;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function switchRoom(room) {
+            alert("Switching to " + room + " chamber...");
+            // Logic to change Ably channel would go here
+        }
+    </script>
+</body>
+</html>
