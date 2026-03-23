@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus Prime | Stealth</title>
+    <title>Nexus Prime | Stealth Fixed</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
@@ -23,7 +23,6 @@
         @keyframes move { from { transform: translate(-10%, -10%); } to { transform: translate(20%, 20%); } }
 
         .container { width: 95%; max-width: 480px; height: 85vh; background: var(--glass); backdrop-filter: blur(50px); border-radius: 40px; border: 1px solid rgba(255, 255, 255, 0.1); display: flex; flex-direction: column; overflow: hidden; position: relative; box-shadow: var(--shadow); }
-        
         #sidebar { position: absolute; left: -300px; top: 0; width: 280px; height: 100%; background: var(--bg); transition: 0.4s ease; z-index: 1000; padding: 25px; box-sizing: border-box; border-right: 1px solid rgba(255,255,255,0.1); }
         #sidebar.open { left: 0; }
 
@@ -90,7 +89,7 @@
                 <input type="text" id="msg-input" placeholder="Signal..." style="flex-grow:1; margin-bottom:0">
                 <button onclick="sendText()" style="padding:10px 20px;">➤</button>
             </div>
-            <div class="is-admin" style="display:none;">
+            <div class="is-admin" id="admin-controls-ui" style="display:none;">
                 <button onclick="sendAnnouncement()" style="background:#ff4757; width:100%; font-size:0.7rem;">⚠️ BOLD ANNOUNCEMENT</button>
             </div>
         </div>
@@ -100,11 +99,9 @@
 <script>
     const ABLY_KEY = 'fVAQIA.kFtCvw:X6QXTzbh4Tbi1HUBiOQMlReiyw0uwkbOnEibDEM_VdA';
 
-    // THESE ARE SCRAMBLED HASHES. 
-    // "redacted" scrambled is: b7a875fc...
-    // "redacted" scrambled is: d68e5470...
-    const LOGIN_HASH = "b7a875fc1d4d682442436f5492d50e8d3509b552737a6b9961f52b6507011d87";
-    const ADMIN_HASH = "d68e54701269925f385150853f090d8a593301a547701e85871804f58f4a1804";
+    // Verification Hashes (SHA-256)
+    const LOGIN_HASH = "b7a875fc1d4d682442436f5492d50e8d3509b552737a6b9961f52b6507011d87";  
+    const ADMIN_HASH = "d68e54701269925f385150853f090d8a593301a547701e85871804f58f4a1804"; 
 
     let username = "", ably, channel, secretKey = "", isAdmin = false;
     let mutedUsers = new Set();
@@ -114,23 +111,23 @@
     function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
 
     function checkPw() {
-        const pInput = document.getElementById('pw-input').value.toLowerCase();
-        const aInput = document.getElementById('admin-input').value;
+        const pInput = document.getElementById('pw-input').value.trim().toLowerCase();
+        const aInput = document.getElementById('admin-input').value.trim();
 
-        // Scramble the user input to see if it matches the stored fingerprint
+        // Convert hashed input to string for reliable comparison
         const hashedP = CryptoJS.SHA256(pInput).toString();
         const hashedA = CryptoJS.SHA256(aInput).toString();
 
         if (hashedP === LOGIN_HASH) {
-            secretKey = pInput; // Use actual text to decrypt messages
+            secretKey = pInput; 
             if (hashedA === ADMIN_HASH) {
                 isAdmin = true;
                 document.body.classList.add('is-admin');
-                document.querySelectorAll('.is-admin').forEach(el => el.style.display = 'block');
+                document.getElementById('admin-controls-ui').style.display = 'block';
             }
             showScreen('user-screen');
         } else {
-            alert("Unauthorized Access.");
+            alert("Invalid Encryption Key.");
         }
     }
 
@@ -170,12 +167,22 @@
 
     function addBubble(id, enc, mid, senderIsAdmin, isAnnounce) {
         const box = document.getElementById('chat-box');
-        let dec; try { dec = CryptoJS.AES.decrypt(enc, secretKey).toString(CryptoJS.enc.Utf8); } catch(e) { dec = "[ENCRYPTED]"; }
+        let dec; 
+        try { 
+            const bytes = CryptoJS.AES.decrypt(enc, secretKey);
+            dec = bytes.toString(CryptoJS.enc.Utf8);
+        } catch(e) { dec = "[ENCRYPTED]"; }
+
         const div = document.createElement('div');
         div.className = 'msg' + (isAnnounce ? ' announcement' : '');
         div.id = mid;
         if(id === username && !isAnnounce) div.style.cssText = 'margin-left:auto; background:var(--accent); color:white;';
-        div.onclick = (e) => { if(e.target.classList.contains('tool-icon')) return; const s = div.querySelector('.msg-c'); s.innerText = s.innerText === enc ? dec : enc; };
+        
+        div.onclick = (e) => { 
+            if(e.target.classList.contains('tool-icon')) return; 
+            const span = div.querySelector('.msg-c'); 
+            span.innerText = span.innerText === enc ? (dec || "[FAILED]") : enc; 
+        };
 
         div.innerHTML = `
             <div class="msg-tools">
