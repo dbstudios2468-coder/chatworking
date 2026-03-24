@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Nexus v24 | Ballard Architecture</title>
+    <title>Nexus v25 | Synthesis</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap" rel="stylesheet">
@@ -27,95 +27,64 @@
             --bg: #f4f7f9; --text: #1a1c20; 
             --glass: linear-gradient(135deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.4)); 
             --border: rgba(255, 255, 255, 0.6); 
-            --accent-glow: rgba(0, 122, 255, 0.1);
             --accent-glow-strong: rgba(0, 122, 255, 0.3);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; scrollbar-color: var(--accent) transparent; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; scrollbar-width: thin; scrollbar-color: var(--accent) transparent; }
         ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; box-shadow: inset 0 0 10px var(--accent-glow-strong); }
-        ::selection { background: var(--accent); color: #000; }
-
-        body { background: var(--bg); height: 100dvh; display: flex; align-items: center; justify-content: center; overflow: hidden; color: var(--text); transition: background 0.8s ease; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
-
-        /* KINETIC LAYERS */
-        #bg-layer { position: fixed; inset: -10%; z-index: -2; background-size: cover; background-position: center; filter: blur(var(--blur)) brightness(0.7); transition: transform 1s var(--spring); transform: translate(calc(var(--tx) * -0.2), calc(var(--ty) * -0.2)); }
-        .caustics { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at center, var(--accent-glow-strong), transparent); opacity: 0.5; pointer-events: none; transition: 0.5s ease; }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
         
-        .vacuum-out { animation: vacuum 0.8s var(--spring) forwards; }
-        @keyframes vacuum { 0% { transform: scale(1); opacity: 1; filter: blur(0); } 100% { transform: scale(0); opacity: 0; filter: blur(50px); } }
-        .ui-bloom { animation: bloom 1s var(--spring) forwards; }
-        @keyframes bloom { 0% { transform: scale(1.1); opacity: 0; filter: blur(30px); } 100% { transform: scale(1); opacity: 1; filter: blur(0); } }
+        body { background: var(--bg); height: 100dvh; display: flex; align-items: center; justify-content: center; overflow: hidden; color: var(--text); transition: background 0.8s ease; }
 
-        /* CHASSIS */
+        #bg-layer { position: fixed; inset: -10%; z-index: -2; background-size: cover; background-position: center; filter: blur(var(--blur)) brightness(0.7); transition: transform 1s var(--spring); transform: translate(calc(var(--tx) * -0.2), calc(var(--ty) * -0.2)); }
+        .caustics { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at center, var(--accent-glow-strong), transparent); opacity: 0.5; pointer-events: none; }
+        
         .nexus-wrapper { display: grid; gap: 20px; width: 96vw; height: 84dvh; max-width: 1800px; opacity: 0; pointer-events: none; transition: transform 0.5s var(--spring); }
         .mode-computer { grid-template-columns: 320px 1fr 240px; }
-        .mode-mobile { width: 420px; grid-template-columns: 1fr; border-radius: 80px; }
-        .mode-watch { width: 380px; height: 380px; aspect-ratio: 1/1; border-radius: 50% !important; border: 12px solid var(--border); grid-template-columns: 1fr; overflow: hidden; box-shadow: 0 0 60px rgba(0,0,0,0.5), inset 0 0 30px var(--accent-glow); margin: auto; }
+        .mode-mobile { width: 420px; grid-template-columns: 1fr; }
+        .mode-watch { width: 380px; height: 380px; aspect-ratio: 1/1; border-radius: 50% !important; border: 12px solid var(--border); grid-template-columns: 1fr; overflow: hidden; margin: auto; }
         
+        aside { display: flex; flex-direction: column; }
         .mode-mobile aside, .mode-watch aside { display: none; }
-        .mode-watch .scroll-flow { padding: 80px 40px 70px; text-align: center; }
 
-        .glass-panel { background: var(--glass); backdrop-filter: blur(var(--blur)) saturate(250%); border: 1.5px solid var(--border); border-radius: 60px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,0.5), inset 0 2px 20px rgba(255,255,255,0.15), inset 0 -20px 60px var(--accent-glow); transition: border-color 0.5s ease, box-shadow 0.5s ease; }
+        .glass-panel { background: var(--glass); backdrop-filter: blur(var(--blur)) saturate(250%); border: 1.5px solid var(--border); border-radius: 60px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,0.5), inset 0 2px 20px rgba(255,255,255,0.15); transition: border-color 0.5s ease; }
 
-        #sketch-wrap { flex: 1; margin: 20px; background: rgba(0,0,0,0.2); border-radius: 40px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; position: relative; box-shadow: inset 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px var(--accent-glow); }
+        #sketch-wrap { flex: 1; margin: 20px; background: rgba(0,0,0,0.2); border-radius: 40px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; position: relative; }
         canvas { width: 100%; height: 100%; cursor: crosshair; touch-action: none; }
 
         /* BUBBLES & WORD WRAPPING */
-        .bubble { padding: 18px 28px; border-radius: 40px; font-size: 1rem; animation: liquid-bloom 0.6s var(--spring); position: relative; max-width: 85%; line-height: 1.5; transition: 0.3s; margin-bottom: 8px; word-wrap: break-word; overflow-wrap: break-word; hyphens: auto; }
+        .bubble { padding: 18px 28px; border-radius: 40px; font-size: 1rem; animation: liquid-bloom 0.6s var(--spring); position: relative; max-width: 85%; line-height: 1.5; margin-bottom: 12px; word-wrap: break-word; overflow-wrap: break-word; }
         @keyframes liquid-bloom { 0% { transform: scale(0.5) translateY(20px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
         
-        .bubble.me { align-self: flex-end; background: linear-gradient(135deg, var(--accent), rgba(255,255,255,0.8)); color: #000; font-weight: 800; border-bottom-right-radius: 10px; border: 1px solid rgba(255,255,255,0.5); box-shadow: inset 0 2px 10px rgba(255,255,255,0.6), 0 15px 30px var(--accent-glow-strong); }
-        .bubble.them { align-self: flex-start; background: linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05)); color: var(--text); border: 1.5px solid var(--border); border-bottom-left-radius: 10px; box-shadow: inset 0 2px 10px rgba(255,255,255,0.1); }
-        .bubble img { max-width: 100%; border-radius: 20px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.2); }
+        .bubble.me { align-self: flex-end; background: linear-gradient(135deg, var(--accent), rgba(255,255,255,0.8)); color: #000; font-weight: 800; border-bottom-right-radius: 8px; }
+        .bubble.them { align-self: flex-start; background: rgba(255,255,255,0.15); color: var(--text); border: 1.5px solid var(--border); border-bottom-left-radius: 8px; }
+        
+        /* REACTIONS SYSTEM */
+        .react-bar { position: absolute; bottom: -12px; left: 20px; display: flex; gap: 4px; z-index: 5; }
+        .react-tag { background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); border: 1px solid var(--border); border-radius: 20px; padding: 2px 8px; font-size: 0.75rem; display: flex; align-items: center; gap: 4px; animation: pop 0.3s var(--spring); color: var(--text); }
+        .react-palette { position: absolute; top: -45px; left: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(20px); border-radius: 30px; padding: 5px 15px; display: none; gap: 10px; border: 1.5px solid var(--accent); z-index: 100; animation: drop-in 0.3s var(--spring); }
+        @keyframes pop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
 
-        .quote-block { background: rgba(0,0,0,0.15); border-left: 4px solid var(--accent); padding: 8px 15px; border-radius: 12px; font-size: 0.85rem; margin-bottom: 8px; opacity: 0.8; box-shadow: inset 0 2px 10px rgba(0,0,0,0.1); word-wrap: break-word; overflow-wrap: break-word; }
-        .bubble.me .quote-block { background: rgba(255,255,255,0.3); border-color: #000; color: #000; box-shadow: inset 0 2px 10px rgba(255,255,255,0.2); }
-
+        /* ACTION BUTTONS */
         .action-btn { position: absolute; top: -8px; width: 28px; height: 28px; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; cursor: pointer; opacity: 0; transform: scale(0.5); transition: 0.3s var(--spring); border: 2px solid var(--bg); z-index: 10; }
         .bubble:hover .action-btn { opacity: 1; transform: scale(1); }
-        .del-btn { right: -8px; background: #ff4757; box-shadow: 0 5px 15px rgba(255,71,87,0.5); }
-        .bubble.me .reply-btn { left: -8px; background: var(--accent); color: #000; box-shadow: 0 5px 15px var(--accent-glow-strong); }
-        .bubble.them .reply-btn { right: -8px; background: var(--accent); color: #000; box-shadow: 0 5px 15px var(--accent-glow-strong); }
+        .del-btn { right: -8px; background: #ff4757; }
+        .reply-btn { right: 25px; background: var(--accent); color: #000; }
+        .react-trigger { left: -8px; background: #ffa502; color: #000; }
 
-        .status-orb { position: absolute; bottom: -6px; right: 20px; width: 18px; height: 18px; background: var(--bg); border: 2px solid rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.5rem; color: rgba(255,255,255,0.3); transition: 0.4s var(--spring); z-index: 10; }
-        .status-orb.read { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 15px var(--accent-glow-strong); text-shadow: 0 0 5px var(--accent); }
+        /* DOCK */
+        .dock { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.15); backdrop-filter: blur(40px); padding: 12px 30px; border-radius: 100px; display: flex; gap: 15px; z-index: 9999; border: 2px solid rgba(255,255,255,0.3); transition: 0.6s var(--spring); }
+        .dock.hidden { transform: translate(-50%, 150%); opacity: 0; }
+        .dock-tool { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text); background: rgba(255,255,255,0.08); transition: 0.3s; }
+        .dock-tool:hover, .dock-tool.active { transform: scale(1.2); background: var(--accent); color: #000; }
 
-        #reply-preview { display: none; background: rgba(255,255,255,0.1); border: 1.5px solid var(--border); border-radius: 20px; padding: 10px 15px; margin-bottom: 10px; align-items: center; justify-content: space-between; font-size: 0.85rem; backdrop-filter: blur(10px); box-shadow: inset 0 2px 10px rgba(255,255,255,0.1); animation: drop-in 0.3s var(--spring); word-wrap: break-word; overflow-wrap: break-word; }
-        #reply-preview i { cursor: pointer; opacity: 0.7; transition: 0.3s; }
-        #reply-preview i:hover { opacity: 1; color: #ff4757; }
-        @keyframes drop-in { 0% { transform: scale(0.9) translateY(-20px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
-
-        /* STEALTH DOCK SYSTEM */
-        .dock { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.15); backdrop-filter: blur(40px) saturate(200%); padding: 12px 30px; border-radius: 100px; display: flex; gap: 15px; z-index: 9999; border: 2px solid rgba(255,255,255,0.3); box-shadow: 0 25px 60px rgba(0,0,0,0.5), inset 0 2px 15px rgba(255,255,255,0.2), 0 0 30px var(--accent-glow); transition: transform 0.6s var(--spring), opacity 0.4s ease, border-color 0.5s ease; }
-        .mode-watch ~ .dock { bottom: auto; top: 10px; transform: translateX(-50%) scale(0.7); }
-        .dock.hidden { transform: translate(-50%, 150%) scale(0.8); opacity: 0; pointer-events: none; }
-        .mode-watch ~ .dock.hidden { transform: translate(-50%, -150%) scale(0.7); }
-        
-        .dock-tool { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text); background: rgba(255,255,255,0.08); transition: 0.3s var(--spring); border: 1px solid transparent; }
-        .dock-tool:hover, .dock-tool.active { transform: scale(1.2); background: var(--accent); color: #000; border-color: rgba(255,255,255,0.5); box-shadow: 0 10px 20px var(--accent-glow-strong); }
-
-        #dock-reveal { position: fixed; bottom: -50px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #000; padding: 5px 30px; border-radius: 20px 20px 0 0; cursor: pointer; transition: 0.4s var(--spring); z-index: 9998; box-shadow: 0 0 30px var(--accent-glow-strong); font-size: 1.2rem; }
+        #dock-reveal { position: fixed; bottom: -50px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #000; padding: 5px 30px; border-radius: 20px 20px 0 0; cursor: pointer; transition: 0.4s; z-index: 9998; }
         #dock-reveal.visible { bottom: 0; }
-        .mode-watch ~ #dock-reveal { top: -50px; bottom: auto; border-radius: 0 0 20px 20px; }
-        .mode-watch ~ #dock-reveal.visible { top: 0; }
 
-        /* GATE & SCHOOL LOGIN */
+        /* LOGIN GATE */
         #gate { position: fixed; inset: 0; z-index: 10000; background: #000; display: flex; align-items: center; justify-content: center; }
-        .login-card { background: var(--glass); padding: 60px; border-radius: 80px; border: 2px solid rgba(255,255,255,0.3); text-align: center; width: 450px; backdrop-filter: blur(50px) saturate(200%); box-shadow: 0 0 50px var(--accent-glow-strong), inset 0 2px 20px rgba(255,255,255,0.2); transition: border-color 0.5s ease; }
-        .input-liquid { width: 100%; padding: 20px; border-radius: 50px; border: 1.5px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; margin-bottom: 10px; text-align: center; outline: none; font-size: 1.1rem; transition: border-color 0.3s ease, box-shadow 0.3s ease; box-shadow: inset 0 5px 15px rgba(0,0,0,0.3); }
-        .input-liquid:focus { border-color: var(--accent); box-shadow: inset 0 5px 15px rgba(0,0,0,0.3), 0 0 20px var(--accent-glow-strong); }
-        
-        .ios-fs { position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100dvh !important; border-radius: 0 !important; z-index: 9000; }
-        
-        /* SETTINGS DROPS */
-        .overlay { position: absolute; inset: 20px; background: rgba(0,0,0,0.85); backdrop-filter: blur(40px); z-index: 5000; padding: 40px; display: none; flex-direction: column; border-radius: 50px; border: 1.5px solid var(--accent); color: white; animation: drop-in 0.5s var(--spring); }
-        .mode-watch .overlay { inset: 0; border-radius: 50%; padding: 60px 40px; }
-        .palette { display: flex; gap: 12px; margin: 20px 0; flex-wrap: wrap; }
-        .drop { width: 45px; height: 45px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: 0.3s; }
-        .drop:hover { transform: scale(1.15); }
-        .drop.active { border-color: white; transform: scale(1.1); box-shadow: 0 0 20px inherit; }
+        .login-card { background: var(--glass); padding: 60px; border-radius: 80px; border: 2px solid var(--accent); text-align: center; width: 450px; backdrop-filter: blur(50px); }
+        .input-liquid { width: 100%; padding: 20px; border-radius: 50px; border: 1.5px solid var(--border); background: rgba(0,0,0,0.3); color: white; margin-bottom: 20px; text-align: center; outline: none; font-size: 1.1rem; }
     </style>
 </head>
 <body onmousemove="handleMove(event)">
@@ -123,90 +92,59 @@
     <div class="caustics"></div>
 
     <div id="gate">
-        <div class="login-card" id="card">
-            <h1 style="margin-bottom: 10px; letter-spacing: -5px; font-size: 4rem; font-weight: 900; color:white; text-shadow: 0 5px 20px rgba(255,255,255,0.3);">NEXUS</h1>
-            <p style="opacity:0.6; font-size: 0.8rem; margin-bottom:30px; letter-spacing: 2px; font-weight:800; color:var(--accent); transition: color 0.5s;">V24 BALLARD ARCHITECTURE</p>
-            
-            <input type="email" id="user-in" placeholder="firstname.surname@ballardschool.co.uk" class="input-liquid" autocomplete="off">
-            <p style="font-size: 0.75rem; color: var(--text); opacity: 0.5; margin-bottom: 25px; font-weight:600;">Use your school email to synchronize.</p>
-            
-            <button onclick="boot()" class="input-liquid" style="background:linear-gradient(135deg, var(--accent), #fff); color:black; font-weight:900; border:none; cursor:pointer; box-shadow: 0 10px 30px var(--accent-glow-strong);">ENGAGE</button>
+        <div class="login-card">
+            <h1 style="margin-bottom: 10px; letter-spacing: -5px; font-size: 4rem; font-weight: 900; color:white;">NEXUS</h1>
+            <p style="opacity:0.6; font-size: 0.8rem; margin-bottom:30px; letter-spacing: 2px; font-weight:800; color:var(--accent);">V25 SYNTHESIS</p>
+            <input type="email" id="email-in" placeholder="firstname.surname@ballardschool.co.uk" class="input-liquid">
+            <button onclick="boot()" class="input-liquid" style="background:white; color:black; font-weight:900; border:none; cursor:pointer;">ENGAGE</button>
         </div>
     </div>
 
     <div class="nexus-wrapper mode-computer" id="ui">
         <aside class="glass-panel">
-            <div style="padding:30px; font-weight:900; border-bottom:1.5px solid var(--border); display:flex; justify-content:space-between; text-shadow: 0 2px 10px rgba(255,255,255,0.2);">LAB <i class="fas fa-trash" onclick="clearCanvas()" style="cursor:pointer; opacity:0.7;"></i></div>
+            <div style="padding:30px; font-weight:900; border-bottom:1.5px solid var(--border);">LAB</div>
             <div id="sketch-wrap"><canvas id="canvas"></canvas></div>
-            <button onclick="broadcastSketch()" style="margin: 0 30px 30px; padding:20px; border-radius:50px; border:1px solid rgba(255,255,255,0.4); background:linear-gradient(135deg, var(--accent), rgba(255,255,255,0.5)); color:black; font-weight:900; cursor:pointer; box-shadow: 0 10px 20px var(--accent-glow-strong); transition: background 0.5s, box-shadow 0.5s;">BROADCAST</button>
+            <button onclick="broadcastSketch()" style="margin: 0 30px 30px; padding:20px; border-radius:50px; border:none; background:var(--accent); color:black; font-weight:900; cursor:pointer;">BROADCAST</button>
         </aside>
 
         <main class="glass-panel">
-            <div id="settings-view" class="overlay">
-                <h2>Liquid Customization</h2>
-                <div class="palette">
-                    <div class="drop active" style="background:#00f2ff; box-shadow: 0 0 15px #00f2ff66;" onclick="injectColor('#00f2ff', this)"></div>
-                    <div class="drop" style="background:#ff007f; box-shadow: 0 0 15px #ff007f66;" onclick="injectColor('#ff007f', this)"></div>
-                    <div class="drop" style="background:#a29bfe; box-shadow: 0 0 15px #a29bfe66;" onclick="injectColor('#a29bfe', this)"></div>
-                    <div class="drop" style="background:#00ff88; box-shadow: 0 0 15px #00ff8866;" onclick="injectColor('#00ff88', this)"></div>
-                    <div class="drop" style="background:#f9ca24; box-shadow: 0 0 15px #f9ca2466;" onclick="injectColor('#f9ca24', this)"></div>
-                    <div class="drop" style="background:#ffffff; box-shadow: 0 0 15px #ffffff66;" onclick="injectColor('#ffffff', this)"></div>
-                </div>
-                <button onclick="toggleOverlay('settings-view')" class="input-liquid" style="margin-top:auto; background:var(--accent); color:black; font-weight:800; border:none; cursor:pointer;">SAVE ARCHITECTURE</button>
-            </div>
-
-            <div id="view" style="flex:1; overflow-y:auto; padding:40px; display:flex; flex-direction:column; gap:18px;"></div>
-            
-            <div style="padding: 25px 30px; background: rgba(0,0,0,0.15); box-shadow: inset 0 10px 30px rgba(0,0,0,0.2);">
-                <div id="reply-preview">
-                    <div style="flex: 1; overflow: hidden;"><strong style="color:var(--accent); transition: color 0.5s;" id="rp-user"></strong> <span id="rp-text" style="opacity:0.8; margin-left:5px;"></span></div>
-                    <i class="fas fa-times" onclick="cancelReply()" style="margin-left: 10px;"></i>
-                </div>
-
-                <div style="background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.2); border-radius: 100px; padding: 10px; display: flex; gap: 15px; box-shadow: inset 0 2px 10px rgba(255,255,255,0.1); transition: border-color 0.3s; padding-left:20px;">
-                    <input type="text" id="msg-input" placeholder="Ripple a thought..." style="flex:1; background:transparent; border:none; padding:10px 0; color:var(--text); outline:none; font-size:1rem; font-weight:600;" onkeypress="if(event.key==='Enter') push()">
-                    <button onclick="push()" style="background:var(--text); color:var(--bg); border:none; padding:0 40px; border-radius:100px; font-weight:900; cursor:pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">SEND</button>
+            <div id="view" style="flex:1; overflow-y:auto; padding:40px; display:flex; flex-direction:column; gap:10px;"></div>
+            <div style="padding: 25px 30px; background: rgba(0,0,0,0.15);">
+                <div style="background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.2); border-radius: 100px; padding: 10px; display: flex; gap: 15px;">
+                    <input type="text" id="msg-input" placeholder="Ripple a thought..." style="flex:1; background:transparent; border:none; padding:10px 20px; color:var(--text); outline:none; font-size:1rem;" onkeypress="if(event.key==='Enter') push()">
+                    <button onclick="push()" style="background:var(--text); color:var(--bg); border:none; padding:0 40px; border-radius:100px; font-weight:900; cursor:pointer;">SEND</button>
                 </div>
             </div>
         </main>
 
         <aside class="glass-panel">
-            <div style="padding:30px; font-weight:900; border-bottom:1.5px solid var(--border); text-shadow: 0 2px 10px rgba(255,255,255,0.2);">VITALITY</div>
+            <div style="padding:30px; font-weight:900; border-bottom:1.5px solid var(--border);">ONLINE</div>
             <div style="padding:40px; text-align:center;">
-                <div style="width:24px; height:24px; border-radius:50%; background:linear-gradient(135deg, var(--accent), #fff); box-shadow: 0 0 30px var(--accent-glow-strong); margin: 0 auto 20px; border: 2px solid rgba(255,255,255,0.5); transition: background 0.5s, box-shadow 0.5s;"></div>
-                <div style="font-weight:900; font-size:1.6rem; letter-spacing: 1px; margin-bottom: 5px; text-shadow: 0 2px 15px rgba(255,255,255,0.3);">ONLINE</div>
-                <div id="user-display" style="font-weight:700; opacity:0.6; text-transform:uppercase; font-size:1rem; letter-spacing: 2px;"></div>
+                <div style="width:24px; height:24px; border-radius:50%; background:var(--accent); box-shadow: 0 0 30px var(--accent-glow-strong); margin: 0 auto 20px;"></div>
+                <div id="user-display" style="font-weight:700; text-transform:uppercase; font-size:1.2rem;"></div>
             </div>
         </aside>
     </div>
 
-    <div class="dock" id="control-dock">
+    <div class="dock" id="dock">
         <div class="dock-tool active" onclick="setMode('computer', this)"><i class="fas fa-desktop"></i></div>
         <div class="dock-tool" onclick="setMode('mobile', this)"><i class="fas fa-mobile-alt"></i></div>
         <div class="dock-tool" onclick="setMode('watch', this)"><i class="fas fa-clock"></i></div>
-        <div style="width:2px; background:rgba(255,255,255,0.2); margin:5px 0; border-radius:5px;"></div>
+        <div style="width:2px; background:rgba(255,255,255,0.2); margin:5px 0;"></div>
         <div class="dock-tool" onclick="document.getElementById('bg-up').click()"><i class="fas fa-image"></i></div>
         <div class="dock-tool" onclick="toggleTheme()"><i class="fas fa-sun"></i></div>
-        <div class="dock-tool" onclick="toggleOverlay('settings-view')"><i class="fas fa-palette"></i></div>
-        <div style="width:2px; background:rgba(255,255,255,0.2); margin:5px 0; border-radius:5px;"></div>
         <div class="dock-tool" onclick="toggleDock()"><i class="fas fa-eye-slash"></i></div>
-        <div class="dock-tool" id="fs-btn" onclick="toggleFS()"><i class="fas fa-expand-alt"></i></div>
+        <div class="dock-tool" onclick="toggleFS()"><i class="fas fa-expand-alt"></i></div>
     </div>
-
-    <div id="dock-reveal" onclick="toggleDock()">
-        <i class="fas fa-chevron-up"></i>
-    </div>
+    <div id="dock-reveal" onclick="toggleDock()"><i class="fas fa-chevron-up"></i></div>
 
     <input type="file" id="bg-up" hidden accept="image/*" onchange="handleBg(this)">
 
     <script>
-        let client, chan, user;
-        const secret = "v24_ballard_arch";
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
+        let client, chan, user, receivedIds = new Set();
+        const secret = "v25_ballard";
+        const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
         let drawing = false;
-        let receivedIds = new Set();
-        let activeReply = null;
 
         function handleMove(e) {
             const x = (window.innerWidth / 2 - e.clientX) / 25, y = (window.innerHeight / 2 - e.clientY) / 25;
@@ -214,209 +152,100 @@
             document.documentElement.style.setProperty('--ty', y + 'px');
         }
 
-        function handleBg(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    const url = e.target.result;
-                    document.getElementById('bg-layer').style.backgroundImage = `url(${url})`;
-                    localStorage.setItem('nx_bg', url);
-                };
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        function injectColor(hex, el) {
-            document.documentElement.style.setProperty('--accent', hex);
-            let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            if(result) {
-                let r = parseInt(result[1], 16), g = parseInt(result[2], 16), b = parseInt(result[3], 16);
-                document.documentElement.style.setProperty('--accent-glow', `rgba(${r}, ${g}, ${b}, 0.15)`);
-                document.documentElement.style.setProperty('--accent-glow-strong', `rgba(${r}, ${g}, ${b}, 0.4)`);
-            }
-            document.querySelectorAll('.drop').forEach(d => { d.style.border = '3px solid transparent'; d.style.transform = 'scale(1)'; });
-            if(el) { el.style.border = '2px solid white'; el.style.transform = 'scale(1.2)'; }
-            localStorage.setItem('nx_color', hex);
-        }
-
         async function boot() {
-            const emailInput = document.getElementById('user-in').value.trim().toLowerCase();
+            let email = document.getElementById('email-in').value.trim().toLowerCase();
+            if(!email.endsWith('@ballardschool.co.uk')) return alert("Use school email.");
             
-            if(!emailInput || !emailInput.includes('@ballardschool.co.uk')) {
-                alert("Please enter a valid @ballardschool.co.uk email to synchronize.");
-                return;
-            }
+            let firstName = email.split('@')[0].split('.')[0];
+            user = firstName.charAt(0).toUpperCase() + firstName.slice(1);
+            localStorage.setItem('nx_user', user);
+            
+            initNexus();
+        }
 
-            // Extract first name and capitalize
-            const namePart = emailInput.split('@')[0];
-            const rawFirstName = namePart.split('.')[0];
-            user = rawFirstName.charAt(0).toUpperCase() + rawFirstName.slice(1);
+        window.onload = () => {
+            let saved = localStorage.getItem('nx_user');
+            if(saved) { user = saved; initNexus(); }
+        }
 
-            document.getElementById('card').classList.add('vacuum-out');
-            setTimeout(() => {
-                document.getElementById('gate').style.display = 'none';
-                const ui = document.getElementById('ui');
-                ui.style.opacity = '1'; ui.style.pointerEvents = 'all'; ui.classList.add('ui-bloom');
-                setTimeout(initCanvas, 600);
-            }, 800);
+        function initNexus() {
+            document.getElementById('gate').style.display = 'none';
+            const ui = document.getElementById('ui');
+            ui.style.opacity = '1'; ui.style.pointerEvents = 'all';
+            
+            client = new Ably.Realtime({ key: 'fVAQIA.kFtCvw:X6QXTzbh4Tbi1HUBiOQMlReiyw0uwkbOnEibDEM_VdA' });
+            chan = client.channels.get('v25-flow');
+            document.getElementById('user-display').innerText = user;
 
-            client = new Ably.Realtime({ key: 'fVAQIA.kFtCvw:X6QXTzbh4Tbi1HUBiOQMlReiyw0uwkbOnEibDEM_VdA', transports: ['xhr_streaming', 'xhr_polling', 'web_socket'] });
-            client.connection.on('connected', () => {
-                document.getElementById('user-display').innerText = user;
-                chan = client.channels.get('v24-flow');
-                
-                chan.subscribe('msg', p => { 
-                    if(receivedIds.has(p.data.id)) return;
-                    receivedIds.add(p.data.id);
-                    if(p.data.u !== user) {
-                        let repDec = null;
-                        if(p.data.rep) repDec = { u: p.data.rep.u, c: dec(p.data.rep.c) };
-                        render(dec(p.data.c), 'them', p.data.u, p.data.img, p.data.id, repDec);
-                        chan.publish('ack', { id: p.data.id });
-                    }
-                });
-                
-                chan.subscribe('del', p => { handleRemoteDelete(p.data.id); });
-                chan.subscribe('ack', p => {
-                    const statusOrb = document.getElementById('status-' + p.data.id);
-                    if(statusOrb) { statusOrb.classList.add('read'); statusOrb.innerHTML = '<i class="fas fa-check-double"></i>'; }
-                });
-                
-                restoreSettings(); load();
+            chan.subscribe('msg', p => {
+                if(receivedIds.has(p.data.id)) return;
+                receivedIds.add(p.data.id);
+                if(p.data.u !== user) render(dec(p.data.c), 'them', p.data.u, p.data.img, p.data.id);
             });
-        }
 
-        function restoreSettings() {
-            const savedBg = localStorage.getItem('nx_bg');
-            if(savedBg) document.getElementById('bg-layer').style.backgroundImage = `url(${savedBg})`;
-            if(localStorage.getItem('nx_theme') === 'light') toggleTheme(true);
-            
-            const savedColor = localStorage.getItem('nx_color');
-            if(savedColor) {
-                const drops = document.querySelectorAll('.drop');
-                let matched = Array.from(drops).find(d => d.style.background.includes(savedColor) || d.style.background.includes(savedColor.replace('#', '')));
-                injectColor(savedColor, matched || drops[0]);
-            }
-            
-            const input = document.getElementById('msg-input');
-            const wrapper = input.parentElement;
-            input.addEventListener('focus', () => { wrapper.style.borderColor = 'var(--accent)'; wrapper.style.boxShadow = 'inset 0 2px 10px rgba(255,255,255,0.1), 0 0 20px var(--accent-glow-strong)'; });
-            input.addEventListener('blur', () => { wrapper.style.borderColor = 'rgba(255,255,255,0.2)'; wrapper.style.boxShadow = 'inset 0 2px 10px rgba(255,255,255,0.1)'; });
-        }
+            chan.subscribe('react', p => { updateReactUI(p.data.id, p.data.emoji, p.data.count); });
+            chan.subscribe('del', p => { document.getElementById(p.data.id)?.remove(); });
 
-        function toggleDock() {
-            const dock = document.getElementById('control-dock');
-            const reveal = document.getElementById('dock-reveal');
-            dock.classList.toggle('hidden');
-            reveal.classList.toggle('visible');
-        }
-
-        function initCanvas() {
-            const wrap = document.getElementById('sketch-wrap');
-            canvas.width = wrap.clientWidth; canvas.height = wrap.clientHeight;
-            ctx.strokeStyle = '#fff'; ctx.lineWidth = 4; ctx.lineCap = 'round';
-            const draw = e => { if(!drawing) return; const r = canvas.getBoundingClientRect(); ctx.lineTo((e.clientX||(e.touches&&e.touches[0].clientX))-r.left, (e.clientY||(e.touches&&e.touches[0].clientY))-r.top); ctx.stroke(); };
-            canvas.onmousedown = e => { drawing = true; ctx.beginPath(); ctx.moveTo((e.clientX)-canvas.getBoundingClientRect().left, (e.clientY)-canvas.getBoundingClientRect().top); };
-            canvas.onmousemove = draw; window.addEventListener('mouseup', () => drawing = false);
-            canvas.ontouchstart = e => { drawing = true; ctx.beginPath(); const r=canvas.getBoundingClientRect(); ctx.moveTo(e.touches[0].clientX-r.left, e.touches[0].clientY-r.top); };
-            canvas.ontouchmove = draw; window.addEventListener('touchend', () => drawing = false);
-        }
-        function clearCanvas() { ctx.clearRect(0,0,canvas.width,canvas.height); }
-
-        function initiateReply(id, replyUser, text) {
-            activeReply = { id, u: replyUser, c: text };
-            document.getElementById('rp-user').innerText = replyUser;
-            document.getElementById('rp-text').innerText = text.length > 50 ? text.substring(0, 50) + '...' : text;
-            document.getElementById('reply-preview').style.display = 'flex';
-            document.getElementById('msg-input').focus();
-        }
-
-        function cancelReply() {
-            activeReply = null;
-            document.getElementById('reply-preview').style.display = 'none';
-        }
-
-        function broadcastSketch() {
-            const id = 'msg_' + Date.now() + Math.floor(Math.random()*1000);
-            let payloadRep = null;
-            if(activeReply) payloadRep = { u: activeReply.u, c: enc(activeReply.c) };
-            
-            const data = { id, u: user, c: enc("[Liquid Sketch]"), img: canvas.toDataURL(), rep: payloadRep };
-            receivedIds.add(id); chan.publish('msg', data);
-            
-            save(data); render("[Liquid Sketch]", 'me', 'You', data.img, id, activeReply);
-            clearCanvas(); cancelReply();
+            initCanvas(); load();
         }
 
         function push() {
             const i = document.getElementById('msg-input'); if(!i.value) return;
-            const id = 'msg_' + Date.now() + Math.floor(Math.random()*1000);
-            
-            let payloadRep = null;
-            if(activeReply) payloadRep = { u: activeReply.u, c: enc(activeReply.c) };
-
-            const data = { id, u: user, c: enc(i.value), rep: payloadRep };
+            const id = 'msg_' + Date.now();
+            const data = { id, u: user, c: enc(i.value) };
             receivedIds.add(id); chan.publish('msg', data);
-            
-            save(data); render(i.value, 'me', 'You', null, id, activeReply);
-            i.value = ''; cancelReply();
+            render(i.value, 'me', 'You', null, id);
+            save(data); i.value = '';
         }
 
-        function render(txt, type, s, img = null, id = null, replyObj = null) {
+        function render(txt, type, s, img, id) {
             if(document.getElementById(id)) return;
-            const v = document.getElementById('view');
-            const b = document.createElement('div');
-            b.className = `bubble ${type}`;
-            if(id) b.id = id;
+            const v = document.getElementById('view'), b = document.createElement('div');
+            b.className = `bubble ${type}`; b.id = id;
             
-            let content = `<small style="display:block;opacity:0.7;font-size:0.7rem;margin-bottom:6px;font-weight:900;">${s}</small>`;
-            
-            if(replyObj) {
-                content += `<div class="quote-block">
-                    <strong style="display:block; margin-bottom:2px; font-size:0.7rem;">${replyObj.u}</strong>
-                    ${replyObj.c}
-                </div>`;
-            }
-
-            content += `<span>${txt}</span>`;
-            if(img) content += `<img src="${img}">`;
-            
-            const escTxt = txt.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-            
-            if(type === 'me' && id) {
-                content += `<div class="action-btn reply-btn" onclick="initiateReply('${id}', 'You', '${escTxt}')"><i class="fas fa-reply"></i></div>`;
-                content += `<div class="action-btn del-btn" onclick="triggerDelete('${id}')"><i class="fas fa-times"></i></div>`;
-                content += `<div class="status-orb" id="status-${id}"><i class="fas fa-check"></i></div>`;
-            } else if (type === 'them' && id) {
-                content += `<div class="action-btn reply-btn" onclick="initiateReply('${id}', '${s}', '${escTxt}')"><i class="fas fa-reply"></i></div>`;
-            }
-            
-            b.innerHTML = content;
+            b.innerHTML = `
+                <small style="display:block;opacity:0.7;font-size:0.7rem;font-weight:900;">${s}</small>
+                ${txt}
+                ${img ? `<img src="${img}" style="width:100%; border-radius:20px; margin-top:10px;">` : ''}
+                <div class="react-bar" id="bar-${id}"></div>
+                <div class="action-btn react-trigger" onclick="togglePalette('${id}')"><i class="fas fa-smile"></i></div>
+                <div class="react-palette" id="pal-${id}">
+                    ${['❤️','👍','🔥','😂','😮','😢'].map(e => `<span onclick="sendReact('${id}','${e}')" style="cursor:pointer">${e}</span>`).join('')}
+                </div>
+                ${type === 'me' ? `<div class="action-btn del-btn" onclick="chan.publish('del',{id:'${id}'});document.getElementById('${id}').remove()">X</div>` : ''}
+            `;
             v.appendChild(b); v.scrollTop = v.scrollHeight;
         }
 
-        function triggerDelete(id) { chan.publish('del', { id }); handleRemoteDelete(id); }
-        function handleRemoteDelete(id) {
-            const el = document.getElementById(id);
-            if(el) { el.style.transform = 'scale(0)'; el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }
-            let h = JSON.parse(localStorage.getItem('nx24_h')) || [];
-            localStorage.setItem('nx24_h', JSON.stringify(h.filter(m => m.id !== id)));
+        function sendReact(id, emoji) {
+            chan.publish('react', { id, emoji, user });
+            document.getElementById('pal-'+id).style.display = 'none';
         }
 
-        function save(d) { let h = JSON.parse(localStorage.getItem('nx24_h')) || []; h.push(d); localStorage.setItem('nx24_h', JSON.stringify(h.slice(-50))); }
-        function load() { let h = JSON.parse(localStorage.getItem('nx24_h')) || []; h.forEach(d => { 
-            receivedIds.add(d.id); 
-            let repDec = null; if(d.rep) repDec = { u: d.rep.u, c: dec(d.rep.c) };
-            render(dec(d.c), d.u === user ? 'me' : 'them', d.u === user ? 'You' : d.u, d.img, d.id, repDec); 
-        });}
+        function updateReactUI(id, emoji, count) {
+            const bar = document.getElementById('bar-'+id);
+            if(!bar) return;
+            let existing = bar.querySelector(`[data-emoji="${emoji}"]`);
+            if(existing) existing.remove();
+            else bar.innerHTML += `<div class="react-tag" data-emoji="${emoji}">${emoji}</div>`;
+        }
 
-        function setMode(m, btn) { document.getElementById('ui').className = 'nexus-wrapper mode-' + m; document.querySelectorAll('.dock-tool').forEach(t => t.classList.remove('active')); btn.classList.add('active'); setTimeout(initCanvas, 600); }
-        function toggleTheme(forceLight = false) { const b = document.body; if(forceLight) b.setAttribute('data-brightness', 'light'); else b.setAttribute('data-brightness', b.getAttribute('data-brightness') === 'light' ? 'dark' : 'light'); localStorage.setItem('nx_theme', b.getAttribute('data-brightness')); }
-        function toggleOverlay(id) { const el = document.getElementById(id); el.style.display = (el.style.display === 'flex') ? 'none' : 'flex'; }
-        function toggleFS() { const ui = document.getElementById('ui'); const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent); if (isIOS) { ui.classList.toggle('ios-fs'); document.getElementById('fs-btn').innerHTML = ui.classList.contains('ios-fs') ? '<i class="fas fa-compress-alt"></i>' : '<i class="fas fa-expand-alt"></i>'; } else { if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); } }
+        function togglePalette(id) {
+            const p = document.getElementById('pal-'+id);
+            p.style.display = p.style.display === 'flex' ? 'none' : 'flex';
+        }
 
+        function toggleDock() { document.getElementById('dock').classList.toggle('hidden'); document.getElementById('dock-reveal').classList.toggle('visible'); }
+        function setMode(m, btn) { document.getElementById('ui').className = 'nexus-wrapper mode-'+m; document.querySelectorAll('.dock-tool').forEach(t=>t.classList.remove('active')); btn.classList.add('active'); setTimeout(initCanvas, 500); }
+        function toggleTheme() { document.body.setAttribute('data-brightness', document.body.getAttribute('data-brightness')==='light'?'dark':'light'); }
+        function toggleFS() { if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
         function enc(t) { return CryptoJS.AES.encrypt(t, secret).toString(); }
         function dec(c) { try { return CryptoJS.AES.decrypt(c, secret).toString(CryptoJS.enc.Utf8); } catch { return "[Encrypted]"; } }
+        function save(d) { let h = JSON.parse(localStorage.getItem('nx_h')) || []; h.push(d); localStorage.setItem('nx_h', JSON.stringify(h.slice(-30))); }
+        function load() { let h = JSON.parse(localStorage.getItem('nx_h')) || []; h.forEach(d => { receivedIds.add(d.id); render(dec(d.c), d.u === user ? 'me' : 'them', d.u === user ? 'You' : d.u, d.img, d.id); }); }
+        function initCanvas() { const w = document.getElementById('sketch-wrap'); canvas.width = w.clientWidth; canvas.height = w.clientHeight; ctx.strokeStyle = '#fff'; ctx.lineWidth = 4; ctx.lineCap = 'round'; canvas.onmousedown = e => { drawing = true; ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); }; canvas.onmousemove = e => { if(drawing) { ctx.lineTo(e.offsetX, e.offsetY); ctx.stroke(); } }; window.onmouseup = () => drawing = false; }
+        function broadcastSketch() { const id = 'sk_'+Date.now(); const data = { id, u: user, c: enc("[Sketch]"), img: canvas.toDataURL() }; receivedIds.add(id); chan.publish('msg', data); render("[Sketch]", 'me', 'You', data.img, id); save(data); ctx.clearRect(0,0,canvas.width,canvas.height); }
+        function handleBg(input) { if(input.files[0]) { const r = new FileReader(); r.onload = e => document.getElementById('bg-layer').style.backgroundImage = `url(${e.target.result})`; r.readAsDataURL(input.files[0]); } }
     </script>
 </body>
 </html>
