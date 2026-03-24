@@ -3,125 +3,217 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Nexus v25 | Synthesis</title>
+    <title>Nexus v26 | Deep-Fluid Singularity</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=JetBrains+Mono:wght@400;700&family=Plus+Jakarta+Sans:wght@400;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         :root {
             --accent: #00f2ff;
-            --accent-glow: rgba(0, 242, 255, 0.15);
-            --accent-glow-strong: rgba(0, 242, 255, 0.4);
-            --glass: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+            --accent-glow: rgba(0, 242, 255, 0.2);
+            --accent-strong: rgba(0, 242, 255, 0.6);
+            --glass-op: 0.08;
+            --glass-saturate: 250%;
             --border: rgba(255, 255, 255, 0.25);
             --bg: #010204;
             --text: #ffffff;
             --blur: 80px;
             --tx: 0px; --ty: 0px;
+            --font-main: 'Plus Jakarta Sans', sans-serif;
             --spring: cubic-bezier(0.175, 0.885, 0.32, 1.3);
         }
 
         [data-brightness="light"] {
-            --bg: #f4f7f9; --text: #1a1c20; 
-            --glass: linear-gradient(135deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.4)); 
-            --border: rgba(255, 255, 255, 0.6); 
-            --accent-glow-strong: rgba(0, 122, 255, 0.3);
+            --bg: #e8eef2; --text: #1a1c20; 
+            --glass-op: 0.6; 
+            --border: rgba(255, 255, 255, 0.8); 
+            --accent-glow: rgba(0, 122, 255, 0.15);
+            --accent-strong: rgba(0, 122, 255, 0.4);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; scrollbar-width: thin; scrollbar-color: var(--accent) transparent; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font-main); scrollbar-width: thin; scrollbar-color: var(--accent) transparent; }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
         
-        body { background: var(--bg); height: 100dvh; display: flex; align-items: center; justify-content: center; overflow: hidden; color: var(--text); transition: background 0.8s ease; }
+        body { background: var(--bg); height: 100dvh; display: flex; align-items: center; justify-content: center; overflow: hidden; color: var(--text); transition: background 0.8s ease; cursor: none; }
 
-        #bg-layer { position: fixed; inset: -10%; z-index: -2; background-size: cover; background-position: center; filter: blur(var(--blur)) brightness(0.7); transition: transform 1s var(--spring); transform: translate(calc(var(--tx) * -0.2), calc(var(--ty) * -0.2)); }
-        .caustics { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at center, var(--accent-glow-strong), transparent); opacity: 0.5; pointer-events: none; }
+        /* FLUID CURSOR */
+        #fluid-cursor { position: fixed; width: 30px; height: 30px; border-radius: 50%; background: var(--accent); filter: blur(8px); mix-blend-mode: screen; pointer-events: none; z-index: 10000; transform: translate(-50%, -50%); transition: width 0.2s, height 0.2s; }
+        body:active #fluid-cursor { width: 15px; height: 15px; }
+
+        #bg-layer { position: fixed; inset: -10%; z-index: -2; background-size: cover; background-position: center; filter: blur(var(--blur)) brightness(0.6); transition: transform 0.3s ease; transform: translate(calc(var(--tx) * -0.2), calc(var(--ty) * -0.2)); }
+        .caustics { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at center, var(--accent-glow), transparent); opacity: 0.6; pointer-events: none; }
         
-        .nexus-wrapper { display: grid; gap: 20px; width: 96vw; height: 84dvh; max-width: 1800px; opacity: 0; pointer-events: none; transition: transform 0.5s var(--spring); }
-        .mode-computer { grid-template-columns: 320px 1fr 240px; }
+        .nexus-wrapper { display: grid; gap: 20px; width: 96vw; height: 86dvh; max-width: 1800px; opacity: 0; pointer-events: none; transition: all 0.5s var(--spring); }
+        .mode-computer { grid-template-columns: 320px 1fr 260px; }
         .mode-mobile { width: 420px; grid-template-columns: 1fr; }
         .mode-watch { width: 380px; height: 380px; aspect-ratio: 1/1; border-radius: 50% !important; border: 12px solid var(--border); grid-template-columns: 1fr; overflow: hidden; margin: auto; }
         
         aside { display: flex; flex-direction: column; }
         .mode-mobile aside, .mode-watch aside { display: none; }
 
-        .glass-panel { background: var(--glass); backdrop-filter: blur(var(--blur)) saturate(250%); border: 1.5px solid var(--border); border-radius: 60px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,0.5), inset 0 2px 20px rgba(255,255,255,0.15); transition: border-color 0.5s ease; }
+        /* HEAVY LIQUID GLASS */
+        .glass-panel { 
+            background: rgba(255,255,255,var(--glass-op)); 
+            backdrop-filter: blur(var(--blur)) saturate(var(--glass-saturate)); 
+            border: 1.5px solid var(--border); border-radius: 60px; display: flex; 
+            flex-direction: column; overflow: hidden; 
+            box-shadow: 0 40px 100px rgba(0,0,0,0.5), inset 2px 2px 20px rgba(255,255,255,0.3), inset -10px -10px 40px var(--accent-glow); 
+            transition: all 0.5s ease; position: relative;
+        }
 
-        #sketch-wrap { flex: 1; margin: 20px; background: rgba(0,0,0,0.2); border-radius: 40px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; position: relative; }
-        canvas { width: 100%; height: 100%; cursor: crosshair; touch-action: none; }
+        #sketch-wrap { flex: 1; margin: 20px; background: rgba(0,0,0,0.2); border-radius: 40px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; position: relative; box-shadow: inset 0 10px 30px rgba(0,0,0,0.5); }
+        canvas { width: 100%; height: 100%; touch-action: none; }
 
-        /* BUBBLES & WORD WRAPPING */
-        .bubble { padding: 18px 28px; border-radius: 40px; font-size: 1rem; animation: liquid-bloom 0.6s var(--spring); position: relative; max-width: 85%; line-height: 1.5; margin-bottom: 12px; word-wrap: break-word; overflow-wrap: break-word; }
+        /* SEARCH BAR */
+        .search-bar { background: rgba(255,255,255,0.05); border-bottom: 1px solid var(--border); padding: 15px 30px; display: flex; align-items: center; gap: 10px; }
+        .search-bar input { background: transparent; border: none; color: var(--text); outline: none; width: 100%; font-size: 0.9rem; }
+
+        /* BUBBLES */
+        .bubble { padding: 18px 28px; border-radius: 40px; font-size: 1rem; animation: liquid-bloom 0.6s var(--spring); position: relative; max-width: 85%; margin-bottom: 12px; word-wrap: break-word; overflow-wrap: break-word; }
         @keyframes liquid-bloom { 0% { transform: scale(0.5) translateY(20px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
         
-        .bubble.me { align-self: flex-end; background: linear-gradient(135deg, var(--accent), rgba(255,255,255,0.8)); color: #000; font-weight: 800; border-bottom-right-radius: 8px; }
-        .bubble.them { align-self: flex-start; background: rgba(255,255,255,0.15); color: var(--text); border: 1.5px solid var(--border); border-bottom-left-radius: 8px; }
+        .bubble.me { align-self: flex-end; background: linear-gradient(135deg, var(--accent), rgba(255,255,255,0.9)); color: #000; font-weight: 800; border-bottom-right-radius: 8px; box-shadow: inset 2px 2px 10px rgba(255,255,255,0.8), 0 10px 20px var(--accent-glow); border: 1px solid rgba(255,255,255,0.6); }
+        .bubble.them { align-self: flex-start; background: rgba(255,255,255,0.1); color: var(--text); border: 1.5px solid var(--border); border-bottom-left-radius: 8px; box-shadow: inset 2px 2px 10px rgba(255,255,255,0.1); }
         
-        /* REACTIONS SYSTEM */
+        /* REACTIONS */
         .react-bar { position: absolute; bottom: -12px; left: 20px; display: flex; gap: 4px; z-index: 5; }
         .react-tag { background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); border: 1px solid var(--border); border-radius: 20px; padding: 2px 8px; font-size: 0.75rem; display: flex; align-items: center; gap: 4px; animation: pop 0.3s var(--spring); color: var(--text); }
         .react-palette { position: absolute; top: -45px; left: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(20px); border-radius: 30px; padding: 5px 15px; display: none; gap: 10px; border: 1.5px solid var(--accent); z-index: 100; animation: drop-in 0.3s var(--spring); }
         @keyframes pop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
 
         /* ACTION BUTTONS */
-        .action-btn { position: absolute; top: -8px; width: 28px; height: 28px; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; cursor: pointer; opacity: 0; transform: scale(0.5); transition: 0.3s var(--spring); border: 2px solid var(--bg); z-index: 10; }
-        .bubble:hover .action-btn { opacity: 1; transform: scale(1); }
+        .action-btn { position: absolute; top: -8px; width: 28px; height: 28px; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; opacity: 0; transform: scale(0.5); transition: 0.3s var(--spring); border: 2px solid var(--bg); z-index: 10; }
+        .bubble:hover .action-btn { opacity: 1; transform: scale(1); cursor: none; }
         .del-btn { right: -8px; background: #ff4757; }
-        .reply-btn { right: 25px; background: var(--accent); color: #000; }
         .react-trigger { left: -8px; background: #ffa502; color: #000; }
 
-        /* DOCK */
-        .dock { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.15); backdrop-filter: blur(40px); padding: 12px 30px; border-radius: 100px; display: flex; gap: 15px; z-index: 9999; border: 2px solid rgba(255,255,255,0.3); transition: 0.6s var(--spring); }
-        .dock.hidden { transform: translate(-50%, 150%); opacity: 0; }
-        .dock-tool { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text); background: rgba(255,255,255,0.08); transition: 0.3s; }
-        .dock-tool:hover, .dock-tool.active { transform: scale(1.2); background: var(--accent); color: #000; }
+        /* ONLINE LIST */
+        .online-user { padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 10px; font-weight: 700; opacity: 0.8; font-size: 0.9rem; }
+        .online-user::before { content: ''; width: 8px; height: 8px; background: #00ff88; border-radius: 50%; box-shadow: 0 0 10px #00ff88; }
+        .online-user.me::before { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
 
-        #dock-reveal { position: fixed; bottom: -50px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #000; padding: 5px 30px; border-radius: 20px 20px 0 0; cursor: pointer; transition: 0.4s; z-index: 9998; }
+        /* TYPING INDICATOR */
+        #typing-indicator { padding: 10px 30px; font-size: 0.8rem; font-weight: 700; color: var(--accent); opacity: 0; transition: 0.3s; height: 30px; }
+
+        /* DOCK & OVERLAYS */
+        .dock { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.15); backdrop-filter: blur(40px); padding: 12px 30px; border-radius: 100px; display: flex; gap: 15px; z-index: 9999; border: 2px solid rgba(255,255,255,0.3); transition: 0.6s var(--spring); box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 2px 2px 15px rgba(255,255,255,0.3); }
+        .dock.hidden { transform: translate(-50%, 150%); opacity: 0; }
+        
+        .stealth-mode .glass-panel:not(main) { opacity: 0.2; filter: blur(10px); }
+        .stealth-mode #bg-layer { filter: blur(100px) brightness(0.3); }
+
+        .dock-tool { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.08); transition: 0.3s; color: var(--text); }
+        .dock-tool:hover, .dock-tool.active { transform: scale(1.2); background: var(--accent); color: #000; box-shadow: 0 0 20px var(--accent-glow); cursor: none;}
+        #dock-reveal { position: fixed; bottom: -50px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #000; padding: 5px 30px; border-radius: 20px 20px 0 0; transition: 0.4s; z-index: 9998; cursor: none;}
         #dock-reveal.visible { bottom: 0; }
 
-        /* LOGIN GATE */
-        #gate { position: fixed; inset: 0; z-index: 10000; background: #000; display: flex; align-items: center; justify-content: center; }
-        .login-card { background: var(--glass); padding: 60px; border-radius: 80px; border: 2px solid var(--accent); text-align: center; width: 450px; backdrop-filter: blur(50px); }
-        .input-liquid { width: 100%; padding: 20px; border-radius: 50px; border: 1.5px solid var(--border); background: rgba(0,0,0,0.3); color: white; margin-bottom: 20px; text-align: center; outline: none; font-size: 1.1rem; }
+        .overlay { position: absolute; inset: 20px; background: rgba(0,0,0,0.85); backdrop-filter: blur(40px); z-index: 5000; padding: 40px; display: none; flex-direction: column; border-radius: 50px; border: 1.5px solid var(--accent); color: white; animation: drop-in 0.5s var(--spring); overflow-y: auto;}
+        @keyframes drop-in { 0% { transform: scale(0.9) translateY(-20px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
+
+        /* SETTINGS ELEMENTS */
+        .setting-group { margin-bottom: 20px; }
+        .setting-group label { display: block; font-size: 0.8rem; font-weight: 700; opacity: 0.7; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;}
+        input[type="range"] { width: 100%; accent-color: var(--accent); cursor: none;}
+        select, .btn-liquid { width: 100%; padding: 15px; border-radius: 30px; border: 1px solid var(--border); background: rgba(255,255,255,0.1); color: white; outline: none; font-family: inherit; font-weight: 700; cursor: none; }
+        .btn-liquid { background: var(--accent); color: black; text-align: center; text-transform: uppercase; margin-top: 10px;}
+
+        .palette { display: flex; gap: 10px; flex-wrap: wrap; }
+        .drop { width: 40px; height: 40px; border-radius: 50%; border: 3px solid transparent; transition: 0.3s; cursor: none;}
+        .drop.active { border-color: white; transform: scale(1.1); }
+
+        #gate { position: fixed; inset: 0; z-index: 10000; background: #000; display: flex; align-items: center; justify-content: center; cursor: default; }
+        .login-card { background: rgba(255,255,255,0.05); padding: 60px; border-radius: 80px; border: 2px solid var(--accent); text-align: center; width: 450px; backdrop-filter: blur(50px); box-shadow: inset 2px 2px 20px rgba(255,255,255,0.2), 0 0 50px var(--accent-glow); }
     </style>
 </head>
 <body onmousemove="handleMove(event)">
+    <div id="fluid-cursor"></div>
     <div id="bg-layer"></div>
     <div class="caustics"></div>
 
     <div id="gate">
         <div class="login-card">
-            <h1 style="margin-bottom: 10px; letter-spacing: -5px; font-size: 4rem; font-weight: 900; color:white;">NEXUS</h1>
-            <p style="opacity:0.6; font-size: 0.8rem; margin-bottom:30px; letter-spacing: 2px; font-weight:800; color:var(--accent);">V25 SYNTHESIS</p>
-            <input type="email" id="email-in" placeholder="firstname.surname@ballardschool.co.uk" class="input-liquid">
-            <button onclick="boot()" class="input-liquid" style="background:white; color:black; font-weight:900; border:none; cursor:pointer;">ENGAGE</button>
+            <h1 style="margin-bottom: 10px; letter-spacing: -4px; font-size: 3.5rem; font-weight: 800; color:white;">NEXUS</h1>
+            <p style="opacity:0.6; font-size: 0.8rem; margin-bottom:30px; letter-spacing: 2px; font-weight:800; color:var(--accent);">V26 SINGULARITY</p>
+            <input type="email" id="email-in" placeholder="firstname.surname@ballardschool.co.uk" style="width:100%; padding:20px; border-radius:50px; border:1px solid var(--border); background:rgba(0,0,0,0.5); color:white; margin-bottom:20px; text-align:center; outline:none; font-size:1.1rem; cursor:none;">
+            <button onclick="boot()" class="btn-liquid" style="background:linear-gradient(135deg, var(--accent), #fff); color:black; font-size: 1.1rem;">ENGAGE</button>
         </div>
     </div>
 
     <div class="nexus-wrapper mode-computer" id="ui">
         <aside class="glass-panel">
-            <div style="padding:30px; font-weight:900; border-bottom:1.5px solid var(--border);">LAB</div>
+            <div style="padding:25px 30px; font-weight:900; border-bottom:1.5px solid var(--border); display:flex; justify-content:space-between;">LAB <i class="fas fa-trash" onclick="ctx.clearRect(0,0,canvas.width,canvas.height)" style="opacity:0.5; cursor:none;"></i></div>
             <div id="sketch-wrap"><canvas id="canvas"></canvas></div>
-            <button onclick="broadcastSketch()" style="margin: 0 30px 30px; padding:20px; border-radius:50px; border:none; background:var(--accent); color:black; font-weight:900; cursor:pointer;">BROADCAST</button>
+            <button onclick="broadcastSketch()" class="btn-liquid" style="margin: 0 20px 20px; width: auto;">BROADCAST SKETCH</button>
         </aside>
 
         <main class="glass-panel">
-            <div id="view" style="flex:1; overflow-y:auto; padding:40px; display:flex; flex-direction:column; gap:10px;"></div>
-            <div style="padding: 25px 30px; background: rgba(0,0,0,0.15);">
-                <div style="background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.2); border-radius: 100px; padding: 10px; display: flex; gap: 15px;">
-                    <input type="text" id="msg-input" placeholder="Ripple a thought..." style="flex:1; background:transparent; border:none; padding:10px 20px; color:var(--text); outline:none; font-size:1rem;" onkeypress="if(event.key==='Enter') push()">
-                    <button onclick="push()" style="background:var(--text); color:var(--bg); border:none; padding:0 40px; border-radius:100px; font-weight:900; cursor:pointer;">SEND</button>
+            <div id="settings-view" class="overlay">
+                <h2 style="margin-bottom: 20px;">Architecture Settings</h2>
+                
+                <div class="setting-group">
+                    <label>Color Matrix</label>
+                    <div class="palette">
+                        <div class="drop active" style="background:#00f2ff;" onclick="injectColor('#00f2ff', this)"></div>
+                        <div class="drop" style="background:#ff007f;" onclick="injectColor('#ff007f', this)"></div>
+                        <div class="drop" style="background:#a29bfe;" onclick="injectColor('#a29bfe', this)"></div>
+                        <div class="drop" style="background:#00ff88;" onclick="injectColor('#00ff88', this)"></div>
+                        <div class="drop" style="background:#f9ca24;" onclick="injectColor('#f9ca24', this)"></div>
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <label>Glass Frost (Blur)</label>
+                    <input type="range" min="10" max="150" value="80" oninput="document.documentElement.style.setProperty('--blur', this.value+'px')">
+                </div>
+                
+                <div class="setting-group">
+                    <label>Glass Viscosity (Opacity)</label>
+                    <input type="range" min="1" max="10" value="1" oninput="document.documentElement.style.setProperty('--glass-op', this.value/10)">
+                </div>
+
+                <div class="setting-group">
+                    <label>Typography</label>
+                    <select onchange="document.documentElement.style.setProperty('--font-main', this.value)">
+                        <option value="'Plus Jakarta Sans', sans-serif">Jakarta Sans</option>
+                        <option value="'Inter', sans-serif">Inter CSS</option>
+                        <option value="'JetBrains Mono', monospace">JetBrains Mono</option>
+                    </select>
+                </div>
+
+                <button onclick="exportChat()" class="btn-liquid" style="background: rgba(255,255,255,0.1); color: white;"><i class="fas fa-download"></i> Export Data</button>
+                
+                <button onclick="toggleOverlay('settings-view')" class="btn-liquid" style="margin-top:20px;">APPLY & CLOSE</button>
+            </div>
+
+            <div class="search-bar">
+                <i class="fas fa-search" style="opacity:0.5;"></i>
+                <input type="text" id="search-in" placeholder="Search data stream..." oninput="filterMessages(this.value)">
+            </div>
+
+            <div id="view" style="flex:1; overflow-y:auto; padding:30px; display:flex; flex-direction:column;"></div>
+            
+            <div id="typing-indicator"></div>
+
+            <div style="padding: 20px 30px; background: rgba(0,0,0,0.2); box-shadow: inset 0 5px 20px rgba(0,0,0,0.3);">
+                <div style="background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.2); border-radius: 100px; padding: 8px; display: flex; gap: 15px; box-shadow: inset 0 2px 10px rgba(255,255,255,0.1);">
+                    <input type="text" id="msg-input" placeholder="Initiate transmission..." style="flex:1; background:transparent; border:none; padding:10px 20px; color:var(--text); outline:none; font-size:1rem; font-weight:600; cursor:none;" onkeypress="if(event.key==='Enter') push()" oninput="sendTyping()">
+                    <button onclick="push()" style="background:var(--text); color:var(--bg); border:none; padding:0 35px; border-radius:100px; font-weight:900; box-shadow: 0 5px 15px rgba(0,0,0,0.3); cursor:none;">SEND</button>
                 </div>
             </div>
         </main>
 
         <aside class="glass-panel">
-            <div style="padding:30px; font-weight:900; border-bottom:1.5px solid var(--border);">ONLINE</div>
-            <div style="padding:40px; text-align:center;">
-                <div style="width:24px; height:24px; border-radius:50%; background:var(--accent); box-shadow: 0 0 30px var(--accent-glow-strong); margin: 0 auto 20px;"></div>
-                <div id="user-display" style="font-weight:700; text-transform:uppercase; font-size:1.2rem;"></div>
+            <div style="padding:25px 30px; font-weight:900; border-bottom:1.5px solid var(--border);">NETWORK</div>
+            <div style="padding:30px; display:flex; flex-direction:column; gap:20px; flex:1; overflow-y:auto;">
+                <div style="text-align:center; margin-bottom: 10px;">
+                    <div style="width:20px; height:20px; border-radius:50%; background:var(--accent); box-shadow: 0 0 30px var(--accent-strong); margin: 0 auto 15px;"></div>
+                    <div id="user-display" style="font-weight:800; text-transform:uppercase; font-size:1.1rem; letter-spacing:1px;"></div>
+                </div>
+                <div style="font-size:0.75rem; font-weight:800; opacity:0.5; text-transform:uppercase; letter-spacing:1px;">Live Presence</div>
+                <div id="online-list" style="display:flex; flex-direction:column;"></div>
             </div>
         </aside>
     </div>
@@ -133,28 +225,39 @@
         <div style="width:2px; background:rgba(255,255,255,0.2); margin:5px 0;"></div>
         <div class="dock-tool" onclick="document.getElementById('bg-up').click()"><i class="fas fa-image"></i></div>
         <div class="dock-tool" onclick="toggleTheme()"><i class="fas fa-sun"></i></div>
-        <div class="dock-tool" onclick="toggleDock()"><i class="fas fa-eye-slash"></i></div>
-        <div class="dock-tool" onclick="toggleFS()"><i class="fas fa-expand-alt"></i></div>
+        <div class="dock-tool" onclick="toggleOverlay('settings-view')"><i class="fas fa-sliders-h"></i></div>
+        <div class="dock-tool" onclick="toggleStealth()"><i class="fas fa-eye-slash"></i></div>
     </div>
-    <div id="dock-reveal" onclick="toggleDock()"><i class="fas fa-chevron-up"></i></div>
+    <div id="dock-reveal" onclick="toggleStealth()"><i class="fas fa-chevron-up"></i></div>
 
     <input type="file" id="bg-up" hidden accept="image/*" onchange="handleBg(this)">
 
     <script>
         let client, chan, user, receivedIds = new Set();
-        const secret = "v25_ballard";
+        const secret = "v26_singularity";
         const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
         let drawing = false;
+        let typingTimeout;
 
+        // Custom Cursor Physics
+        const cursor = document.getElementById('fluid-cursor');
+        let curX = 0, curY = 0, tgX = 0, tgY = 0;
         function handleMove(e) {
-            const x = (window.innerWidth / 2 - e.clientX) / 25, y = (window.innerHeight / 2 - e.clientY) / 25;
-            document.documentElement.style.setProperty('--tx', x + 'px');
-            document.documentElement.style.setProperty('--ty', y + 'px');
+            tgX = e.clientX; tgY = e.clientY;
+            // Parallax
+            const px = (window.innerWidth / 2 - e.clientX) / 40, py = (window.innerHeight / 2 - e.clientY) / 40;
+            document.documentElement.style.setProperty('--tx', px + 'px'); document.documentElement.style.setProperty('--ty', py + 'px');
         }
+        function animCursor() {
+            curX += (tgX - curX) * 0.2; curY += (tgY - curY) * 0.2;
+            cursor.style.left = curX + 'px'; cursor.style.top = curY + 'px';
+            requestAnimationFrame(animCursor);
+        }
+        animCursor();
 
         async function boot() {
             let email = document.getElementById('email-in').value.trim().toLowerCase();
-            if(!email.endsWith('@ballardschool.co.uk')) return alert("Use school email.");
+            if(!email.endsWith('@ballardschool.co.uk')) return alert("Access Denied: School email required.");
             
             let firstName = email.split('@')[0].split('.')[0];
             user = firstName.charAt(0).toUpperCase() + firstName.slice(1);
@@ -166,28 +269,60 @@
         window.onload = () => {
             let saved = localStorage.getItem('nx_user');
             if(saved) { user = saved; initNexus(); }
+            restoreSettings();
         }
 
         function initNexus() {
             document.getElementById('gate').style.display = 'none';
+            document.body.style.cursor = 'none'; // Ensure custom cursor is visible
             const ui = document.getElementById('ui');
             ui.style.opacity = '1'; ui.style.pointerEvents = 'all';
             
-            client = new Ably.Realtime({ key: 'fVAQIA.kFtCvw:X6QXTzbh4Tbi1HUBiOQMlReiyw0uwkbOnEibDEM_VdA' });
-            chan = client.channels.get('v25-flow');
+            client = new Ably.Realtime({ key: 'fVAQIA.kFtCvw:X6QXTzbh4Tbi1HUBiOQMlReiyw0uwkbOnEibDEM_VdA', clientId: user });
+            chan = client.channels.get('v26-flow');
             document.getElementById('user-display').innerText = user;
 
+            // 1. Message Sync
             chan.subscribe('msg', p => {
                 if(receivedIds.has(p.data.id)) return;
                 receivedIds.add(p.data.id);
                 if(p.data.u !== user) render(dec(p.data.c), 'them', p.data.u, p.data.img, p.data.id);
             });
 
-            chan.subscribe('react', p => { updateReactUI(p.data.id, p.data.emoji, p.data.count); });
-            chan.subscribe('del', p => { document.getElementById(p.data.id)?.remove(); });
+            chan.subscribe('react', p => updateReactUI(p.data.id, p.data.emoji));
+            chan.subscribe('del', p => document.getElementById(p.data.id)?.remove());
+            
+            // 2. Typing Indicator
+            chan.subscribe('typing', p => {
+                if(p.data.u !== user) {
+                    const ind = document.getElementById('typing-indicator');
+                    ind.innerText = `${p.data.u} is transmitting...`;
+                    ind.style.opacity = '1';
+                    clearTimeout(typingTimeout);
+                    typingTimeout = setTimeout(() => ind.style.opacity = '0', 2000);
+                }
+            });
+
+            // 3. Live Presence Engine
+            chan.presence.subscribe(['enter', 'present', 'leave'], () => updatePresence());
+            chan.presence.enter();
 
             initCanvas(); load();
         }
+
+        function updatePresence() {
+            chan.presence.get((err, members) => {
+                if(err) return;
+                const list = document.getElementById('online-list');
+                list.innerHTML = '';
+                const uniqueUsers = [...new Set(members.map(m => m.clientId))];
+                uniqueUsers.forEach(u => {
+                    list.innerHTML += `<div class="online-user ${u===user?'me':''}">${u}</div>`;
+                });
+            });
+        }
+
+        function sendTyping() { chan.publish('typing', { u: user }); }
 
         function push() {
             const i = document.getElementById('msg-input'); if(!i.value) return;
@@ -202,50 +337,92 @@
             if(document.getElementById(id)) return;
             const v = document.getElementById('view'), b = document.createElement('div');
             b.className = `bubble ${type}`; b.id = id;
+            b.setAttribute('data-text', txt.toLowerCase()); // For search filtering
             
             b.innerHTML = `
-                <small style="display:block;opacity:0.7;font-size:0.7rem;font-weight:900;">${s}</small>
+                <small style="display:block;opacity:0.7;font-size:0.7rem;font-weight:900;margin-bottom:4px;">${s}</small>
                 ${txt}
-                ${img ? `<img src="${img}" style="width:100%; border-radius:20px; margin-top:10px;">` : ''}
+                ${img ? `<img src="${img}" style="width:100%; border-radius:20px; margin-top:10px; border: 1px solid rgba(255,255,255,0.2);">` : ''}
                 <div class="react-bar" id="bar-${id}"></div>
                 <div class="action-btn react-trigger" onclick="togglePalette('${id}')"><i class="fas fa-smile"></i></div>
                 <div class="react-palette" id="pal-${id}">
-                    ${['❤️','👍','🔥','😂','😮','😢'].map(e => `<span onclick="sendReact('${id}','${e}')" style="cursor:pointer">${e}</span>`).join('')}
+                    ${['❤️','👍','🔥','😂','😮','😢'].map(e => `<span onclick="sendReact('${id}','${e}')" style="cursor:none">${e}</span>`).join('')}
                 </div>
                 ${type === 'me' ? `<div class="action-btn del-btn" onclick="chan.publish('del',{id:'${id}'});document.getElementById('${id}').remove()">X</div>` : ''}
             `;
             v.appendChild(b); v.scrollTop = v.scrollHeight;
         }
 
-        function sendReact(id, emoji) {
-            chan.publish('react', { id, emoji, user });
-            document.getElementById('pal-'+id).style.display = 'none';
+        // 4. Local Chat Search
+        function filterMessages(q) {
+            const term = q.toLowerCase();
+            document.querySelectorAll('.bubble').forEach(b => {
+                if(b.getAttribute('data-text').includes(term)) b.style.display = 'block';
+                else b.style.display = 'none';
+            });
         }
 
-        function updateReactUI(id, emoji, count) {
-            const bar = document.getElementById('bar-'+id);
-            if(!bar) return;
+        // 5. Export Data
+        function exportChat() {
+            const h = localStorage.getItem('nx26_h') || '[]';
+            const blob = new Blob([h], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'nexus_data_v26.json';
+            a.click(); URL.revokeObjectURL(url);
+        }
+
+        function sendReact(id, emoji) { chan.publish('react', { id, emoji, u: user }); document.getElementById('pal-'+id).style.display = 'none'; }
+        function updateReactUI(id, emoji) {
+            const bar = document.getElementById('bar-'+id); if(!bar) return;
             let existing = bar.querySelector(`[data-emoji="${emoji}"]`);
-            if(existing) existing.remove();
-            else bar.innerHTML += `<div class="react-tag" data-emoji="${emoji}">${emoji}</div>`;
+            if(existing) existing.remove(); else bar.innerHTML += `<div class="react-tag" data-emoji="${emoji}">${emoji}</div>`;
         }
 
-        function togglePalette(id) {
-            const p = document.getElementById('pal-'+id);
-            p.style.display = p.style.display === 'flex' ? 'none' : 'flex';
+        function togglePalette(id) { const p = document.getElementById('pal-'+id); p.style.display = p.style.display === 'flex' ? 'none' : 'flex'; }
+
+        // 9. Stealth Mode
+        function toggleStealth() { 
+            document.getElementById('dock').classList.toggle('hidden'); 
+            document.getElementById('dock-reveal').classList.toggle('visible');
+            document.body.classList.toggle('stealth-mode');
         }
 
-        function toggleDock() { document.getElementById('dock').classList.toggle('hidden'); document.getElementById('dock-reveal').classList.toggle('visible'); }
+        function injectColor(hex, el) {
+            document.documentElement.style.setProperty('--accent', hex);
+            let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            if(result) {
+                let r = parseInt(result[1], 16), g = parseInt(result[2], 16), b = parseInt(result[3], 16);
+                document.documentElement.style.setProperty('--accent-glow', `rgba(${r}, ${g}, ${b}, 0.2)`);
+                document.documentElement.style.setProperty('--accent-strong', `rgba(${r}, ${g}, ${b}, 0.6)`);
+            }
+            document.querySelectorAll('.drop').forEach(d => { d.style.border = '3px solid transparent'; d.style.transform = 'scale(1)'; });
+            if(el) { el.style.border = '2px solid white'; el.style.transform = 'scale(1.2)'; }
+            localStorage.setItem('nx_color', hex);
+        }
+
+        function restoreSettings() {
+            const bg = localStorage.getItem('nx_bg'); if(bg) document.getElementById('bg-layer').style.backgroundImage = `url(${bg})`;
+            if(localStorage.getItem('nx_theme') === 'light') document.body.setAttribute('data-brightness', 'light');
+            const col = localStorage.getItem('nx_color');
+            if(col) {
+                const drops = document.querySelectorAll('.drop');
+                let matched = Array.from(drops).find(d => d.style.background.includes(col));
+                injectColor(col, matched || drops[0]);
+            }
+        }
+
         function setMode(m, btn) { document.getElementById('ui').className = 'nexus-wrapper mode-'+m; document.querySelectorAll('.dock-tool').forEach(t=>t.classList.remove('active')); btn.classList.add('active'); setTimeout(initCanvas, 500); }
-        function toggleTheme() { document.body.setAttribute('data-brightness', document.body.getAttribute('data-brightness')==='light'?'dark':'light'); }
-        function toggleFS() { if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
+        function toggleTheme() { const b = document.body; b.setAttribute('data-brightness', b.getAttribute('data-brightness')==='light'?'dark':'light'); localStorage.setItem('nx_theme', b.getAttribute('data-brightness')); }
+        function toggleOverlay(id) { const el = document.getElementById(id); el.style.display = el.style.display === 'flex' ? 'none' : 'flex'; }
+        
         function enc(t) { return CryptoJS.AES.encrypt(t, secret).toString(); }
         function dec(c) { try { return CryptoJS.AES.decrypt(c, secret).toString(CryptoJS.enc.Utf8); } catch { return "[Encrypted]"; } }
-        function save(d) { let h = JSON.parse(localStorage.getItem('nx_h')) || []; h.push(d); localStorage.setItem('nx_h', JSON.stringify(h.slice(-30))); }
-        function load() { let h = JSON.parse(localStorage.getItem('nx_h')) || []; h.forEach(d => { receivedIds.add(d.id); render(dec(d.c), d.u === user ? 'me' : 'them', d.u === user ? 'You' : d.u, d.img, d.id); }); }
+        function save(d) { let h = JSON.parse(localStorage.getItem('nx26_h')) || []; h.push(d); localStorage.setItem('nx26_h', JSON.stringify(h.slice(-50))); }
+        function load() { let h = JSON.parse(localStorage.getItem('nx26_h')) || []; h.forEach(d => { receivedIds.add(d.id); render(dec(d.c), d.u === user ? 'me' : 'them', d.u === user ? 'You' : d.u, d.img, d.id); }); }
         function initCanvas() { const w = document.getElementById('sketch-wrap'); canvas.width = w.clientWidth; canvas.height = w.clientHeight; ctx.strokeStyle = '#fff'; ctx.lineWidth = 4; ctx.lineCap = 'round'; canvas.onmousedown = e => { drawing = true; ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); }; canvas.onmousemove = e => { if(drawing) { ctx.lineTo(e.offsetX, e.offsetY); ctx.stroke(); } }; window.onmouseup = () => drawing = false; }
         function broadcastSketch() { const id = 'sk_'+Date.now(); const data = { id, u: user, c: enc("[Sketch]"), img: canvas.toDataURL() }; receivedIds.add(id); chan.publish('msg', data); render("[Sketch]", 'me', 'You', data.img, id); save(data); ctx.clearRect(0,0,canvas.width,canvas.height); }
-        function handleBg(input) { if(input.files[0]) { const r = new FileReader(); r.onload = e => document.getElementById('bg-layer').style.backgroundImage = `url(${e.target.result})`; r.readAsDataURL(input.files[0]); } }
+        function handleBg(input) { if(input.files[0]) { const r = new FileReader(); r.onload = e => { document.getElementById('bg-layer').style.backgroundImage = `url(${e.target.result})`; localStorage.setItem('nx_bg', e.target.result); }; r.readAsDataURL(input.files[0]); } }
     </script>
 </body>
 </html>
