@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Nexus v27 | Hyper-Flux</title>
+    <title>Nexus v28 | Neural Identity</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=JetBrains+Mono:wght@400;700&family=Plus+Jakarta+Sans:wght@400;700;800&family=Poppins:wght@400;700&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
@@ -67,7 +67,10 @@
         .search-bar { background: rgba(255,255,255,0.05); border-bottom: 1px solid var(--border); padding: 15px 30px; display: flex; align-items: center; gap: 10px; }
         .search-bar input { background: transparent; border: none; color: var(--text); outline: none; width: 100%; font-size: 0.9rem; font-family: inherit; }
 
-        /* BUBBLES & ANNOUNCEMENTS */
+        /* AVATARS & BUBBLES */
+        .pfp-mini { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--accent); box-shadow: 0 0 10px var(--accent-glow); flex-shrink: 0; }
+        .bubble-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+
         .bubble { padding: 18px 28px; border-radius: 40px; font-size: 1rem; animation: liquid-bloom 0.6s var(--spring); position: relative; max-width: 85%; margin-bottom: 12px; word-wrap: break-word; overflow-wrap: break-word; }
         @keyframes liquid-bloom { 0% { transform: scale(0.5) translateY(20px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
         
@@ -81,21 +84,17 @@
         .bubble:hover .action-btn { opacity: 1; transform: scale(1); }
         .del-btn { right: -8px; background: #ff4757; }
 
-        .online-user { padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 10px; font-weight: 700; opacity: 0.8; font-size: 0.9rem; }
-        .online-user::before { content: ''; width: 8px; height: 8px; background: #00ff88; border-radius: 50%; box-shadow: 0 0 10px #00ff88; }
-        .online-user.me::before { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+        .online-user { padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 10px; font-weight: 700; opacity: 0.9; font-size: 0.9rem; }
 
         #typing-indicator { padding: 10px 30px; font-size: 0.8rem; font-weight: 700; color: var(--accent); opacity: 0; transition: 0.3s; height: 30px; }
 
         /* DOCK */
         .dock { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.15); backdrop-filter: blur(40px); padding: 12px 30px; border-radius: 100px; display: flex; gap: 15px; z-index: 9999; border: 2px solid rgba(255,255,255,0.3); transition: 0.6s var(--spring); box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 2px 2px 15px rgba(255,255,255,0.3); }
-        .dock.hidden { transform: translate(-50%, 150%); opacity: 0; }
-        .stealth-mode .glass-panel:not(main) { opacity: 0.15; filter: blur(15px); }
-        .stealth-mode #bg-layer { filter: blur(120px) brightness(0.2); }
+        .dock.hidden { transform: translate(-50%, 150%); opacity: 0; pointer-events: none; }
 
         .dock-tool { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.08); transition: 0.3s; color: var(--text); cursor: pointer; }
         .dock-tool:hover, .dock-tool.active { transform: scale(1.2); background: var(--accent); color: #000; box-shadow: 0 0 20px var(--accent-glow); }
-        #dock-reveal { position: fixed; bottom: -50px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #000; padding: 5px 30px; border-radius: 20px 20px 0 0; transition: 0.4s; z-index: 9998; cursor: pointer; }
+        #dock-reveal { position: fixed; bottom: -50px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #000; padding: 5px 30px; border-radius: 20px 20px 0 0; transition: 0.4s; z-index: 9998; cursor: pointer; font-weight: 800; box-shadow: 0 0 30px var(--accent-glow); }
         #dock-reveal.visible { bottom: 0; }
 
         /* SETTINGS OVERLAY */
@@ -117,7 +116,6 @@
         #gate { position: fixed; inset: 0; z-index: 10000; background: #000; display: flex; align-items: center; justify-content: center; }
         .login-card { background: rgba(255,255,255,0.05); padding: 60px; border-radius: 80px; border: 2px solid var(--accent); text-align: center; width: 450px; backdrop-filter: blur(50px); box-shadow: inset 2px 2px 20px rgba(255,255,255,0.2), 0 0 50px var(--accent-glow); }
         
-        /* MEGAPHONE BTN */
         .announce-btn { background: rgba(255,255,255,0.1); color: var(--text); border: none; padding: 0 25px; border-radius: 100px; cursor: pointer; transition: 0.3s; font-size: 1.1rem; }
         .announce-btn:hover { background: #ff4757; color: white; box-shadow: 0 0 20px rgba(255,71,87,0.5); }
         .announce-btn.cooldown { opacity: 0.3; pointer-events: none; background: transparent; }
@@ -130,7 +128,7 @@
     <div id="gate">
         <div class="login-card">
             <h1 style="margin-bottom: 10px; letter-spacing: -4px; font-size: 3.5rem; font-weight: 800; color:white;">NEXUS</h1>
-            <p style="opacity:0.6; font-size: 0.8rem; margin-bottom:30px; letter-spacing: 2px; font-weight:800; color:var(--accent);">V27 HYPER-FLUX</p>
+            <p style="opacity:0.6; font-size: 0.8rem; margin-bottom:30px; letter-spacing: 2px; font-weight:800; color:var(--accent);">V28 NEURAL IDENTITY</p>
             <input type="email" id="email-in" placeholder="firstname.surname@ballardschool.co.uk" style="width:100%; padding:20px; border-radius:50px; border:1px solid var(--border); background:rgba(0,0,0,0.5); color:white; margin-bottom:20px; text-align:center; outline:none; font-size:1.1rem;">
             <button onclick="boot()" class="btn-liquid" style="background:linear-gradient(135deg, var(--accent), #fff); color:black; font-size: 1.1rem;">ENGAGE</button>
         </div>
@@ -147,6 +145,12 @@
             <div id="settings-view" class="overlay">
                 <h2 style="margin-bottom: 20px;">Architecture Settings</h2>
                 
+                <div class="setting-group">
+                    <label>Neural Avatar (Profile Photo)</label>
+                    <button onclick="document.getElementById('pfp-up').click()" class="btn-liquid" style="background: rgba(255,255,255,0.1); color: white; box-shadow:none;"><i class="fas fa-camera"></i> Upload Image</button>
+                    <input type="file" id="pfp-up" hidden accept="image/*" onchange="handlePfp(this)">
+                </div>
+
                 <div class="setting-group">
                     <label>Color Matrix (12 Presets)</label>
                     <div class="palette">
@@ -212,7 +216,8 @@
             <div style="padding:25px 30px; font-weight:900; border-bottom:1.5px solid var(--border);">NETWORK</div>
             <div style="padding:30px; display:flex; flex-direction:column; gap:20px; flex:1; overflow-y:auto;">
                 <div style="text-align:center; margin-bottom: 10px;">
-                    <div style="width:20px; height:20px; border-radius:50%; background:var(--accent); box-shadow: 0 0 30px var(--accent-strong); margin: 0 auto 15px;"></div>
+                    <img id="local-pfp" src="" style="width:70px; height:70px; border-radius:50%; object-fit:cover; border:2px solid var(--accent); box-shadow: 0 0 30px var(--accent-strong); margin: 0 auto 15px; display:none;">
+                    <div id="local-orb" style="width:20px; height:20px; border-radius:50%; background:var(--accent); box-shadow: 0 0 30px var(--accent-strong); margin: 0 auto 15px;"></div>
                     <div id="user-display" style="font-weight:800; text-transform:uppercase; font-size:1.1rem; letter-spacing:1px;"></div>
                 </div>
                 <div style="font-size:0.75rem; font-weight:800; opacity:0.5; text-transform:uppercase; letter-spacing:1px;">Live Presence</div>
@@ -229,28 +234,54 @@
         <div class="dock-tool" onclick="document.getElementById('bg-up').click()" title="Change Background"><i class="fas fa-image"></i></div>
         <div class="dock-tool" onclick="toggleTheme()" title="Toggle Light/Dark"><i class="fas fa-sun"></i></div>
         <div class="dock-tool" onclick="toggleOverlay('settings-view')" title="Settings"><i class="fas fa-sliders-h"></i></div>
-        <div class="dock-tool" onclick="toggleStealth()" title="Stealth Mode"><i class="fas fa-eye-slash"></i></div>
+        <div class="dock-tool" onclick="toggleStealth()" title="Hide Dock"><i class="fas fa-eye-slash"></i></div>
         <div style="width:2px; background:rgba(255,255,255,0.2); margin:5px 0;"></div>
         <div class="dock-tool" onclick="panicProtocol()" title="Panic Button" style="color:#ff4757;"><i class="fas fa-running"></i></div>
     </div>
-    <div id="dock-reveal" onclick="toggleStealth()"><i class="fas fa-chevron-up"></i></div>
+    <div id="dock-reveal" onclick="toggleStealth()"><i class="fas fa-chevron-up"></i> REVEAL</div>
 
     <input type="file" id="bg-up" hidden accept="image/*" onchange="handleBg(this)">
 
     <script>
         let client, chan, user, receivedIds = new Set();
-        const secret = "v27_hyper_flux";
+        const secret = "v28_neural_id";
         const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
-        let drawing = false;
-        let typingTimeout;
+        let drawing = false, typingTimeout;
 
-        function panicProtocol() {
-            window.location.href = "https://google.com";
-        }
+        function panicProtocol() { window.location.href = "https://google.com"; }
 
         function handleMove(e) {
             const px = (window.innerWidth / 2 - e.clientX) / 40, py = (window.innerHeight / 2 - e.clientY) / 40;
             document.documentElement.style.setProperty('--tx', px + 'px'); document.documentElement.style.setProperty('--ty', py + 'px');
+        }
+
+        // PFP COMPRESSION ENGINE
+        function handlePfp(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const cvs = document.createElement('canvas');
+                        const c = cvs.getContext('2d');
+                        cvs.width = 100; cvs.height = 100;
+                        c.drawImage(img, 0, 0, 100, 100);
+                        const b64 = cvs.toDataURL('image/jpeg', 0.5);
+                        localStorage.setItem('nx_pfp', b64);
+                        updateLocalPfpDisplay(b64);
+                        if(chan) chan.presence.update({ pfp: b64 });
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function updateLocalPfpDisplay(src) {
+            if(!src) return;
+            document.getElementById('local-pfp').src = src;
+            document.getElementById('local-pfp').style.display = 'block';
+            document.getElementById('local-orb').style.display = 'none';
         }
 
         async function boot() {
@@ -275,14 +306,17 @@
             const ui = document.getElementById('ui');
             ui.style.opacity = '1'; ui.style.pointerEvents = 'all';
             
+            let myPfp = localStorage.getItem('nx_pfp');
+            if(myPfp) updateLocalPfpDisplay(myPfp);
+
             client = new Ably.Realtime({ key: 'fVAQIA.kFtCvw:X6QXTzbh4Tbi1HUBiOQMlReiyw0uwkbOnEibDEM_VdA', clientId: user });
-            chan = client.channels.get('v27-flow');
+            chan = client.channels.get('v28-flow');
             document.getElementById('user-display').innerText = user;
 
             chan.subscribe('msg', p => {
                 if(receivedIds.has(p.data.id)) return;
                 receivedIds.add(p.data.id);
-                if(p.data.u !== user) render(dec(p.data.c), 'them', p.data.u, p.data.img, p.data.id);
+                if(p.data.u !== user) render(dec(p.data.c), 'them', p.data.u, p.data.img, p.data.id, p.data.pfp);
             });
             
             chan.subscribe('announce', p => {
@@ -296,15 +330,13 @@
             chan.subscribe('typing', p => {
                 if(p.data.u !== user) {
                     const ind = document.getElementById('typing-indicator');
-                    ind.innerText = `${p.data.u} is transmitting...`;
-                    ind.style.opacity = '1';
-                    clearTimeout(typingTimeout);
-                    typingTimeout = setTimeout(() => ind.style.opacity = '0', 2000);
+                    ind.innerText = `${p.data.u} is transmitting...`; ind.style.opacity = '1';
+                    clearTimeout(typingTimeout); typingTimeout = setTimeout(() => ind.style.opacity = '0', 2000);
                 }
             });
 
-            chan.presence.subscribe(['enter', 'present', 'leave'], () => updatePresence());
-            chan.presence.enter();
+            chan.presence.subscribe(['enter', 'present', 'leave', 'update'], () => updatePresence());
+            chan.presence.enter({ pfp: myPfp });
 
             initCanvas(); load(); checkCooldown();
         }
@@ -314,9 +346,17 @@
                 if(err) return;
                 const list = document.getElementById('online-list');
                 list.innerHTML = '';
-                const uniqueUsers = [...new Set(members.map(m => m.clientId))];
-                uniqueUsers.forEach(u => {
-                    list.innerHTML += `<div class="online-user ${u===user?'me':''}">${u}</div>`;
+                
+                // Deduplicate members
+                let uniqueMap = new Map();
+                members.forEach(m => { uniqueMap.set(m.clientId, m.data); });
+
+                uniqueMap.forEach((data, clientId) => {
+                    let pfpHtml = '';
+                    if(data && data.pfp) {
+                        pfpHtml = `<img src="${data.pfp}" style="width:26px; height:26px; border-radius:50%; object-fit:cover; border:1px solid var(--accent);">`;
+                    }
+                    list.innerHTML += `<div class="online-user ${clientId===user?'me':''}">${pfpHtml} ${clientId}</div>`;
                 });
             });
         }
@@ -326,9 +366,10 @@
         function push() {
             const i = document.getElementById('msg-input'); if(!i.value) return;
             const id = 'msg_' + Date.now();
-            const data = { id, u: user, c: enc(i.value) };
+            const myPfp = localStorage.getItem('nx_pfp');
+            const data = { id, u: user, c: enc(i.value), pfp: myPfp };
             receivedIds.add(id); chan.publish('msg', data);
-            render(i.value, 'me', 'You', null, id);
+            render(i.value, 'me', 'You', null, id, myPfp);
             save(data, 'msg'); i.value = '';
         }
 
@@ -336,46 +377,39 @@
             const i = document.getElementById('msg-input'); if(!i.value) return;
             const btn = document.getElementById('announce-btn');
             
-            // Check cooldown
             const lastAnnounce = localStorage.getItem('nx_last_announce');
-            if (lastAnnounce && Date.now() - parseInt(lastAnnounce) < 60000) {
-                alert("Announcement system cooling down. Please wait.");
-                return;
-            }
+            if (lastAnnounce && Date.now() - parseInt(lastAnnounce) < 60000) { alert("Cooling down."); return; }
 
             const id = 'ann_' + Date.now();
             const data = { id, u: user, c: enc(i.value) };
             receivedIds.add(id); chan.publish('announce', data);
-            renderAnnounce(i.value, 'You');
-            save(data, 'announce'); i.value = '';
-
-            // Start Cooldown
-            localStorage.setItem('nx_last_announce', Date.now());
-            checkCooldown();
+            renderAnnounce(i.value, 'You'); save(data, 'announce'); i.value = '';
+            localStorage.setItem('nx_last_announce', Date.now()); checkCooldown();
         }
 
         function checkCooldown() {
             const btn = document.getElementById('announce-btn');
             const lastAnnounce = localStorage.getItem('nx_last_announce');
-            if (lastAnnounce) {
-                const diff = Date.now() - parseInt(lastAnnounce);
-                if (diff < 60000) {
-                    btn.classList.add('cooldown');
-                    setTimeout(checkCooldown, 1000); // Check every second
-                    return;
-                }
+            if (lastAnnounce && (Date.now() - parseInt(lastAnnounce) < 60000)) {
+                btn.classList.add('cooldown'); setTimeout(checkCooldown, 1000); return;
             }
             btn.classList.remove('cooldown');
         }
 
-        function render(txt, type, s, img, id) {
+        function render(txt, type, s, img, id, pfpStr) {
             if(document.getElementById(id)) return;
             const v = document.getElementById('view'), b = document.createElement('div');
             b.className = `bubble ${type}`; b.id = id;
             b.setAttribute('data-text', txt.toLowerCase()); 
             
+            let pfpHtml = '';
+            if(pfpStr) pfpHtml = `<img src="${pfpStr}" class="pfp-mini">`;
+            
             b.innerHTML = `
-                <small style="display:block;opacity:0.7;font-size:0.7rem;font-weight:900;margin-bottom:4px;">${s}</small>
+                <div class="bubble-header">
+                    ${pfpHtml}
+                    <small style="opacity:0.7; font-weight:900;">${s}</small>
+                </div>
                 ${txt}
                 ${img ? `<img src="${img}" style="width:100%; border-radius:20px; margin-top:10px; border: 1px solid rgba(255,255,255,0.2);">` : ''}
                 ${type === 'me' ? `<div class="action-btn del-btn" onclick="chan.publish('del',{id:'${id}'});document.getElementById('${id}').remove()"><i class="fas fa-times"></i></div>` : ''}
@@ -385,36 +419,30 @@
 
         function renderAnnounce(txt, s) {
             const v = document.getElementById('view'), b = document.createElement('div');
-            b.className = `announcement`;
-            b.setAttribute('data-text', txt.toLowerCase());
-            b.innerHTML = `
-                <small style="display:block;opacity:0.7;font-size:0.7rem;font-weight:900;margin-bottom:8px;"><i class="fas fa-bullhorn"></i> BROADCAST FROM ${s}</small>
-                ${txt}
-            `;
+            b.className = `announcement`; b.setAttribute('data-text', txt.toLowerCase());
+            b.innerHTML = `<small style="display:block;opacity:0.7;font-size:0.7rem;font-weight:900;margin-bottom:8px;"><i class="fas fa-bullhorn"></i> BROADCAST FROM ${s}</small>${txt}`;
             v.appendChild(b); v.scrollTop = v.scrollHeight;
         }
 
         function filterMessages(q) {
             const term = q.toLowerCase();
             document.querySelectorAll('.bubble, .announcement').forEach(b => {
-                if(b.getAttribute('data-text').includes(term)) b.style.display = 'block';
-                else b.style.display = 'none';
+                if(b.getAttribute('data-text').includes(term)) b.style.display = 'block'; else b.style.display = 'none';
             });
         }
 
         function exportChat() {
-            const h = localStorage.getItem('nx27_h') || '[]';
+            const h = localStorage.getItem('nx28_h') || '[]';
             const blob = new Blob([h], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url; a.download = 'nexus_data_v27.json';
+            const a = document.createElement('a'); a.href = url; a.download = 'nexus_data_v28.json';
             a.click(); URL.revokeObjectURL(url);
         }
 
+        // 🟢 STEALTH MODE FIX: Only toggles dock classes
         function toggleStealth() { 
             document.getElementById('dock').classList.toggle('hidden'); 
             document.getElementById('dock-reveal').classList.toggle('visible');
-            document.body.classList.toggle('stealth-mode');
         }
 
         function injectColor(hex, el) {
@@ -451,26 +479,21 @@
         function dec(c) { try { return CryptoJS.AES.decrypt(c, secret).toString(CryptoJS.enc.Utf8); } catch { return "[Encrypted]"; } }
         
         function save(d, type) { 
-            let h = JSON.parse(localStorage.getItem('nx27_h')) || []; 
-            d.type = type; // Store if it's a message or announce
-            h.push(d); 
-            localStorage.setItem('nx27_h', JSON.stringify(h.slice(-50))); 
+            let h = JSON.parse(localStorage.getItem('nx28_h')) || []; 
+            d.type = type; h.push(d); localStorage.setItem('nx28_h', JSON.stringify(h.slice(-50))); 
         }
         
         function load() { 
-            let h = JSON.parse(localStorage.getItem('nx27_h')) || []; 
+            let h = JSON.parse(localStorage.getItem('nx28_h')) || []; 
             h.forEach(d => { 
                 receivedIds.add(d.id); 
-                if (d.type === 'announce') {
-                    renderAnnounce(dec(d.c), d.u === user ? 'You' : d.u);
-                } else {
-                    render(dec(d.c), d.u === user ? 'me' : 'them', d.u === user ? 'You' : d.u, d.img, d.id); 
-                }
+                if (d.type === 'announce') renderAnnounce(dec(d.c), d.u === user ? 'You' : d.u);
+                else render(dec(d.c), d.u === user ? 'me' : 'them', d.u === user ? 'You' : d.u, d.img, d.id, d.pfp); 
             }); 
         }
         
         function initCanvas() { const w = document.getElementById('sketch-wrap'); canvas.width = w.clientWidth; canvas.height = w.clientHeight; ctx.strokeStyle = '#fff'; ctx.lineWidth = 4; ctx.lineCap = 'round'; canvas.onmousedown = e => { drawing = true; ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); }; canvas.onmousemove = e => { if(drawing) { ctx.lineTo(e.offsetX, e.offsetY); ctx.stroke(); } }; window.onmouseup = () => drawing = false; }
-        function broadcastSketch() { const id = 'sk_'+Date.now(); const data = { id, u: user, c: enc("[Sketch]"), img: canvas.toDataURL() }; receivedIds.add(id); chan.publish('msg', data); render("[Sketch]", 'me', 'You', data.img, id); save(data, 'msg'); ctx.clearRect(0,0,canvas.width,canvas.height); }
+        function broadcastSketch() { const id = 'sk_'+Date.now(); const myPfp = localStorage.getItem('nx_pfp'); const data = { id, u: user, c: enc("[Sketch]"), img: canvas.toDataURL(), pfp: myPfp }; receivedIds.add(id); chan.publish('msg', data); render("[Sketch]", 'me', 'You', data.img, id, myPfp); save(data, 'msg'); ctx.clearRect(0,0,canvas.width,canvas.height); }
         function handleBg(input) { if(input.files[0]) { const r = new FileReader(); r.onload = e => { document.getElementById('bg-layer').style.backgroundImage = `url(${e.target.result})`; localStorage.setItem('nx_bg', e.target.result); }; r.readAsDataURL(input.files[0]); } }
     </script>
 </body>
