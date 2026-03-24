@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Nexus v28 | Neural Identity</title>
+    <title>Nexus v29 | Quantum Direct</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=JetBrains+Mono:wght@400;700&family=Plus+Jakarta+Sans:wght@400;700;800&family=Poppins:wght@400;700&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
@@ -67,6 +67,11 @@
         .search-bar { background: rgba(255,255,255,0.05); border-bottom: 1px solid var(--border); padding: 15px 30px; display: flex; align-items: center; gap: 10px; }
         .search-bar input { background: transparent; border: none; color: var(--text); outline: none; width: 100%; font-size: 0.9rem; font-family: inherit; }
 
+        /* CHAT HEADER (DM vs GENERAL) */
+        .chat-header { padding: 15px 30px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 0.9rem; letter-spacing: 1px; text-transform: uppercase; }
+        .chat-header .back-btn { background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 20px; cursor: pointer; transition: 0.3s; display: none; }
+        .chat-header .back-btn:hover { background: var(--accent); color: black; }
+
         /* AVATARS & BUBBLES */
         .pfp-mini { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--accent); box-shadow: 0 0 10px var(--accent-glow); flex-shrink: 0; }
         .bubble-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
@@ -84,13 +89,21 @@
         .bubble:hover .action-btn { opacity: 1; transform: scale(1); }
         .del-btn { right: -8px; background: #ff4757; }
 
-        .online-user { padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 10px; font-weight: 700; opacity: 0.9; font-size: 0.9rem; }
+        /* ONLINE LIST & NOTIFICATIONS */
+        .online-user { padding: 10px 15px; border-radius: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 10px; font-weight: 700; opacity: 0.9; font-size: 0.9rem; cursor: pointer; transition: 0.3s; position: relative; }
+        .online-user:hover { background: rgba(255,255,255,0.1); transform: translateX(5px); }
+        .online-user.me { cursor: default; }
+        .online-user.me:hover { transform: none; background: transparent; }
+        .notify-dot { position: absolute; right: 15px; width: 12px; height: 12px; background: #ff4757; border-radius: 50%; box-shadow: 0 0 15px #ff4757; display: none; animation: pulse-glow 1s infinite alternate; }
+        .online-user.has-dm .notify-dot { display: block; }
 
         #typing-indicator { padding: 10px 30px; font-size: 0.8rem; font-weight: 700; color: var(--accent); opacity: 0; transition: 0.3s; height: 30px; }
 
         /* DOCK */
         .dock { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.15); backdrop-filter: blur(40px); padding: 12px 30px; border-radius: 100px; display: flex; gap: 15px; z-index: 9999; border: 2px solid rgba(255,255,255,0.3); transition: 0.6s var(--spring); box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 2px 2px 15px rgba(255,255,255,0.3); }
         .dock.hidden { transform: translate(-50%, 150%); opacity: 0; pointer-events: none; }
+        .stealth-mode .glass-panel:not(main) { opacity: 0.15; filter: blur(15px); pointer-events: none; }
+        .stealth-mode #bg-layer { filter: blur(120px) brightness(0.2); }
 
         .dock-tool { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.08); transition: 0.3s; color: var(--text); cursor: pointer; }
         .dock-tool:hover, .dock-tool.active { transform: scale(1.2); background: var(--accent); color: #000; box-shadow: 0 0 20px var(--accent-glow); }
@@ -128,7 +141,7 @@
     <div id="gate">
         <div class="login-card">
             <h1 style="margin-bottom: 10px; letter-spacing: -4px; font-size: 3.5rem; font-weight: 800; color:white;">NEXUS</h1>
-            <p style="opacity:0.6; font-size: 0.8rem; margin-bottom:30px; letter-spacing: 2px; font-weight:800; color:var(--accent);">V28 NEURAL IDENTITY</p>
+            <p style="opacity:0.6; font-size: 0.8rem; margin-bottom:30px; letter-spacing: 2px; font-weight:800; color:var(--accent);">V29 QUANTUM DIRECT</p>
             <input type="email" id="email-in" placeholder="firstname.surname@ballardschool.co.uk" style="width:100%; padding:20px; border-radius:50px; border:1px solid var(--border); background:rgba(0,0,0,0.5); color:white; margin-bottom:20px; text-align:center; outline:none; font-size:1.1rem;">
             <button onclick="boot()" class="btn-liquid" style="background:linear-gradient(135deg, var(--accent), #fff); color:black; font-size: 1.1rem;">ENGAGE</button>
         </div>
@@ -144,13 +157,11 @@
         <main class="glass-panel">
             <div id="settings-view" class="overlay">
                 <h2 style="margin-bottom: 20px;">Architecture Settings</h2>
-                
                 <div class="setting-group">
                     <label>Neural Avatar (Profile Photo)</label>
                     <button onclick="document.getElementById('pfp-up').click()" class="btn-liquid" style="background: rgba(255,255,255,0.1); color: white; box-shadow:none;"><i class="fas fa-camera"></i> Upload Image</button>
                     <input type="file" id="pfp-up" hidden accept="image/*" onchange="handlePfp(this)">
                 </div>
-
                 <div class="setting-group">
                     <label>Color Matrix (12 Presets)</label>
                     <div class="palette">
@@ -168,17 +179,10 @@
                         <div class="drop" style="background:#eccc68;" onclick="injectColor('#eccc68', this)"></div>
                     </div>
                 </div>
-
                 <div class="setting-group">
                     <label>Glass Frost (Blur)</label>
                     <input type="range" min="10" max="150" value="80" oninput="document.documentElement.style.setProperty('--blur', this.value+'px')">
                 </div>
-                
-                <div class="setting-group">
-                    <label>Glass Viscosity (Opacity)</label>
-                    <input type="range" min="1" max="15" value="1" oninput="document.documentElement.style.setProperty('--glass-op', this.value/10)">
-                </div>
-
                 <div class="setting-group">
                     <label>Typography Engine</label>
                     <select onchange="document.documentElement.style.setProperty('--font-main', this.value)">
@@ -189,14 +193,12 @@
                         <option value="'Poppins', sans-serif">Poppins</option>
                     </select>
                 </div>
-
-                <button onclick="exportChat()" class="btn-liquid" style="background: rgba(255,255,255,0.1); color: white; box-shadow:none;"><i class="fas fa-download"></i> Export Data</button>
                 <button onclick="toggleOverlay('settings-view')" class="btn-liquid" style="margin-top:20px;">APPLY & CLOSE</button>
             </div>
 
-            <div class="search-bar">
-                <i class="fas fa-search" style="opacity:0.5;"></i>
-                <input type="text" id="search-in" placeholder="Search data stream..." oninput="filterMessages(this.value)">
+            <div class="chat-header">
+                <span id="chat-title" style="color: var(--accent);">GENERAL FLOW</span>
+                <div class="back-btn" id="dm-back" onclick="closeDM()"><i class="fas fa-arrow-left"></i> BACK TO MAIN</div>
             </div>
 
             <div id="view" style="flex:1; overflow-y:auto; padding:30px; display:flex; flex-direction:column;"></div>
@@ -206,7 +208,7 @@
             <div style="padding: 20px 30px; background: rgba(0,0,0,0.2); box-shadow: inset 0 5px 20px rgba(0,0,0,0.3);">
                 <div style="background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.2); border-radius: 100px; padding: 8px; display: flex; gap: 10px; box-shadow: inset 0 2px 10px rgba(255,255,255,0.1);">
                     <input type="text" id="msg-input" placeholder="Initiate transmission..." style="flex:1; background:transparent; border:none; padding:10px 20px; color:var(--text); outline:none; font-size:1rem; font-weight:600;" onkeypress="if(event.key==='Enter') push()" oninput="sendTyping()">
-                    <button class="announce-btn" id="announce-btn" onclick="sendAnnouncement()" title="Global Announcement (60s Cooldown)"><i class="fas fa-bullhorn"></i></button>
+                    <button class="announce-btn" id="announce-btn" onclick="sendAnnouncement()" title="Global Announcement"><i class="fas fa-bullhorn"></i></button>
                     <button onclick="push()" style="background:var(--text); color:var(--bg); border:none; padding:0 35px; border-radius:100px; font-weight:900; box-shadow: 0 5px 15px rgba(0,0,0,0.3); cursor:pointer;">SEND</button>
                 </div>
             </div>
@@ -220,7 +222,7 @@
                     <div id="local-orb" style="width:20px; height:20px; border-radius:50%; background:var(--accent); box-shadow: 0 0 30px var(--accent-strong); margin: 0 auto 15px;"></div>
                     <div id="user-display" style="font-weight:800; text-transform:uppercase; font-size:1.1rem; letter-spacing:1px;"></div>
                 </div>
-                <div style="font-size:0.75rem; font-weight:800; opacity:0.5; text-transform:uppercase; letter-spacing:1px;">Live Presence</div>
+                <div style="font-size:0.75rem; font-weight:800; opacity:0.5; text-transform:uppercase; letter-spacing:1px;">Live Presence (Click to DM)</div>
                 <div id="online-list" style="display:flex; flex-direction:column;"></div>
             </div>
         </aside>
@@ -234,7 +236,7 @@
         <div class="dock-tool" onclick="document.getElementById('bg-up').click()" title="Change Background"><i class="fas fa-image"></i></div>
         <div class="dock-tool" onclick="toggleTheme()" title="Toggle Light/Dark"><i class="fas fa-sun"></i></div>
         <div class="dock-tool" onclick="toggleOverlay('settings-view')" title="Settings"><i class="fas fa-sliders-h"></i></div>
-        <div class="dock-tool" onclick="toggleStealth()" title="Hide Dock"><i class="fas fa-eye-slash"></i></div>
+        <div class="dock-tool" onclick="toggleStealth()" title="Stealth Mode"><i class="fas fa-eye-slash"></i></div>
         <div style="width:2px; background:rgba(255,255,255,0.2); margin:5px 0;"></div>
         <div class="dock-tool" onclick="panicProtocol()" title="Panic Button" style="color:#ff4757;"><i class="fas fa-running"></i></div>
     </div>
@@ -243,55 +245,50 @@
     <input type="file" id="bg-up" hidden accept="image/*" onchange="handleBg(this)">
 
     <script>
-        let client, chan, user, receivedIds = new Set();
-        const secret = "v28_neural_id";
+        let client, chanMain, chanDM, user, receivedIds = new Set();
+        let activeDM = null; // null = General Flow, string = username
+        let unreadDMs = new Set();
+        const secret = "v29_quantum_direct";
         const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
         let drawing = false, typingTimeout;
 
         function panicProtocol() { window.location.href = "https://google.com"; }
-
         function handleMove(e) {
             const px = (window.innerWidth / 2 - e.clientX) / 40, py = (window.innerHeight / 2 - e.clientY) / 40;
             document.documentElement.style.setProperty('--tx', px + 'px'); document.documentElement.style.setProperty('--ty', py + 'px');
         }
 
-        // PFP COMPRESSION ENGINE
+        // PFP COMPRESSION
         function handlePfp(input) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = e => {
                     const img = new Image();
                     img.onload = () => {
-                        const cvs = document.createElement('canvas');
-                        const c = cvs.getContext('2d');
-                        cvs.width = 100; cvs.height = 100;
-                        c.drawImage(img, 0, 0, 100, 100);
+                        const cvs = document.createElement('canvas'); const c = cvs.getContext('2d');
+                        cvs.width = 100; cvs.height = 100; c.drawImage(img, 0, 0, 100, 100);
                         const b64 = cvs.toDataURL('image/jpeg', 0.5);
                         localStorage.setItem('nx_pfp', b64);
                         updateLocalPfpDisplay(b64);
-                        if(chan) chan.presence.update({ pfp: b64 });
+                        if(chanMain) chanMain.presence.update({ pfp: b64 });
                     };
                     img.src = e.target.result;
                 };
                 reader.readAsDataURL(input.files[0]);
             }
         }
-
         function updateLocalPfpDisplay(src) {
             if(!src) return;
-            document.getElementById('local-pfp').src = src;
-            document.getElementById('local-pfp').style.display = 'block';
+            document.getElementById('local-pfp').src = src; document.getElementById('local-pfp').style.display = 'block';
             document.getElementById('local-orb').style.display = 'none';
         }
 
         async function boot() {
             let email = document.getElementById('email-in').value.trim().toLowerCase();
             if(!email.endsWith('@ballardschool.co.uk')) return alert("Access Denied: School email required.");
-            
             let firstName = email.split('@')[0].split('.')[0];
             user = firstName.charAt(0).toUpperCase() + firstName.slice(1);
             localStorage.setItem('nx_user', user);
-            
             initNexus();
         }
 
@@ -303,87 +300,130 @@
 
         function initNexus() {
             document.getElementById('gate').style.display = 'none';
-            const ui = document.getElementById('ui');
-            ui.style.opacity = '1'; ui.style.pointerEvents = 'all';
+            const ui = document.getElementById('ui'); ui.style.opacity = '1'; ui.style.pointerEvents = 'all';
             
             let myPfp = localStorage.getItem('nx_pfp');
             if(myPfp) updateLocalPfpDisplay(myPfp);
 
             client = new Ably.Realtime({ key: 'fVAQIA.kFtCvw:X6QXTzbh4Tbi1HUBiOQMlReiyw0uwkbOnEibDEM_VdA', clientId: user });
-            chan = client.channels.get('v28-flow');
             document.getElementById('user-display').innerText = user;
 
-            chan.subscribe('msg', p => {
-                if(receivedIds.has(p.data.id)) return;
-                receivedIds.add(p.data.id);
-                if(p.data.u !== user) render(dec(p.data.c), 'them', p.data.u, p.data.img, p.data.id, p.data.pfp);
-            });
-            
-            chan.subscribe('announce', p => {
-                if(receivedIds.has(p.data.id)) return;
-                receivedIds.add(p.data.id);
-                renderAnnounce(dec(p.data.c), p.data.u);
-            });
-
-            chan.subscribe('del', p => document.getElementById(p.data.id)?.remove());
-            
-            chan.subscribe('typing', p => {
-                if(p.data.u !== user) {
-                    const ind = document.getElementById('typing-indicator');
-                    ind.innerText = `${p.data.u} is transmitting...`; ind.style.opacity = '1';
+            // MAIN CHANNEL
+            chanMain = client.channels.get('v29-flow');
+            chanMain.subscribe('msg', p => handleIncoming(p.data, false));
+            chanMain.subscribe('announce', p => { if(activeDM === null && !receivedIds.has(p.data.id)) { receivedIds.add(p.data.id); renderAnnounce(dec(p.data.c), p.data.u); } });
+            chanMain.subscribe('del', p => document.getElementById(p.data.id)?.remove());
+            chanMain.subscribe('typing', p => {
+                if(p.data.u !== user && activeDM === null) {
+                    const ind = document.getElementById('typing-indicator'); ind.innerText = `${p.data.u} is transmitting...`; ind.style.opacity = '1';
                     clearTimeout(typingTimeout); typingTimeout = setTimeout(() => ind.style.opacity = '0', 2000);
                 }
             });
+            chanMain.presence.subscribe(['enter', 'present', 'leave', 'update'], () => updatePresence());
+            chanMain.presence.enter({ pfp: myPfp });
 
-            chan.presence.subscribe(['enter', 'present', 'leave', 'update'], () => updatePresence());
-            chan.presence.enter({ pfp: myPfp });
+            // PRIVATE DM CHANNEL FOR THIS USER
+            chanDM = client.channels.get('v29-dm-' + user);
+            chanDM.subscribe('msg', p => handleIncoming(p.data, true));
 
-            initCanvas(); load(); checkCooldown();
+            initCanvas(); loadGeneralHistory(); checkCooldown();
         }
 
         function updatePresence() {
-            chan.presence.get((err, members) => {
+            chanMain.presence.get((err, members) => {
                 if(err) return;
-                const list = document.getElementById('online-list');
-                list.innerHTML = '';
-                
-                // Deduplicate members
+                const list = document.getElementById('online-list'); list.innerHTML = '';
                 let uniqueMap = new Map();
-                members.forEach(m => { uniqueMap.set(m.clientId, m.data); });
+                members.forEach(m => uniqueMap.set(m.clientId, m.data));
 
                 uniqueMap.forEach((data, clientId) => {
                     let pfpHtml = '';
-                    if(data && data.pfp) {
-                        pfpHtml = `<img src="${data.pfp}" style="width:26px; height:26px; border-radius:50%; object-fit:cover; border:1px solid var(--accent);">`;
-                    }
-                    list.innerHTML += `<div class="online-user ${clientId===user?'me':''}">${pfpHtml} ${clientId}</div>`;
+                    if(data && data.pfp) pfpHtml = `<img src="${data.pfp}" class="pfp-mini" style="width:26px; height:26px;">`;
+                    let hasDot = unreadDMs.has(clientId) ? 'has-dm' : '';
+                    let action = clientId !== user ? `onclick="openDM('${clientId}')"` : '';
+                    list.innerHTML += `<div class="online-user ${clientId===user?'me':''} ${hasDot}" id="user-node-${clientId}" ${action}>${pfpHtml} ${clientId} <div class="notify-dot"></div></div>`;
                 });
             });
         }
 
-        function sendTyping() { chan.publish('typing', { u: user }); }
+        // DM LOGIC
+        function openDM(targetUser) {
+            activeDM = targetUser;
+            unreadDMs.delete(targetUser);
+            updatePresence(); // Clear notification dot
+            
+            document.getElementById('chat-title').innerText = "PRIVATE: " + targetUser.toUpperCase();
+            document.getElementById('dm-back').style.display = 'block';
+            document.getElementById('announce-btn').style.display = 'none'; // No announcements in DM
+            document.getElementById('view').innerHTML = '';
+            
+            loadDMHistory(targetUser);
+        }
+
+        function closeDM() {
+            activeDM = null;
+            document.getElementById('chat-title').innerText = "GENERAL FLOW";
+            document.getElementById('dm-back').style.display = 'none';
+            document.getElementById('announce-btn').style.display = 'block';
+            document.getElementById('view').innerHTML = '';
+            loadGeneralHistory();
+        }
+
+        function handleIncoming(data, isDM) {
+            if(receivedIds.has(data.id)) return;
+            receivedIds.add(data.id);
+            
+            // If it's a DM sent TO me
+            if (isDM) {
+                if (activeDM === data.u) {
+                    // I am currently chatting with them, render it
+                    render(dec(data.c), 'them', data.u, data.img, data.id, data.pfp);
+                    saveDM(data.u, data);
+                } else {
+                    // I am not looking at their chat. Save it and notify.
+                    saveDM(data.u, data);
+                    unreadDMs.add(data.u);
+                    updatePresence();
+                }
+            } else {
+                // It's a public message
+                if (activeDM === null && data.u !== user) {
+                    render(dec(data.c), 'them', data.u, data.img, data.id, data.pfp);
+                }
+            }
+        }
+
+        function sendTyping() { if(activeDM === null) chanMain.publish('typing', { u: user }); }
 
         function push() {
             const i = document.getElementById('msg-input'); if(!i.value) return;
             const id = 'msg_' + Date.now();
             const myPfp = localStorage.getItem('nx_pfp');
             const data = { id, u: user, c: enc(i.value), pfp: myPfp };
-            receivedIds.add(id); chan.publish('msg', data);
-            render(i.value, 'me', 'You', null, id, myPfp);
-            save(data, 'msg'); i.value = '';
+            
+            if (activeDM) {
+                // Send to Target's private channel
+                client.channels.get('v29-dm-' + activeDM).publish('msg', data);
+                render(i.value, 'me', 'You', null, id, myPfp);
+                saveDM(activeDM, data);
+            } else {
+                // Send to Public
+                chanMain.publish('msg', data);
+                render(i.value, 'me', 'You', null, id, myPfp);
+                savePublic(data, 'msg');
+            }
+            receivedIds.add(id); i.value = '';
         }
 
         function sendAnnouncement() {
-            const i = document.getElementById('msg-input'); if(!i.value) return;
-            const btn = document.getElementById('announce-btn');
-            
+            const i = document.getElementById('msg-input'); if(!i.value || activeDM !== null) return;
             const lastAnnounce = localStorage.getItem('nx_last_announce');
-            if (lastAnnounce && Date.now() - parseInt(lastAnnounce) < 60000) { alert("Cooling down."); return; }
+            if (lastAnnounce && Date.now() - parseInt(lastAnnounce) < 60000) return alert("Cooling down.");
 
             const id = 'ann_' + Date.now();
             const data = { id, u: user, c: enc(i.value) };
-            receivedIds.add(id); chan.publish('announce', data);
-            renderAnnounce(i.value, 'You'); save(data, 'announce'); i.value = '';
+            receivedIds.add(id); chanMain.publish('announce', data);
+            renderAnnounce(i.value, 'You'); savePublic(data, 'announce'); i.value = '';
             localStorage.setItem('nx_last_announce', Date.now()); checkCooldown();
         }
 
@@ -402,17 +442,13 @@
             b.className = `bubble ${type}`; b.id = id;
             b.setAttribute('data-text', txt.toLowerCase()); 
             
-            let pfpHtml = '';
-            if(pfpStr) pfpHtml = `<img src="${pfpStr}" class="pfp-mini">`;
+            let pfpHtml = ''; if(pfpStr) pfpHtml = `<img src="${pfpStr}" class="pfp-mini">`;
             
             b.innerHTML = `
-                <div class="bubble-header">
-                    ${pfpHtml}
-                    <small style="opacity:0.7; font-weight:900;">${s}</small>
-                </div>
+                <div class="bubble-header">${pfpHtml}<small style="opacity:0.7; font-weight:900;">${s}</small></div>
                 ${txt}
                 ${img ? `<img src="${img}" style="width:100%; border-radius:20px; margin-top:10px; border: 1px solid rgba(255,255,255,0.2);">` : ''}
-                ${type === 'me' ? `<div class="action-btn del-btn" onclick="chan.publish('del',{id:'${id}'});document.getElementById('${id}').remove()"><i class="fas fa-times"></i></div>` : ''}
+                ${type === 'me' ? `<div class="action-btn del-btn" onclick="deleteLocal('${id}')"><i class="fas fa-times"></i></div>` : ''}
             `;
             v.appendChild(b); v.scrollTop = v.scrollHeight;
         }
@@ -431,20 +467,47 @@
             });
         }
 
-        function exportChat() {
-            const h = localStorage.getItem('nx28_h') || '[]';
-            const blob = new Blob([h], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = 'nexus_data_v28.json';
-            a.click(); URL.revokeObjectURL(url);
+        function deleteLocal(id) {
+            document.getElementById(id)?.remove();
+            if(activeDM === null) chanMain.publish('del', {id});
+            // Also clean from storage based on current view
+            if(activeDM) {
+                let h = JSON.parse(localStorage.getItem('nx29_dm_' + activeDM)) || [];
+                localStorage.setItem('nx29_dm_' + activeDM, JSON.stringify(h.filter(m => m.id !== id)));
+            } else {
+                let h = JSON.parse(localStorage.getItem('nx29_public')) || [];
+                localStorage.setItem('nx29_public', JSON.stringify(h.filter(m => m.id !== id)));
+            }
         }
 
-        // 🟢 STEALTH MODE FIX: Only toggles dock classes
-        function toggleStealth() { 
-            document.getElementById('dock').classList.toggle('hidden'); 
-            document.getElementById('dock-reveal').classList.toggle('visible');
+        // STORAGE LOGIC
+        function savePublic(d, type) { 
+            let h = JSON.parse(localStorage.getItem('nx29_public')) || []; 
+            d.type = type; h.push(d); localStorage.setItem('nx29_public', JSON.stringify(h.slice(-50))); 
+        }
+        function loadGeneralHistory() { 
+            let h = JSON.parse(localStorage.getItem('nx29_public')) || []; 
+            h.forEach(d => { 
+                receivedIds.add(d.id); 
+                if (d.type === 'announce') renderAnnounce(dec(d.c), d.u === user ? 'You' : d.u);
+                else render(dec(d.c), d.u === user ? 'me' : 'them', d.u === user ? 'You' : d.u, d.img, d.id, d.pfp); 
+            }); 
+        }
+        
+        function saveDM(target, d) {
+            let h = JSON.parse(localStorage.getItem('nx29_dm_' + target)) || [];
+            h.push(d); localStorage.setItem('nx29_dm_' + target, JSON.stringify(h.slice(-50)));
+        }
+        function loadDMHistory(target) {
+            let h = JSON.parse(localStorage.getItem('nx29_dm_' + target)) || [];
+            h.forEach(d => {
+                receivedIds.add(d.id);
+                render(dec(d.c), d.u === user ? 'me' : 'them', d.u === user ? 'You' : d.u, d.img, d.id, d.pfp);
+            });
         }
 
+        // UTILS
+        function toggleStealth() { document.getElementById('dock').classList.toggle('hidden'); document.getElementById('dock-reveal').classList.toggle('visible'); document.body.classList.toggle('stealth-mode'); }
         function injectColor(hex, el) {
             document.documentElement.style.setProperty('--accent', hex);
             let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -457,18 +520,12 @@
             if(el) { el.style.border = '2px solid white'; el.style.transform = 'scale(1.15)'; }
             localStorage.setItem('nx_color', hex);
         }
-
         function restoreSettings() {
             const bg = localStorage.getItem('nx_bg'); if(bg) document.getElementById('bg-layer').style.backgroundImage = `url(${bg})`;
             if(localStorage.getItem('nx_theme') === 'light') document.body.setAttribute('data-brightness', 'light');
             const col = localStorage.getItem('nx_color');
-            if(col) {
-                const drops = document.querySelectorAll('.drop');
-                let matched = Array.from(drops).find(d => d.style.background.includes(col));
-                injectColor(col, matched || drops[0]);
-            }
-            const font = localStorage.getItem('nx_font');
-            if(font) document.documentElement.style.setProperty('--font-main', font);
+            if(col) { const drops = document.querySelectorAll('.drop'); let matched = Array.from(drops).find(d => d.style.background.includes(col)); injectColor(col, matched || drops[0]); }
+            const font = localStorage.getItem('nx_font'); if(font) document.documentElement.style.setProperty('--font-main', font);
         }
 
         function setMode(m, btn) { document.getElementById('ui').className = 'nexus-wrapper mode-'+m; document.querySelectorAll('.dock-tool').forEach(t=>t.classList.remove('active')); btn.classList.add('active'); setTimeout(initCanvas, 500); }
@@ -478,23 +535,15 @@
         function enc(t) { return CryptoJS.AES.encrypt(t, secret).toString(); }
         function dec(c) { try { return CryptoJS.AES.decrypt(c, secret).toString(CryptoJS.enc.Utf8); } catch { return "[Encrypted]"; } }
         
-        function save(d, type) { 
-            let h = JSON.parse(localStorage.getItem('nx28_h')) || []; 
-            d.type = type; h.push(d); localStorage.setItem('nx28_h', JSON.stringify(h.slice(-50))); 
-        }
-        
-        function load() { 
-            let h = JSON.parse(localStorage.getItem('nx28_h')) || []; 
-            h.forEach(d => { 
-                receivedIds.add(d.id); 
-                if (d.type === 'announce') renderAnnounce(dec(d.c), d.u === user ? 'You' : d.u);
-                else render(dec(d.c), d.u === user ? 'me' : 'them', d.u === user ? 'You' : d.u, d.img, d.id, d.pfp); 
-            }); 
-        }
-        
         function initCanvas() { const w = document.getElementById('sketch-wrap'); canvas.width = w.clientWidth; canvas.height = w.clientHeight; ctx.strokeStyle = '#fff'; ctx.lineWidth = 4; ctx.lineCap = 'round'; canvas.onmousedown = e => { drawing = true; ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); }; canvas.onmousemove = e => { if(drawing) { ctx.lineTo(e.offsetX, e.offsetY); ctx.stroke(); } }; window.onmouseup = () => drawing = false; }
-        function broadcastSketch() { const id = 'sk_'+Date.now(); const myPfp = localStorage.getItem('nx_pfp'); const data = { id, u: user, c: enc("[Sketch]"), img: canvas.toDataURL(), pfp: myPfp }; receivedIds.add(id); chan.publish('msg', data); render("[Sketch]", 'me', 'You', data.img, id, myPfp); save(data, 'msg'); ctx.clearRect(0,0,canvas.width,canvas.height); }
+        function broadcastSketch() { 
+            const id = 'sk_'+Date.now(); const myPfp = localStorage.getItem('nx_pfp'); const data = { id, u: user, c: enc("[Sketch]"), img: canvas.toDataURL(), pfp: myPfp }; receivedIds.add(id); 
+            if(activeDM) { client.channels.get('v29-dm-'+activeDM).publish('msg', data); render("[Sketch]", 'me', 'You', data.img, id, myPfp); saveDM(activeDM, data); }
+            else { chanMain.publish('msg', data); render("[Sketch]", 'me', 'You', data.img, id, myPfp); savePublic(data, 'msg'); }
+            ctx.clearRect(0,0,canvas.width,canvas.height); 
+        }
         function handleBg(input) { if(input.files[0]) { const r = new FileReader(); r.onload = e => { document.getElementById('bg-layer').style.backgroundImage = `url(${e.target.result})`; localStorage.setItem('nx_bg', e.target.result); }; r.readAsDataURL(input.files[0]); } }
+        function toggleFS() { if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
     </script>
 </body>
 </html>
