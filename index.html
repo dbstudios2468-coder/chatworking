@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Nexus v29 | Quantum Direct</title>
+    <title>Nexus v31 | Sonic Hologram</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=JetBrains+Mono:wght@400;700&family=Plus+Jakarta+Sans:wght@400;700;800&family=Poppins:wght@400;700&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
@@ -20,6 +20,7 @@
             --bg: #010204;
             --text: #ffffff;
             --blur: 80px;
+            --bg-bright: 0.6;
             --tx: 0px; --ty: 0px;
             --font-main: 'Plus Jakarta Sans', sans-serif;
             --spring: cubic-bezier(0.175, 0.885, 0.32, 1.3);
@@ -40,7 +41,7 @@
         
         body { background: var(--bg); height: 100dvh; display: flex; align-items: center; justify-content: center; overflow: hidden; color: var(--text); transition: background 0.8s ease; }
 
-        #bg-layer { position: fixed; inset: -10%; z-index: -2; background-size: cover; background-position: center; filter: blur(var(--blur)) brightness(0.6); transition: transform 0.3s ease; transform: translate(calc(var(--tx) * -0.2), calc(var(--ty) * -0.2)); }
+        #bg-layer { position: fixed; inset: -10%; z-index: -2; background-size: cover; background-position: center; filter: blur(var(--blur)) brightness(var(--bg-bright)); transition: transform 0.3s ease, filter 0.3s ease; transform: translate(calc(var(--tx) * -0.2), calc(var(--ty) * -0.2)); }
         .caustics { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at center, var(--accent-glow), transparent); opacity: 0.8; pointer-events: none; }
         
         .nexus-wrapper { display: grid; gap: 20px; width: 96vw; height: 86dvh; max-width: 1800px; opacity: 0; pointer-events: none; transition: all 0.5s var(--spring); }
@@ -64,17 +65,15 @@
         #sketch-wrap { flex: 1; margin: 20px; background: rgba(0,0,0,0.2); border-radius: 40px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; position: relative; box-shadow: inset 0 10px 30px rgba(0,0,0,0.5); }
         canvas { width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
 
-        .search-bar { background: rgba(255,255,255,0.05); border-bottom: 1px solid var(--border); padding: 15px 30px; display: flex; align-items: center; gap: 10px; }
-        .search-bar input { background: transparent; border: none; color: var(--text); outline: none; width: 100%; font-size: 0.9rem; font-family: inherit; }
-
-        /* CHAT HEADER (DM vs GENERAL) */
+        /* CHAT HEADER */
         .chat-header { padding: 15px 30px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 0.9rem; letter-spacing: 1px; text-transform: uppercase; }
         .chat-header .back-btn { background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 20px; cursor: pointer; transition: 0.3s; display: none; }
         .chat-header .back-btn:hover { background: var(--accent); color: black; }
 
-        /* AVATARS & BUBBLES */
+        /* BUBBLES, TIMESTAMPS & LINKS */
         .pfp-mini { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--accent); box-shadow: 0 0 10px var(--accent-glow); flex-shrink: 0; }
         .bubble-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+        .msg-time { font-size: 0.65rem; opacity: 0.5; margin-left: auto; font-weight: 400; letter-spacing: 0.5px; }
 
         .bubble { padding: 18px 28px; border-radius: 40px; font-size: 1rem; animation: liquid-bloom 0.6s var(--spring); position: relative; max-width: 85%; margin-bottom: 12px; word-wrap: break-word; overflow-wrap: break-word; }
         @keyframes liquid-bloom { 0% { transform: scale(0.5) translateY(20px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
@@ -82,14 +81,21 @@
         .bubble.me { align-self: flex-end; background: linear-gradient(135deg, var(--accent), rgba(255,255,255,0.9)); color: #000; font-weight: 800; border-bottom-right-radius: 8px; box-shadow: inset 2px 2px 10px rgba(255,255,255,0.8), 0 10px 20px var(--accent-glow); border: 1px solid rgba(255,255,255,0.6); }
         .bubble.them { align-self: flex-start; background: rgba(255,255,255,0.1); color: var(--text); border: 1.5px solid var(--border); border-bottom-left-radius: 8px; box-shadow: inset 2px 2px 10px rgba(255,255,255,0.1); }
         
-        .announcement { align-self: center; background: linear-gradient(135deg, var(--accent), var(--accent-strong)); color: #000; font-weight: 900; text-transform: uppercase; text-align: center; padding: 25px; border-radius: 40px; width: 90%; margin: 20px 0; box-shadow: 0 0 40px var(--accent-glow); animation: liquid-bloom 0.6s var(--spring), pulse-glow 3s infinite alternate; letter-spacing: 1px; border: 2px solid white; }
+        .bubble img.media-attachment { max-width: 100%; border-radius: 20px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.3); }
+
+        .link-preview { background: rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.2); padding: 10px 15px; border-radius: 15px; margin-top: 8px; font-size: 0.85rem; box-shadow: inset 0 2px 10px rgba(0,0,0,0.1); }
+        .bubble.me .link-preview { background: rgba(255,255,255,0.3); border-color: rgba(0,0,0,0.1); box-shadow: inset 0 2px 10px rgba(255,255,255,0.3); }
+        .link-preview a { color: inherit; text-decoration: none; font-weight: 800; display: flex; align-items: center; gap: 8px; word-break: break-all; }
+        .link-preview a:hover { text-decoration: underline; }
+
+        .announcement { align-self: center; background: linear-gradient(135deg, var(--accent), var(--accent-strong)); color: #000; font-weight: 900; text-transform: uppercase; text-align: center; padding: 25px; border-radius: 40px; width: 90%; margin: 20px 0; box-shadow: 0 0 40px var(--accent-glow); animation: liquid-bloom 0.6s var(--spring), pulse-glow 3s infinite alternate; letter-spacing: 1px; border: 2px solid white; position: relative; }
         @keyframes pulse-glow { 0% { box-shadow: 0 0 20px var(--accent-glow); } 100% { box-shadow: 0 0 50px var(--accent-strong); } }
 
         .action-btn { position: absolute; top: -8px; width: 28px; height: 28px; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; opacity: 0; transform: scale(0.5); transition: 0.3s var(--spring); border: 2px solid var(--bg); z-index: 10; cursor: pointer; }
         .bubble:hover .action-btn { opacity: 1; transform: scale(1); }
         .del-btn { right: -8px; background: #ff4757; }
 
-        /* ONLINE LIST & NOTIFICATIONS */
+        /* ONLINE LIST */
         .online-user { padding: 10px 15px; border-radius: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 10px; font-weight: 700; opacity: 0.9; font-size: 0.9rem; cursor: pointer; transition: 0.3s; position: relative; }
         .online-user:hover { background: rgba(255,255,255,0.1); transform: translateX(5px); }
         .online-user.me { cursor: default; }
@@ -99,18 +105,16 @@
 
         #typing-indicator { padding: 10px 30px; font-size: 0.8rem; font-weight: 700; color: var(--accent); opacity: 0; transition: 0.3s; height: 30px; }
 
-        /* DOCK */
-        .dock { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.15); backdrop-filter: blur(40px); padding: 12px 30px; border-radius: 100px; display: flex; gap: 15px; z-index: 9999; border: 2px solid rgba(255,255,255,0.3); transition: 0.6s var(--spring); box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 2px 2px 15px rgba(255,255,255,0.3); }
-        .dock.hidden { transform: translate(-50%, 150%); opacity: 0; pointer-events: none; }
-        .stealth-mode .glass-panel:not(main) { opacity: 0.15; filter: blur(15px); pointer-events: none; }
-        .stealth-mode #bg-layer { filter: blur(120px) brightness(0.2); }
+        /* DOCK (TRUE STEALTH FIX) */
+        .dock { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.15); backdrop-filter: blur(40px); padding: 12px 30px; border-radius: 100px; display: flex; gap: 15px; z-index: 9999; border: 2px solid rgba(255,255,255,0.3); transition: transform 0.6s var(--spring); box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 2px 2px 15px rgba(255,255,255,0.3); }
+        .dock.hidden { transform: translate(-50%, 150%); }
 
         .dock-tool { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.08); transition: 0.3s; color: var(--text); cursor: pointer; }
         .dock-tool:hover, .dock-tool.active { transform: scale(1.2); background: var(--accent); color: #000; box-shadow: 0 0 20px var(--accent-glow); }
         #dock-reveal { position: fixed; bottom: -50px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #000; padding: 5px 30px; border-radius: 20px 20px 0 0; transition: 0.4s; z-index: 9998; cursor: pointer; font-weight: 800; box-shadow: 0 0 30px var(--accent-glow); }
         #dock-reveal.visible { bottom: 0; }
 
-        /* SETTINGS OVERLAY */
+        /* OVERLAYS (SETTINGS & GIFS) */
         .overlay { position: absolute; inset: 20px; background: rgba(0,0,0,0.85); backdrop-filter: blur(50px); z-index: 5000; padding: 40px; display: none; flex-direction: column; border-radius: 50px; border: 2px solid var(--accent); color: white; animation: drop-in 0.5s var(--spring); overflow-y: auto; box-shadow: 0 0 100px rgba(0,0,0,0.8); }
         @keyframes drop-in { 0% { transform: scale(0.9) translateY(-20px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
 
@@ -120,16 +124,24 @@
         select, .btn-liquid { width: 100%; padding: 15px; border-radius: 30px; border: 1px solid var(--border); background: rgba(255,255,255,0.1); color: white; outline: none; font-family: inherit; font-weight: 800; cursor: pointer; transition: 0.3s; }
         .btn-liquid { background: var(--accent); color: black; text-align: center; text-transform: uppercase; margin-top: 10px; border: none; box-shadow: 0 10px 20px var(--accent-glow); }
         .btn-liquid:hover { transform: scale(1.02); }
-
         .palette { display: flex; gap: 10px; flex-wrap: wrap; }
         .drop { width: 45px; height: 45px; border-radius: 50%; border: 3px solid transparent; transition: 0.3s; cursor: pointer; box-shadow: inset 2px 2px 10px rgba(255,255,255,0.4); }
         .drop.active { border-color: white; transform: scale(1.15); box-shadow: 0 0 20px inherit; }
 
+        /* GIF SEARCH UI */
+        #gif-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; overflow-y: auto; flex: 1; }
+        .gif-item { width: 100%; height: 100px; object-fit: cover; border-radius: 15px; cursor: pointer; transition: 0.3s; border: 2px solid transparent; }
+        .gif-item:hover { transform: scale(1.05); border-color: var(--accent); box-shadow: 0 0 15px var(--accent-glow); }
+
         /* AUTH GATE */
         #gate { position: fixed; inset: 0; z-index: 10000; background: #000; display: flex; align-items: center; justify-content: center; }
         .login-card { background: rgba(255,255,255,0.05); padding: 60px; border-radius: 80px; border: 2px solid var(--accent); text-align: center; width: 450px; backdrop-filter: blur(50px); box-shadow: inset 2px 2px 20px rgba(255,255,255,0.2), 0 0 50px var(--accent-glow); }
+        .input-liquid { width: 100%; padding: 20px; border-radius: 50px; border: 1.5px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; margin-bottom: 25px; text-align: center; outline: none; font-size: 1.2rem; transition: border-color 0.3s ease, box-shadow 0.3s ease; box-shadow: inset 0 5px 15px rgba(0,0,0,0.3); }
+        .input-liquid:focus { border-color: var(--accent); box-shadow: inset 0 5px 15px rgba(0,0,0,0.3), 0 0 20px var(--accent-glow); }
         
-        .announce-btn { background: rgba(255,255,255,0.1); color: var(--text); border: none; padding: 0 25px; border-radius: 100px; cursor: pointer; transition: 0.3s; font-size: 1.1rem; }
+        .media-btn { background: rgba(255,255,255,0.1); color: var(--text); border: none; padding: 0 20px; border-radius: 100px; cursor: pointer; transition: 0.3s; font-size: 1.1rem; }
+        .media-btn:hover { background: var(--accent); color: #000; box-shadow: 0 0 20px var(--accent-glow); }
+        .announce-btn { background: rgba(255,255,255,0.1); color: var(--text); border: none; padding: 0 20px; border-radius: 100px; cursor: pointer; transition: 0.3s; font-size: 1.1rem; }
         .announce-btn:hover { background: #ff4757; color: white; box-shadow: 0 0 20px rgba(255,71,87,0.5); }
         .announce-btn.cooldown { opacity: 0.3; pointer-events: none; background: transparent; }
     </style>
@@ -141,8 +153,8 @@
     <div id="gate">
         <div class="login-card">
             <h1 style="margin-bottom: 10px; letter-spacing: -4px; font-size: 3.5rem; font-weight: 800; color:white;">NEXUS</h1>
-            <p style="opacity:0.6; font-size: 0.8rem; margin-bottom:30px; letter-spacing: 2px; font-weight:800; color:var(--accent);">V29 QUANTUM DIRECT</p>
-            <input type="email" id="email-in" placeholder="firstname.surname@ballardschool.co.uk" style="width:100%; padding:20px; border-radius:50px; border:1px solid var(--border); background:rgba(0,0,0,0.5); color:white; margin-bottom:20px; text-align:center; outline:none; font-size:1.1rem;">
+            <p style="opacity:0.6; font-size: 0.8rem; margin-bottom:30px; letter-spacing: 2px; font-weight:800; color:var(--accent);">V31 SONIC HOLOGRAM</p>
+            <input type="email" id="email-in" placeholder="firstname.surname@ballardschool.co.uk" class="input-liquid">
             <button onclick="boot()" class="btn-liquid" style="background:linear-gradient(135deg, var(--accent), #fff); color:black; font-size: 1.1rem;">ENGAGE</button>
         </div>
     </div>
@@ -163,6 +175,10 @@
                     <input type="file" id="pfp-up" hidden accept="image/*" onchange="handlePfp(this)">
                 </div>
                 <div class="setting-group">
+                    <label>Audio Engine (Sonic Ripples)</label>
+                    <button onclick="toggleAudio(this)" id="audio-btn" class="btn-liquid" style="background:var(--accent); color:black;">SOUND: ON</button>
+                </div>
+                <div class="setting-group">
                     <label>Color Matrix (12 Presets)</label>
                     <div class="palette">
                         <div class="drop active" style="background:#00f2ff;" onclick="injectColor('#00f2ff', this)"></div>
@@ -179,9 +195,15 @@
                         <div class="drop" style="background:#eccc68;" onclick="injectColor('#eccc68', this)"></div>
                     </div>
                 </div>
-                <div class="setting-group">
-                    <label>Glass Frost (Blur)</label>
-                    <input type="range" min="10" max="150" value="80" oninput="document.documentElement.style.setProperty('--blur', this.value+'px')">
+                <div style="display:flex; gap:20px;">
+                    <div class="setting-group" style="flex:1;">
+                        <label>Glass Frost (Blur)</label>
+                        <input type="range" min="10" max="150" value="80" oninput="document.documentElement.style.setProperty('--blur', this.value+'px')">
+                    </div>
+                    <div class="setting-group" style="flex:1;">
+                        <label>Background Illumination</label>
+                        <input type="range" min="1" max="10" value="6" id="bg-bright-slider" oninput="updateBrightness(this.value)">
+                    </div>
                 </div>
                 <div class="setting-group">
                     <label>Typography Engine</label>
@@ -196,6 +218,15 @@
                 <button onclick="toggleOverlay('settings-view')" class="btn-liquid" style="margin-top:20px;">APPLY & CLOSE</button>
             </div>
 
+            <div id="gif-view" class="overlay">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+                    <h2>Hologram Matrix</h2>
+                    <i class="fas fa-times" style="cursor:pointer; font-size:1.5rem;" onclick="toggleOverlay('gif-view')"></i>
+                </div>
+                <input type="text" id="gif-search" placeholder="Search Giphy..." class="input-liquid" style="margin-bottom:0;" onkeypress="if(event.key==='Enter') searchGifs()">
+                <div id="gif-grid"></div>
+            </div>
+
             <div class="chat-header">
                 <span id="chat-title" style="color: var(--accent);">GENERAL FLOW</span>
                 <div class="back-btn" id="dm-back" onclick="closeDM()"><i class="fas fa-arrow-left"></i> BACK TO MAIN</div>
@@ -206,9 +237,12 @@
             <div id="typing-indicator"></div>
 
             <div style="padding: 20px 30px; background: rgba(0,0,0,0.2); box-shadow: inset 0 5px 20px rgba(0,0,0,0.3);">
-                <div style="background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.2); border-radius: 100px; padding: 8px; display: flex; gap: 10px; box-shadow: inset 0 2px 10px rgba(255,255,255,0.1);">
+                <div style="background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.2); border-radius: 100px; padding: 8px; display: flex; gap: 8px; box-shadow: inset 0 2px 10px rgba(255,255,255,0.1);">
                     <input type="text" id="msg-input" placeholder="Initiate transmission..." style="flex:1; background:transparent; border:none; padding:10px 20px; color:var(--text); outline:none; font-size:1rem; font-weight:600;" onkeypress="if(event.key==='Enter') push()" oninput="sendTyping()">
+                    
+                    <button class="media-btn" onclick="toggleOverlay('gif-view')" title="Send GIF"><i class="fas fa-photo-video"></i></button>
                     <button class="announce-btn" id="announce-btn" onclick="sendAnnouncement()" title="Global Announcement"><i class="fas fa-bullhorn"></i></button>
+                    
                     <button onclick="push()" style="background:var(--text); color:var(--bg); border:none; padding:0 35px; border-radius:100px; font-weight:900; box-shadow: 0 5px 15px rgba(0,0,0,0.3); cursor:pointer;">SEND</button>
                 </div>
             </div>
@@ -236,7 +270,7 @@
         <div class="dock-tool" onclick="document.getElementById('bg-up').click()" title="Change Background"><i class="fas fa-image"></i></div>
         <div class="dock-tool" onclick="toggleTheme()" title="Toggle Light/Dark"><i class="fas fa-sun"></i></div>
         <div class="dock-tool" onclick="toggleOverlay('settings-view')" title="Settings"><i class="fas fa-sliders-h"></i></div>
-        <div class="dock-tool" onclick="toggleStealth()" title="Stealth Mode"><i class="fas fa-eye-slash"></i></div>
+        <div class="dock-tool" onclick="toggleStealth()" title="Hide Dock"><i class="fas fa-eye-slash"></i></div>
         <div style="width:2px; background:rgba(255,255,255,0.2); margin:5px 0;"></div>
         <div class="dock-tool" onclick="panicProtocol()" title="Panic Button" style="color:#ff4757;"><i class="fas fa-running"></i></div>
     </div>
@@ -246,11 +280,79 @@
 
     <script>
         let client, chanMain, chanDM, user, receivedIds = new Set();
-        let activeDM = null; // null = General Flow, string = username
+        let activeDM = null; 
         let unreadDMs = new Set();
-        const secret = "v29_quantum_direct";
+        const secret = "v31_sonic_hologram";
         const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
         let drawing = false, typingTimeout;
+
+        // SONIC ENGINE
+        let soundEnabled = true;
+        const sndSend = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3'); // Water drop
+        const sndRecv = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3'); // Water plop
+        sndSend.volume = 0.5; sndRecv.volume = 0.5;
+        
+        function playSnd(type) {
+            if(!soundEnabled) return;
+            if(type === 'send') { sndSend.currentTime = 0; sndSend.play().catch(e=>{}); }
+            if(type === 'recv') { sndRecv.currentTime = 0; sndRecv.play().catch(e=>{}); }
+        }
+        function toggleAudio(btn) {
+            soundEnabled = !soundEnabled;
+            btn.innerText = soundEnabled ? "SOUND: ON" : "SOUND: OFF";
+            btn.style.background = soundEnabled ? "var(--accent)" : "rgba(255,255,255,0.1)";
+            btn.style.color = soundEnabled ? "black" : "white";
+            localStorage.setItem('nx_snd', soundEnabled);
+        }
+
+        // LINK PARSER
+        function parseLinks(text) {
+            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            return text.replace(urlRegex, url => {
+                return `<div class="link-preview"><a href="${url}" target="_blank"><i class="fas fa-link"></i> ${url}</a></div>`;
+            });
+        }
+
+        // GIF ENGINE (Using Giphy Public Beta Key)
+        async function searchGifs() {
+            const q = document.getElementById('gif-search').value;
+            if(!q) return;
+            const grid = document.getElementById('gif-grid');
+            grid.innerHTML = '<p style="text-align:center; width:100%; grid-column: span 3;">Searching matrix...</p>';
+            try {
+                const res = await fetch(`https://api.giphy.com/v1/gifs/search?q=${encodeURIComponent(q)}&api_key=dc6zaTOxFJmzC&limit=12`);
+                const data = await res.json();
+                grid.innerHTML = '';
+                data.data.forEach(gif => {
+                    const url = gif.images.fixed_height.url;
+                    grid.innerHTML += `<img src="${url}" class="gif-item" onclick="sendGif('${url}')">`;
+                });
+            } catch (err) {
+                grid.innerHTML = '<p style="text-align:center; width:100%; grid-column: span 3; color:#ff4757;">Matrix connection failed.</p>';
+            }
+        }
+        function sendGif(url) {
+            toggleOverlay('gif-view');
+            const id = 'msg_' + Date.now();
+            const myPfp = localStorage.getItem('nx_pfp');
+            const t = Date.now();
+            const data = { id, u: user, c: enc(""), img: url, pfp: myPfp, t: t };
+            
+            if (activeDM) {
+                client.channels.get('v31-dm-' + activeDM).publish('msg', data);
+                render("", 'me', 'You', url, id, myPfp, t); saveDM(activeDM, data);
+            } else {
+                chanMain.publish('msg', data);
+                render("", 'me', 'You', url, id, myPfp, t); savePublic(data, 'msg');
+            }
+            playSnd('send'); receivedIds.add(id);
+        }
+
+        function updateBrightness(val) {
+            const opacity = val / 10;
+            document.documentElement.style.setProperty('--bg-bright', opacity);
+            localStorage.setItem('nx_bright', opacity);
+        }
 
         function panicProtocol() { window.location.href = "https://google.com"; }
         function handleMove(e) {
@@ -258,7 +360,6 @@
             document.documentElement.style.setProperty('--tx', px + 'px'); document.documentElement.style.setProperty('--ty', py + 'px');
         }
 
-        // PFP COMPRESSION
         function handlePfp(input) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
@@ -309,9 +410,9 @@
             document.getElementById('user-display').innerText = user;
 
             // MAIN CHANNEL
-            chanMain = client.channels.get('v29-flow');
+            chanMain = client.channels.get('v31-flow');
             chanMain.subscribe('msg', p => handleIncoming(p.data, false));
-            chanMain.subscribe('announce', p => { if(activeDM === null && !receivedIds.has(p.data.id)) { receivedIds.add(p.data.id); renderAnnounce(dec(p.data.c), p.data.u); } });
+            chanMain.subscribe('announce', p => { if(activeDM === null && !receivedIds.has(p.data.id)) { receivedIds.add(p.data.id); playSnd('recv'); renderAnnounce(dec(p.data.c), p.data.u, p.data.t); } });
             chanMain.subscribe('del', p => document.getElementById(p.data.id)?.remove());
             chanMain.subscribe('typing', p => {
                 if(p.data.u !== user && activeDM === null) {
@@ -322,11 +423,18 @@
             chanMain.presence.subscribe(['enter', 'present', 'leave', 'update'], () => updatePresence());
             chanMain.presence.enter({ pfp: myPfp });
 
-            // PRIVATE DM CHANNEL FOR THIS USER
-            chanDM = client.channels.get('v29-dm-' + user);
+            // DM CHANNEL
+            chanDM = client.channels.get('v31-dm-' + user);
             chanDM.subscribe('msg', p => handleIncoming(p.data, true));
 
             initCanvas(); loadGeneralHistory(); checkCooldown();
+            
+            // Load trending gifs on start
+            fetch(`https://api.giphy.com/v1/gifs/trending?api_key=dc6zaTOxFJmzC&limit=6`)
+            .then(r=>r.json()).then(d=>{
+                const grid = document.getElementById('gif-grid');
+                d.data.forEach(g => { grid.innerHTML += `<img src="${g.images.fixed_height.url}" class="gif-item" onclick="sendGif('${g.images.fixed_height.url}')">`; });
+            }).catch(e=>console.log(e));
         }
 
         function updatePresence() {
@@ -338,7 +446,7 @@
 
                 uniqueMap.forEach((data, clientId) => {
                     let pfpHtml = '';
-                    if(data && data.pfp) pfpHtml = `<img src="${data.pfp}" class="pfp-mini" style="width:26px; height:26px;">`;
+                    if(data && data.pfp) pfpHtml = `<img src="${data.pfp}" class="pfp-mini">`;
                     let hasDot = unreadDMs.has(clientId) ? 'has-dm' : '';
                     let action = clientId !== user ? `onclick="openDM('${clientId}')"` : '';
                     list.innerHTML += `<div class="online-user ${clientId===user?'me':''} ${hasDot}" id="user-node-${clientId}" ${action}>${pfpHtml} ${clientId} <div class="notify-dot"></div></div>`;
@@ -346,17 +454,12 @@
             });
         }
 
-        // DM LOGIC
         function openDM(targetUser) {
-            activeDM = targetUser;
-            unreadDMs.delete(targetUser);
-            updatePresence(); // Clear notification dot
-            
+            activeDM = targetUser; unreadDMs.delete(targetUser); updatePresence();
             document.getElementById('chat-title').innerText = "PRIVATE: " + targetUser.toUpperCase();
             document.getElementById('dm-back').style.display = 'block';
-            document.getElementById('announce-btn').style.display = 'none'; // No announcements in DM
+            document.getElementById('announce-btn').style.display = 'none';
             document.getElementById('view').innerHTML = '';
-            
             loadDMHistory(targetUser);
         }
 
@@ -372,24 +475,15 @@
         function handleIncoming(data, isDM) {
             if(receivedIds.has(data.id)) return;
             receivedIds.add(data.id);
-            
-            // If it's a DM sent TO me
+            playSnd('recv');
             if (isDM) {
                 if (activeDM === data.u) {
-                    // I am currently chatting with them, render it
-                    render(dec(data.c), 'them', data.u, data.img, data.id, data.pfp);
-                    saveDM(data.u, data);
+                    render(dec(data.c), 'them', data.u, data.img, data.id, data.pfp, data.t); saveDM(data.u, data);
                 } else {
-                    // I am not looking at their chat. Save it and notify.
-                    saveDM(data.u, data);
-                    unreadDMs.add(data.u);
-                    updatePresence();
+                    saveDM(data.u, data); unreadDMs.add(data.u); updatePresence();
                 }
             } else {
-                // It's a public message
-                if (activeDM === null && data.u !== user) {
-                    render(dec(data.c), 'them', data.u, data.img, data.id, data.pfp);
-                }
+                if (activeDM === null && data.u !== user) render(dec(data.c), 'them', data.u, data.img, data.id, data.pfp, data.t);
             }
         }
 
@@ -399,19 +493,17 @@
             const i = document.getElementById('msg-input'); if(!i.value) return;
             const id = 'msg_' + Date.now();
             const myPfp = localStorage.getItem('nx_pfp');
-            const data = { id, u: user, c: enc(i.value), pfp: myPfp };
+            const t = Date.now();
+            const data = { id, u: user, c: enc(i.value), pfp: myPfp, t: t };
             
             if (activeDM) {
-                // Send to Target's private channel
-                client.channels.get('v29-dm-' + activeDM).publish('msg', data);
-                render(i.value, 'me', 'You', null, id, myPfp);
-                saveDM(activeDM, data);
+                client.channels.get('v31-dm-' + activeDM).publish('msg', data);
+                render(i.value, 'me', 'You', null, id, myPfp, t); saveDM(activeDM, data);
             } else {
-                // Send to Public
                 chanMain.publish('msg', data);
-                render(i.value, 'me', 'You', null, id, myPfp);
-                savePublic(data, 'msg');
+                render(i.value, 'me', 'You', null, id, myPfp, t); savePublic(data, 'msg');
             }
+            playSnd('send');
             receivedIds.add(id); i.value = '';
         }
 
@@ -420,11 +512,11 @@
             const lastAnnounce = localStorage.getItem('nx_last_announce');
             if (lastAnnounce && Date.now() - parseInt(lastAnnounce) < 60000) return alert("Cooling down.");
 
-            const id = 'ann_' + Date.now();
-            const data = { id, u: user, c: enc(i.value) };
+            const id = 'ann_' + Date.now(); const t = Date.now();
+            const data = { id, u: user, c: enc(i.value), t: t };
             receivedIds.add(id); chanMain.publish('announce', data);
-            renderAnnounce(i.value, 'You'); savePublic(data, 'announce'); i.value = '';
-            localStorage.setItem('nx_last_announce', Date.now()); checkCooldown();
+            renderAnnounce(i.value, 'You', t); savePublic(data, 'announce'); i.value = ''; playSnd('send');
+            localStorage.setItem('nx_last_announce', t); checkCooldown();
         }
 
         function checkCooldown() {
@@ -436,78 +528,64 @@
             btn.classList.remove('cooldown');
         }
 
-        function render(txt, type, s, img, id, pfpStr) {
+        function render(txt, type, s, img, id, pfpStr, timestamp) {
             if(document.getElementById(id)) return;
             const v = document.getElementById('view'), b = document.createElement('div');
             b.className = `bubble ${type}`; b.id = id;
             b.setAttribute('data-text', txt.toLowerCase()); 
             
             let pfpHtml = ''; if(pfpStr) pfpHtml = `<img src="${pfpStr}" class="pfp-mini">`;
+            let timeStr = timestamp ? new Date(timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             
+            let parsedText = parseLinks(txt);
+
             b.innerHTML = `
-                <div class="bubble-header">${pfpHtml}<small style="opacity:0.7; font-weight:900;">${s}</small></div>
-                ${txt}
-                ${img ? `<img src="${img}" style="width:100%; border-radius:20px; margin-top:10px; border: 1px solid rgba(255,255,255,0.2);">` : ''}
+                <div class="bubble-header">
+                    ${pfpHtml}
+                    <small style="opacity:0.7; font-weight:900;">${s}</small>
+                    <span class="msg-time">${timeStr}</span>
+                </div>
+                <span>${parsedText}</span>
+                ${img ? `<img src="${img}" class="media-attachment">` : ''}
                 ${type === 'me' ? `<div class="action-btn del-btn" onclick="deleteLocal('${id}')"><i class="fas fa-times"></i></div>` : ''}
             `;
             v.appendChild(b); v.scrollTop = v.scrollHeight;
         }
 
-        function renderAnnounce(txt, s) {
+        function renderAnnounce(txt, s, timestamp) {
             const v = document.getElementById('view'), b = document.createElement('div');
             b.className = `announcement`; b.setAttribute('data-text', txt.toLowerCase());
-            b.innerHTML = `<small style="display:block;opacity:0.7;font-size:0.7rem;font-weight:900;margin-bottom:8px;"><i class="fas fa-bullhorn"></i> BROADCAST FROM ${s}</small>${txt}`;
+            let timeStr = timestamp ? new Date(timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            b.innerHTML = `
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                    <small style="opacity:0.7;font-size:0.7rem;font-weight:900;"><i class="fas fa-bullhorn"></i> BROADCAST FROM ${s}</small>
+                    <span class="msg-time" style="font-size:0.6rem; opacity:0.5;">${timeStr}</span>
+                </div>
+                ${parseLinks(txt)}
+            `;
             v.appendChild(b); v.scrollTop = v.scrollHeight;
-        }
-
-        function filterMessages(q) {
-            const term = q.toLowerCase();
-            document.querySelectorAll('.bubble, .announcement').forEach(b => {
-                if(b.getAttribute('data-text').includes(term)) b.style.display = 'block'; else b.style.display = 'none';
-            });
         }
 
         function deleteLocal(id) {
             document.getElementById(id)?.remove();
             if(activeDM === null) chanMain.publish('del', {id});
-            // Also clean from storage based on current view
             if(activeDM) {
-                let h = JSON.parse(localStorage.getItem('nx29_dm_' + activeDM)) || [];
-                localStorage.setItem('nx29_dm_' + activeDM, JSON.stringify(h.filter(m => m.id !== id)));
+                let h = JSON.parse(localStorage.getItem('nx31_dm_' + activeDM)) || [];
+                localStorage.setItem('nx31_dm_' + activeDM, JSON.stringify(h.filter(m => m.id !== id)));
             } else {
-                let h = JSON.parse(localStorage.getItem('nx29_public')) || [];
-                localStorage.setItem('nx29_public', JSON.stringify(h.filter(m => m.id !== id)));
+                let h = JSON.parse(localStorage.getItem('nx31_public')) || [];
+                localStorage.setItem('nx31_public', JSON.stringify(h.filter(m => m.id !== id)));
             }
         }
 
-        // STORAGE LOGIC
-        function savePublic(d, type) { 
-            let h = JSON.parse(localStorage.getItem('nx29_public')) || []; 
-            d.type = type; h.push(d); localStorage.setItem('nx29_public', JSON.stringify(h.slice(-50))); 
-        }
-        function loadGeneralHistory() { 
-            let h = JSON.parse(localStorage.getItem('nx29_public')) || []; 
-            h.forEach(d => { 
-                receivedIds.add(d.id); 
-                if (d.type === 'announce') renderAnnounce(dec(d.c), d.u === user ? 'You' : d.u);
-                else render(dec(d.c), d.u === user ? 'me' : 'them', d.u === user ? 'You' : d.u, d.img, d.id, d.pfp); 
-            }); 
-        }
-        
-        function saveDM(target, d) {
-            let h = JSON.parse(localStorage.getItem('nx29_dm_' + target)) || [];
-            h.push(d); localStorage.setItem('nx29_dm_' + target, JSON.stringify(h.slice(-50)));
-        }
-        function loadDMHistory(target) {
-            let h = JSON.parse(localStorage.getItem('nx29_dm_' + target)) || [];
-            h.forEach(d => {
-                receivedIds.add(d.id);
-                render(dec(d.c), d.u === user ? 'me' : 'them', d.u === user ? 'You' : d.u, d.img, d.id, d.pfp);
-            });
-        }
+        function savePublic(d, type) { let h = JSON.parse(localStorage.getItem('nx31_public')) || []; d.type = type; h.push(d); localStorage.setItem('nx31_public', JSON.stringify(h.slice(-50))); }
+        function loadGeneralHistory() { let h = JSON.parse(localStorage.getItem('nx31_public')) || []; h.forEach(d => { receivedIds.add(d.id); if (d.type === 'announce') renderAnnounce(dec(d.c), d.u === user ? 'You' : d.u, d.t); else render(dec(d.c), d.u === user ? 'me' : 'them', d.u === user ? 'You' : d.u, d.img, d.id, d.pfp, d.t); }); }
+        function saveDM(target, d) { let h = JSON.parse(localStorage.getItem('nx31_dm_' + target)) || []; h.push(d); localStorage.setItem('nx31_dm_' + target, JSON.stringify(h.slice(-50))); }
+        function loadDMHistory(target) { let h = JSON.parse(localStorage.getItem('nx31_dm_' + target)) || []; h.forEach(d => { receivedIds.add(d.id); render(dec(d.c), d.u === user ? 'me' : 'them', d.u === user ? 'You' : d.u, d.img, d.id, d.pfp, d.t); }); }
 
-        // UTILS
-        function toggleStealth() { document.getElementById('dock').classList.toggle('hidden'); document.getElementById('dock-reveal').classList.toggle('visible'); document.body.classList.toggle('stealth-mode'); }
+        // STEALTH FIX - ONLY AFFECTS DOCK CLASSES
+        function toggleStealth() { document.getElementById('dock').classList.toggle('hidden'); document.getElementById('dock-reveal').classList.toggle('visible'); }
+        
         function injectColor(hex, el) {
             document.documentElement.style.setProperty('--accent', hex);
             let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -520,12 +598,15 @@
             if(el) { el.style.border = '2px solid white'; el.style.transform = 'scale(1.15)'; }
             localStorage.setItem('nx_color', hex);
         }
+        
         function restoreSettings() {
             const bg = localStorage.getItem('nx_bg'); if(bg) document.getElementById('bg-layer').style.backgroundImage = `url(${bg})`;
             if(localStorage.getItem('nx_theme') === 'light') document.body.setAttribute('data-brightness', 'light');
             const col = localStorage.getItem('nx_color');
             if(col) { const drops = document.querySelectorAll('.drop'); let matched = Array.from(drops).find(d => d.style.background.includes(col)); injectColor(col, matched || drops[0]); }
             const font = localStorage.getItem('nx_font'); if(font) document.documentElement.style.setProperty('--font-main', font);
+            const snd = localStorage.getItem('nx_snd'); if(snd !== null) { soundEnabled = snd === 'true'; const btn = document.getElementById('audio-btn'); btn.innerText = soundEnabled ? "SOUND: ON" : "SOUND: OFF"; btn.style.background = soundEnabled ? "var(--accent)" : "rgba(255,255,255,0.1)"; btn.style.color = soundEnabled ? "black" : "white"; }
+            const bright = localStorage.getItem('nx_bright'); if(bright) { document.documentElement.style.setProperty('--bg-bright', bright); document.getElementById('bg-bright-slider').value = bright * 10; }
         }
 
         function setMode(m, btn) { document.getElementById('ui').className = 'nexus-wrapper mode-'+m; document.querySelectorAll('.dock-tool').forEach(t=>t.classList.remove('active')); btn.classList.add('active'); setTimeout(initCanvas, 500); }
@@ -536,14 +617,8 @@
         function dec(c) { try { return CryptoJS.AES.decrypt(c, secret).toString(CryptoJS.enc.Utf8); } catch { return "[Encrypted]"; } }
         
         function initCanvas() { const w = document.getElementById('sketch-wrap'); canvas.width = w.clientWidth; canvas.height = w.clientHeight; ctx.strokeStyle = '#fff'; ctx.lineWidth = 4; ctx.lineCap = 'round'; canvas.onmousedown = e => { drawing = true; ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); }; canvas.onmousemove = e => { if(drawing) { ctx.lineTo(e.offsetX, e.offsetY); ctx.stroke(); } }; window.onmouseup = () => drawing = false; }
-        function broadcastSketch() { 
-            const id = 'sk_'+Date.now(); const myPfp = localStorage.getItem('nx_pfp'); const data = { id, u: user, c: enc("[Sketch]"), img: canvas.toDataURL(), pfp: myPfp }; receivedIds.add(id); 
-            if(activeDM) { client.channels.get('v29-dm-'+activeDM).publish('msg', data); render("[Sketch]", 'me', 'You', data.img, id, myPfp); saveDM(activeDM, data); }
-            else { chanMain.publish('msg', data); render("[Sketch]", 'me', 'You', data.img, id, myPfp); savePublic(data, 'msg'); }
-            ctx.clearRect(0,0,canvas.width,canvas.height); 
-        }
+        function broadcastSketch() { const id = 'sk_'+Date.now(); const myPfp = localStorage.getItem('nx_pfp'); const t = Date.now(); const data = { id, u: user, c: enc("[Sketch]"), img: canvas.toDataURL(), pfp: myPfp, t: t }; receivedIds.add(id); if(activeDM) { client.channels.get('v31-dm-'+activeDM).publish('msg', data); render("[Sketch]", 'me', 'You', data.img, id, myPfp, t); saveDM(activeDM, data); } else { chanMain.publish('msg', data); render("[Sketch]", 'me', 'You', data.img, id, myPfp, t); savePublic(data, 'msg'); } playSnd('send'); ctx.clearRect(0,0,canvas.width,canvas.height); }
         function handleBg(input) { if(input.files[0]) { const r = new FileReader(); r.onload = e => { document.getElementById('bg-layer').style.backgroundImage = `url(${e.target.result})`; localStorage.setItem('nx_bg', e.target.result); }; r.readAsDataURL(input.files[0]); } }
-        function toggleFS() { if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
     </script>
 </body>
 </html>
