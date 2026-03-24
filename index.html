@@ -3,622 +3,549 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Nexus v31 | Sonic Hologram</title>
+    <title>Liquid Glass</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=JetBrains+Mono:wght@400;700&family=Plus+Jakarta+Sans:wght@400;700;800&family=Poppins:wght@400;700&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;600;700;800&family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         :root {
-            --accent: #00f2ff;
-            --accent-glow: rgba(0, 242, 255, 0.2);
-            --accent-strong: rgba(0, 242, 255, 0.6);
-            --glass-op: 0.12;
-            --glass-saturate: 300%;
-            --border: rgba(255, 255, 255, 0.3);
-            --bg: #010204;
-            --text: #ffffff;
-            --blur: 80px;
-            --bg-bright: 0.6;
+            --accent: #0A84FF;
+            --accent-glow: rgba(10, 132, 255, 0.4);
+            --bg-color: #000000;
+            --text-color: #ffffff;
+            --glass-bg: rgba(30, 30, 30, 0.4);
+            --glass-blur: 60px;
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --glass-border-light: rgba(255, 255, 255, 0.3);
+            --shadow-heavy: 0 30px 60px rgba(0,0,0,0.6);
+            --spring: cubic-bezier(0.25, 1, 0.3, 1);
+            --spring-bouncy: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             --tx: 0px; --ty: 0px;
-            --font-main: 'Plus Jakarta Sans', sans-serif;
-            --spring: cubic-bezier(0.175, 0.885, 0.32, 1.3);
         }
 
-        [data-brightness="light"] {
-            --bg: #e8eef2; --text: #1a1c20; 
-            --glass-op: 0.6; 
-            --border: rgba(255, 255, 255, 0.8); 
-            --accent-glow: rgba(0, 122, 255, 0.15);
-            --accent-strong: rgba(0, 122, 255, 0.4);
+        [data-theme="light"] {
+            --bg-color: #f2f2f7;
+            --text-color: #000000;
+            --glass-bg: rgba(255, 255, 255, 0.5);
+            --glass-border: rgba(0, 0, 0, 0.1);
+            --glass-border-light: rgba(255, 255, 255, 0.8);
+            --shadow-heavy: 0 30px 60px rgba(0,0,0,0.1);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font-main); scrollbar-width: thin; scrollbar-color: var(--accent) transparent; }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
-        ::selection { background: var(--accent); color: #000; }
-        
-        body { background: var(--bg); height: 100dvh; display: flex; align-items: center; justify-content: center; overflow: hidden; color: var(--text); transition: background 0.8s ease; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font-main); scrollbar-width: none; -webkit-font-smoothing: antialiased; }
+        ::-webkit-scrollbar { display: none; }
+        ::selection { background: var(--accent); color: #fff; }
 
-        #bg-layer { position: fixed; inset: -10%; z-index: -2; background-size: cover; background-position: center; filter: blur(var(--blur)) brightness(var(--bg-bright)); transition: transform 0.3s ease, filter 0.3s ease; transform: translate(calc(var(--tx) * -0.2), calc(var(--ty) * -0.2)); }
-        .caustics { position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at center, var(--accent-glow), transparent); opacity: 0.8; pointer-events: none; }
-        
-        .nexus-wrapper { display: grid; gap: 20px; width: 96vw; height: 86dvh; max-width: 1800px; opacity: 0; pointer-events: none; transition: all 0.5s var(--spring); }
-        .mode-computer { grid-template-columns: 320px 1fr 260px; }
-        .mode-mobile { width: 420px; grid-template-columns: 1fr; }
-        .mode-watch { width: 380px; height: 380px; aspect-ratio: 1/1; border-radius: 50% !important; border: 12px solid var(--border); grid-template-columns: 1fr; overflow: hidden; margin: auto; }
-        
-        aside { display: flex; flex-direction: column; }
-        .mode-mobile aside, .mode-watch aside { display: none; }
+        body { background: var(--bg-color); color: var(--text-color); height: 100dvh; display: flex; align-items: center; justify-content: center; overflow: hidden; transition: background 0.8s ease; }
 
-        /* HYPER-LIQUID GLASS */
-        .glass-panel { 
-            background: linear-gradient(135deg, rgba(255,255,255,var(--glass-op)), rgba(255,255,255,calc(var(--glass-op)/3))); 
-            backdrop-filter: blur(var(--blur)) saturate(var(--glass-saturate)); 
-            border: 1px solid var(--border); border-radius: 60px; display: flex; 
-            flex-direction: column; overflow: hidden; 
-            box-shadow: 0 40px 100px rgba(0,0,0,0.5), inset 3px 3px 25px rgba(255,255,255,0.4), inset -10px -10px 50px var(--accent-glow); 
-            transition: all 0.5s ease; position: relative;
+        /* DYNAMIC LIQUID BACKGROUND */
+        #bg-canvas { position: fixed; inset: -5%; z-index: -3; background-size: cover; background-position: center; filter: blur(var(--glass-blur)) saturate(150%) brightness(0.8); transform: translate(calc(var(--tx) * -0.3), calc(var(--ty) * -0.3)); transition: transform 0.2s linear, filter 0.8s ease; }
+        .mesh-gradient { position: fixed; inset: 0; z-index: -2; background: radial-gradient(circle at 20% 30%, var(--accent-glow) 0%, transparent 50%), radial-gradient(circle at 80% 70%, var(--accent-glow) 0%, transparent 50%); opacity: 0.6; mix-blend-mode: screen; pointer-events: none; animation: breathe 10s infinite alternate ease-in-out; }
+        @keyframes breathe { 0% { transform: scale(1); opacity: 0.4; } 100% { transform: scale(1.1); opacity: 0.7; } }
+
+        /* ANIMATIONS */
+        @keyframes slideUpFade { 0% { transform: translateY(40px) scale(0.95); opacity: 0; filter: blur(10px); } 100% { transform: translateY(0) scale(1); opacity: 1; filter: blur(0); } }
+        @keyframes bubblePop { 0% { transform: scale(0.8) translateY(10px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
+        @keyframes vacuumGate { 0% { transform: scale(1); opacity: 1; filter: blur(0); } 100% { transform: scale(0.5); opacity: 0; filter: blur(20px); pointer-events: none; } }
+
+        /* CHASSIS LAYOUT */
+        .nexus-wrapper { display: grid; gap: 24px; width: 96vw; height: 88dvh; max-width: 1600px; opacity: 0; pointer-events: none; transition: all 0.5s var(--spring); }
+        .mode-computer { grid-template-columns: 300px 1fr 300px; }
+        .mode-mobile { width: 400px; grid-template-columns: 1fr; }
+        .mode-mobile aside { display: none; }
+        
+        /* WATCH MODE FIXES */
+        .mode-watch { 
+            width: 380px; height: 380px; aspect-ratio: 1/1; 
+            border-radius: 50% !important; border: 14px solid rgba(255,255,255,0.15); 
+            margin: auto; grid-template-columns: 1fr; overflow: hidden;
+            box-shadow: var(--shadow-heavy), inset 0 0 40px var(--accent-glow);
         }
+        .mode-watch aside { display: none; }
+        .mode-watch main.ios-panel { border-radius: 0; border: none; box-shadow: none; }
+        .mode-watch .chat-header { padding: 45px 20px 15px; justify-content: center; }
+        .mode-watch .input-dock { padding: 15px 20px 45px; }
 
-        #sketch-wrap { flex: 1; margin: 20px; background: rgba(0,0,0,0.2); border-radius: 40px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; position: relative; box-shadow: inset 0 10px 30px rgba(0,0,0,0.5); }
+        /* IOS 26 GLASS PANELS */
+        .ios-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--glass-blur)) saturate(200%);
+            -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(200%);
+            border-radius: 38px;
+            border: 1px solid var(--glass-border);
+            border-top: 1.5px solid var(--glass-border-light);
+            border-left: 1.5px solid var(--glass-border-light);
+            box-shadow: var(--shadow-heavy);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+            animation: slideUpFade 0.8s var(--spring) forwards;
+        }
+        
+        .ios-panel:nth-child(1) { animation-delay: 0.1s; }
+        .ios-panel:nth-child(2) { animation-delay: 0.2s; }
+        .ios-panel:nth-child(3) { animation-delay: 0.3s; }
+
+        /* HEADERS */
+        .panel-header { padding: 20px 25px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; font-weight: 800; letter-spacing: -0.5px; font-size: 1.1rem; }
+        .dm-badge { background: var(--accent); color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; cursor: pointer; transition: 0.3s var(--spring-bouncy); box-shadow: 0 4px 15px var(--accent-glow); display: none; }
+        .dm-badge:hover { transform: scale(1.05); }
+
+        /* SKETCH LAB */
+        #sketch-wrap { flex: 1; margin: 20px; border-radius: 28px; background: rgba(0,0,0,0.15); box-shadow: inset 0 4px 20px rgba(0,0,0,0.2); position: relative; overflow: hidden; }
         canvas { width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+        .btn-ios { margin: 0 20px 20px; padding: 16px; border-radius: 24px; background: var(--text-color); color: var(--bg-color); border: none; font-weight: 700; font-size: 1rem; cursor: pointer; transition: 0.3s var(--spring-bouncy); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        .btn-ios:active { transform: scale(0.95); }
 
-        /* CHAT HEADER */
-        .chat-header { padding: 15px 30px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-weight: 800; font-size: 0.9rem; letter-spacing: 1px; text-transform: uppercase; }
-        .chat-header .back-btn { background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 20px; cursor: pointer; transition: 0.3s; display: none; }
-        .chat-header .back-btn:hover { background: var(--accent); color: black; }
-
-        /* BUBBLES, TIMESTAMPS & LINKS */
-        .pfp-mini { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--accent); box-shadow: 0 0 10px var(--accent-glow); flex-shrink: 0; }
-        .bubble-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-        .msg-time { font-size: 0.65rem; opacity: 0.5; margin-left: auto; font-weight: 400; letter-spacing: 0.5px; }
-
-        .bubble { padding: 18px 28px; border-radius: 40px; font-size: 1rem; animation: liquid-bloom 0.6s var(--spring); position: relative; max-width: 85%; margin-bottom: 12px; word-wrap: break-word; overflow-wrap: break-word; }
-        @keyframes liquid-bloom { 0% { transform: scale(0.5) translateY(20px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
+        /* CHAT FLOW */
+        #view { flex: 1; padding: 30px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; }
         
-        .bubble.me { align-self: flex-end; background: linear-gradient(135deg, var(--accent), rgba(255,255,255,0.9)); color: #000; font-weight: 800; border-bottom-right-radius: 8px; box-shadow: inset 2px 2px 10px rgba(255,255,255,0.8), 0 10px 20px var(--accent-glow); border: 1px solid rgba(255,255,255,0.6); }
-        .bubble.them { align-self: flex-start; background: rgba(255,255,255,0.1); color: var(--text); border: 1.5px solid var(--border); border-bottom-left-radius: 8px; box-shadow: inset 2px 2px 10px rgba(255,255,255,0.1); }
+        .bubble-wrap { display: flex; flex-direction: column; max-width: 80%; animation: bubblePop 0.5s var(--spring-bouncy) forwards; }
+        .bubble-wrap.me { align-self: flex-end; align-items: flex-end; }
+        .bubble-wrap.them { align-self: flex-start; align-items: flex-start; }
+
+        .bubble-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; padding: 0 4px; }
+        .meta-pfp { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; border: 1px solid var(--accent); }
+        .meta-name { font-size: 0.75rem; font-weight: 700; opacity: 0.8; }
+        .meta-time { font-size: 0.65rem; opacity: 0.5; }
+
+        .bubble { padding: 14px 20px; border-radius: 24px; font-size: 1.05rem; line-height: 1.4; position: relative; word-wrap: break-word; overflow-wrap: break-word; }
+        .bubble-wrap.me .bubble { background: var(--accent); color: white; border-bottom-right-radius: 6px; box-shadow: 0 8px 25px var(--accent-glow); }
+        .bubble-wrap.them .bubble { background: rgba(255,255,255,0.1); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-top: 1px solid var(--glass-border-light); border-bottom-left-radius: 6px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
         
-        .bubble img.media-attachment { max-width: 100%; border-radius: 20px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.3); }
+        .bubble img { max-width: 100%; border-radius: 16px; margin-top: 8px; }
+        
+        .del-msg { position: absolute; top: -8px; right: -8px; background: #FF3B30; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.7rem; cursor: pointer; opacity: 0; transform: scale(0.5); transition: 0.2s var(--spring-bouncy); box-shadow: 0 4px 10px rgba(255, 59, 48, 0.4); }
+        .bubble-wrap:hover .del-msg { opacity: 1; transform: scale(1); }
 
-        .link-preview { background: rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.2); padding: 10px 15px; border-radius: 15px; margin-top: 8px; font-size: 0.85rem; box-shadow: inset 0 2px 10px rgba(0,0,0,0.1); }
-        .bubble.me .link-preview { background: rgba(255,255,255,0.3); border-color: rgba(0,0,0,0.1); box-shadow: inset 0 2px 10px rgba(255,255,255,0.3); }
-        .link-preview a { color: inherit; text-decoration: none; font-weight: 800; display: flex; align-items: center; gap: 8px; word-break: break-all; }
-        .link-preview a:hover { text-decoration: underline; }
+        .announcement { align-self: center; background: rgba(255,255,255,0.15); backdrop-filter: blur(30px); border: 1.5px solid var(--accent); border-radius: 30px; padding: 20px 30px; text-align: center; max-width: 90%; animation: bubblePop 0.6s var(--spring-bouncy); box-shadow: 0 10px 40px var(--accent-glow); margin: 10px 0; }
 
-        .announcement { align-self: center; background: linear-gradient(135deg, var(--accent), var(--accent-strong)); color: #000; font-weight: 900; text-transform: uppercase; text-align: center; padding: 25px; border-radius: 40px; width: 90%; margin: 20px 0; box-shadow: 0 0 40px var(--accent-glow); animation: liquid-bloom 0.6s var(--spring), pulse-glow 3s infinite alternate; letter-spacing: 1px; border: 2px solid white; position: relative; }
-        @keyframes pulse-glow { 0% { box-shadow: 0 0 20px var(--accent-glow); } 100% { box-shadow: 0 0 50px var(--accent-strong); } }
+        /* INPUT AREA */
+        .input-dock { padding: 20px; background: rgba(0,0,0,0.1); border-top: 1px solid var(--glass-border); }
+        .input-pill { display: flex; align-items: center; background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border); border-top: 1px solid var(--glass-border-light); border-radius: 100px; padding: 6px 6px 6px 20px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.1); transition: border-color 0.3s; }
+        .input-pill:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+        .input-pill input { flex: 1; background: transparent; border: none; color: var(--text-color); font-size: 1.05rem; outline: none; }
+        .send-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: white; border: none; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; transition: 0.2s var(--spring-bouncy); box-shadow: 0 4px 15px var(--accent-glow); }
+        .send-btn:active { transform: scale(0.85); }
+        .announce-btn { width: 40px; height: 40px; border-radius: 50%; background: transparent; color: var(--text-color); border: none; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; transition: 0.2s; opacity: 0.6; }
+        .announce-btn:hover { opacity: 1; color: #FF3B30; }
+        .announce-btn.cooling { opacity: 0.2; pointer-events: none; }
 
-        .action-btn { position: absolute; top: -8px; width: 28px; height: 28px; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; opacity: 0; transform: scale(0.5); transition: 0.3s var(--spring); border: 2px solid var(--bg); z-index: 10; cursor: pointer; }
-        .bubble:hover .action-btn { opacity: 1; transform: scale(1); }
-        .del-btn { right: -8px; background: #ff4757; }
+        /* NETWORK PANEL */
+        .profile-card { padding: 30px 20px; text-align: center; border-bottom: 1px solid var(--glass-border); }
+        .main-pfp { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); box-shadow: 0 8px 25px var(--accent-glow); margin: 0 auto 15px; background: var(--glass-bg); }
+        
+        .presence-list { padding: 20px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .user-node { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 20px; background: rgba(255,255,255,0.05); cursor: pointer; transition: 0.3s var(--spring-bouncy); border: 1px solid transparent; position: relative; }
+        .user-node:hover { background: rgba(255,255,255,0.1); transform: translateX(5px); border-color: var(--glass-border); }
+        .user-node.me { cursor: default; }
+        .user-node.me:hover { transform: none; background: rgba(255,255,255,0.05); border-color: transparent; }
+        
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #34C759; box-shadow: 0 0 10px #34C759; }
+        .user-node.me .status-dot { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+        .dm-alert { position: absolute; right: 15px; width: 10px; height: 10px; background: #FF3B30; border-radius: 50%; animation: ping 1.5s infinite; display: none; }
+        .user-node.has-unread .dm-alert { display: block; }
+        @keyframes ping { 0% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(255, 59, 48, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); } }
 
-        /* ONLINE LIST */
-        .online-user { padding: 10px 15px; border-radius: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 10px; font-weight: 700; opacity: 0.9; font-size: 0.9rem; cursor: pointer; transition: 0.3s; position: relative; }
-        .online-user:hover { background: rgba(255,255,255,0.1); transform: translateX(5px); }
-        .online-user.me { cursor: default; }
-        .online-user.me:hover { transform: none; background: transparent; }
-        .notify-dot { position: absolute; right: 15px; width: 12px; height: 12px; background: #ff4757; border-radius: 50%; box-shadow: 0 0 15px #ff4757; display: none; animation: pulse-glow 1s infinite alternate; }
-        .online-user.has-dm .notify-dot { display: block; }
+        /* FLOATING DOCK */
+        .dock-wrapper { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)) saturate(200%); border: 1px solid var(--glass-border); border-top: 1.5px solid var(--glass-border-light); padding: 10px 24px; border-radius: 100px; box-shadow: 0 20px 50px rgba(0,0,0,0.4); transition: 0.6s var(--spring); z-index: 9000; }
+        .dock-wrapper.stealth { transform: translate(-50%, 150%); opacity: 0; pointer-events: none; }
+        
+        .dock-icon { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--text-color); font-size: 1.1rem; cursor: pointer; transition: 0.3s var(--spring-bouncy); background: rgba(255,255,255,0.05); }
+        .dock-icon:hover, .dock-icon.active { background: var(--accent); color: white; transform: scale(1.15) translateY(-5px); box-shadow: 0 10px 20px var(--accent-glow); }
+        .dock-divider { width: 2px; height: 30px; background: var(--glass-border); margin: auto 5px; border-radius: 2px; }
 
-        #typing-indicator { padding: 10px 30px; font-size: 0.8rem; font-weight: 700; color: var(--accent); opacity: 0; transition: 0.3s; height: 30px; }
+        .stealth-trigger { position: fixed; bottom: -40px; left: 50%; transform: translateX(-50%); width: 100px; height: 6px; background: rgba(255,255,255,0.5); border-radius: 10px; cursor: pointer; z-index: 8999; transition: 0.4s var(--spring); }
+        .stealth-trigger.visible { bottom: 10px; }
+        .stealth-trigger:hover { background: var(--accent); height: 8px; box-shadow: 0 0 15px var(--accent-glow); }
 
-        /* DOCK (TRUE STEALTH FIX) */
-        .dock { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.15); backdrop-filter: blur(40px); padding: 12px 30px; border-radius: 100px; display: flex; gap: 15px; z-index: 9999; border: 2px solid rgba(255,255,255,0.3); transition: transform 0.6s var(--spring); box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 2px 2px 15px rgba(255,255,255,0.3); }
-        .dock.hidden { transform: translate(-50%, 150%); }
-
-        .dock-tool { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.08); transition: 0.3s; color: var(--text); cursor: pointer; }
-        .dock-tool:hover, .dock-tool.active { transform: scale(1.2); background: var(--accent); color: #000; box-shadow: 0 0 20px var(--accent-glow); }
-        #dock-reveal { position: fixed; bottom: -50px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #000; padding: 5px 30px; border-radius: 20px 20px 0 0; transition: 0.4s; z-index: 9998; cursor: pointer; font-weight: 800; box-shadow: 0 0 30px var(--accent-glow); }
-        #dock-reveal.visible { bottom: 0; }
-
-        /* OVERLAYS (SETTINGS & GIFS) */
-        .overlay { position: absolute; inset: 20px; background: rgba(0,0,0,0.85); backdrop-filter: blur(50px); z-index: 5000; padding: 40px; display: none; flex-direction: column; border-radius: 50px; border: 2px solid var(--accent); color: white; animation: drop-in 0.5s var(--spring); overflow-y: auto; box-shadow: 0 0 100px rgba(0,0,0,0.8); }
-        @keyframes drop-in { 0% { transform: scale(0.9) translateY(-20px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
-
-        .setting-group { margin-bottom: 25px; }
-        .setting-group label { display: block; font-size: 0.8rem; font-weight: 800; opacity: 0.7; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;}
+        /* CONTROL CENTER (SETTINGS) */
+        #control-center { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(40px); z-index: 9999; display: none; align-items: flex-end; justify-content: center; padding: 20px; opacity: 0; transition: 0.4s ease; }
+        .cc-panel { background: var(--glass-bg); border: 1px solid var(--glass-border); border-top: 1.5px solid var(--glass-border-light); border-radius: 45px; width: 100%; max-width: 500px; padding: 40px; box-shadow: 0 30px 60px rgba(0,0,0,0.5); transform: translateY(100%); transition: 0.5s var(--spring-bouncy); }
+        
+        .cc-group { margin-bottom: 24px; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 28px; border: 1px solid var(--glass-border); }
+        .cc-label { font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; opacity: 0.6; display: block; }
+        
+        .cc-color-grid { display: flex; gap: 12px; flex-wrap: wrap; }
+        .color-dot { width: 36px; height: 36px; border-radius: 50%; cursor: pointer; transition: 0.2s; border: 3px solid transparent; box-shadow: inset 0 2px 10px rgba(255,255,255,0.3); }
+        .color-dot.active { border-color: white; transform: scale(1.2); }
+        
         input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
-        select, .btn-liquid { width: 100%; padding: 15px; border-radius: 30px; border: 1px solid var(--border); background: rgba(255,255,255,0.1); color: white; outline: none; font-family: inherit; font-weight: 800; cursor: pointer; transition: 0.3s; }
-        .btn-liquid { background: var(--accent); color: black; text-align: center; text-transform: uppercase; margin-top: 10px; border: none; box-shadow: 0 10px 20px var(--accent-glow); }
-        .btn-liquid:hover { transform: scale(1.02); }
-        .palette { display: flex; gap: 10px; flex-wrap: wrap; }
-        .drop { width: 45px; height: 45px; border-radius: 50%; border: 3px solid transparent; transition: 0.3s; cursor: pointer; box-shadow: inset 2px 2px 10px rgba(255,255,255,0.4); }
-        .drop.active { border-color: white; transform: scale(1.15); box-shadow: 0 0 20px inherit; }
 
-        /* GIF SEARCH UI */
-        #gif-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; overflow-y: auto; flex: 1; }
-        .gif-item { width: 100%; height: 100px; object-fit: cover; border-radius: 15px; cursor: pointer; transition: 0.3s; border: 2px solid transparent; }
-        .gif-item:hover { transform: scale(1.05); border-color: var(--accent); box-shadow: 0 0 15px var(--accent-glow); }
-
-        /* AUTH GATE */
-        #gate { position: fixed; inset: 0; z-index: 10000; background: #000; display: flex; align-items: center; justify-content: center; }
-        .login-card { background: rgba(255,255,255,0.05); padding: 60px; border-radius: 80px; border: 2px solid var(--accent); text-align: center; width: 450px; backdrop-filter: blur(50px); box-shadow: inset 2px 2px 20px rgba(255,255,255,0.2), 0 0 50px var(--accent-glow); }
-        .input-liquid { width: 100%; padding: 20px; border-radius: 50px; border: 1.5px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; margin-bottom: 25px; text-align: center; outline: none; font-size: 1.2rem; transition: border-color 0.3s ease, box-shadow 0.3s ease; box-shadow: inset 0 5px 15px rgba(0,0,0,0.3); }
-        .input-liquid:focus { border-color: var(--accent); box-shadow: inset 0 5px 15px rgba(0,0,0,0.3), 0 0 20px var(--accent-glow); }
-        
-        .media-btn { background: rgba(255,255,255,0.1); color: var(--text); border: none; padding: 0 20px; border-radius: 100px; cursor: pointer; transition: 0.3s; font-size: 1.1rem; }
-        .media-btn:hover { background: var(--accent); color: #000; box-shadow: 0 0 20px var(--accent-glow); }
-        .announce-btn { background: rgba(255,255,255,0.1); color: var(--text); border: none; padding: 0 20px; border-radius: 100px; cursor: pointer; transition: 0.3s; font-size: 1.1rem; }
-        .announce-btn:hover { background: #ff4757; color: white; box-shadow: 0 0 20px rgba(255,71,87,0.5); }
-        .announce-btn.cooldown { opacity: 0.3; pointer-events: none; background: transparent; }
+        /* LOGIN GATE */
+        #gate { position: fixed; inset: 0; background: var(--bg-color); z-index: 10000; display: flex; align-items: center; justify-content: center; }
+        .gate-card { background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); border: 1px solid var(--glass-border); border-top: 1.5px solid var(--glass-border-light); border-radius: 50px; padding: 60px 50px; width: 420px; text-align: center; box-shadow: var(--shadow-heavy); }
+        .gate-input { width: 100%; background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border); color: var(--text-color); padding: 20px; border-radius: 25px; margin-bottom: 20px; font-size: 1.1rem; text-align: center; outline: none; transition: 0.3s; }
+        .gate-input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-glow); }
     </style>
 </head>
 <body onmousemove="handleMove(event)">
-    <div id="bg-layer"></div>
-    <div class="caustics"></div>
+    <div id="bg-canvas"></div>
+    <div class="mesh-gradient"></div>
 
     <div id="gate">
-        <div class="login-card">
-            <h1 style="margin-bottom: 10px; letter-spacing: -4px; font-size: 3.5rem; font-weight: 800; color:white;">NEXUS</h1>
-            <p style="opacity:0.6; font-size: 0.8rem; margin-bottom:30px; letter-spacing: 2px; font-weight:800; color:var(--accent);">V31 SONIC HOLOGRAM</p>
-            <input type="email" id="email-in" placeholder="firstname.surname@ballardschool.co.uk" class="input-liquid">
-            <button onclick="boot()" class="btn-liquid" style="background:linear-gradient(135deg, var(--accent), #fff); color:black; font-size: 1.1rem;">ENGAGE</button>
+        <div class="gate-card" id="gate-card">
+            <i class="fas fa-fingerprint" style="font-size: 3rem; color: var(--accent); margin-bottom: 20px; filter: drop-shadow(0 0 20px var(--accent-glow));"></i>
+            <h1 style="font-weight: 800; font-size: 2.5rem; letter-spacing: -2px; margin-bottom: 10px;">NEXUS</h1>
+            <p style="opacity: 0.6; font-size: 0.9rem; margin-bottom: 30px; font-weight: 600;">iOS 26 ARCHITECTURE</p>
+            <input type="email" id="email-in" class="gate-input" placeholder="firstname.surname@ballardschool.co.uk" autocomplete="off">
+            <button class="btn-ios" style="width: 100%; margin: 0; background: var(--accent); color: white; box-shadow: 0 10px 30px var(--accent-glow);" onclick="boot()">Authenticate</button>
         </div>
     </div>
 
     <div class="nexus-wrapper mode-computer" id="ui">
-        <aside class="glass-panel">
-            <div style="padding:25px 30px; font-weight:900; border-bottom:1.5px solid var(--border); display:flex; justify-content:space-between;">LAB <i class="fas fa-trash" onclick="ctx.clearRect(0,0,canvas.width,canvas.height)" style="opacity:0.5; cursor:pointer;"></i></div>
+        
+        <aside class="ios-panel">
+            <div class="panel-header">
+                <span>Sketch Lab</span>
+                <i class="fas fa-trash-alt" style="cursor: pointer; opacity: 0.5; transition: 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5" onclick="ctx.clearRect(0,0,canvas.width,canvas.height)"></i>
+            </div>
             <div id="sketch-wrap"><canvas id="canvas"></canvas></div>
-            <button onclick="broadcastSketch()" class="btn-liquid" style="margin: 0 20px 20px; width: auto;">BROADCAST SKETCH</button>
+            <button class="btn-ios" onclick="broadcastSketch()">Broadcast Canvas</button>
         </aside>
 
-        <main class="glass-panel">
-            <div id="settings-view" class="overlay">
-                <h2 style="margin-bottom: 20px;">Architecture Settings</h2>
-                <div class="setting-group">
-                    <label>Neural Avatar (Profile Photo)</label>
-                    <button onclick="document.getElementById('pfp-up').click()" class="btn-liquid" style="background: rgba(255,255,255,0.1); color: white; box-shadow:none;"><i class="fas fa-camera"></i> Upload Image</button>
-                    <input type="file" id="pfp-up" hidden accept="image/*" onchange="handlePfp(this)">
-                </div>
-                <div class="setting-group">
-                    <label>Audio Engine (Sonic Ripples)</label>
-                    <button onclick="toggleAudio(this)" id="audio-btn" class="btn-liquid" style="background:var(--accent); color:black;">SOUND: ON</button>
-                </div>
-                <div class="setting-group">
-                    <label>Color Matrix (12 Presets)</label>
-                    <div class="palette">
-                        <div class="drop active" style="background:#00f2ff;" onclick="injectColor('#00f2ff', this)"></div>
-                        <div class="drop" style="background:#ff007f;" onclick="injectColor('#ff007f', this)"></div>
-                        <div class="drop" style="background:#a29bfe;" onclick="injectColor('#a29bfe', this)"></div>
-                        <div class="drop" style="background:#00ff88;" onclick="injectColor('#00ff88', this)"></div>
-                        <div class="drop" style="background:#f9ca24;" onclick="injectColor('#f9ca24', this)"></div>
-                        <div class="drop" style="background:#ffffff;" onclick="injectColor('#ffffff', this)"></div>
-                        <div class="drop" style="background:#ff4757;" onclick="injectColor('#ff4757', this)"></div>
-                        <div class="drop" style="background:#2ed573;" onclick="injectColor('#2ed573', this)"></div>
-                        <div class="drop" style="background:#5352ed;" onclick="injectColor('#5352ed', this)"></div>
-                        <div class="drop" style="background:#ff7f50;" onclick="injectColor('#ff7f50', this)"></div>
-                        <div class="drop" style="background:#7bed9f;" onclick="injectColor('#7bed9f', this)"></div>
-                        <div class="drop" style="background:#eccc68;" onclick="injectColor('#eccc68', this)"></div>
-                    </div>
-                </div>
-                <div style="display:flex; gap:20px;">
-                    <div class="setting-group" style="flex:1;">
-                        <label>Glass Frost (Blur)</label>
-                        <input type="range" min="10" max="150" value="80" oninput="document.documentElement.style.setProperty('--blur', this.value+'px')">
-                    </div>
-                    <div class="setting-group" style="flex:1;">
-                        <label>Background Illumination</label>
-                        <input type="range" min="1" max="10" value="6" id="bg-bright-slider" oninput="updateBrightness(this.value)">
-                    </div>
-                </div>
-                <div class="setting-group">
-                    <label>Typography Engine</label>
-                    <select onchange="document.documentElement.style.setProperty('--font-main', this.value)">
-                        <option value="'Plus Jakarta Sans', sans-serif">Jakarta Sans</option>
-                        <option value="'Inter', sans-serif">Inter CSS</option>
-                        <option value="'JetBrains Mono', monospace">JetBrains Mono</option>
-                        <option value="'Space Grotesk', sans-serif">Space Grotesk</option>
-                        <option value="'Poppins', sans-serif">Poppins</option>
-                    </select>
-                </div>
-                <button onclick="toggleOverlay('settings-view')" class="btn-liquid" style="margin-top:20px;">APPLY & CLOSE</button>
+        <main class="ios-panel">
+            <div class="panel-header chat-header">
+                <span id="chat-title" style="color: var(--accent);">Global Flow</span>
+                <div class="dm-badge" id="dm-back" onclick="closeDM()"><i class="fas fa-arrow-left"></i> Return</div>
             </div>
-
-            <div id="gif-view" class="overlay">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
-                    <h2>Hologram Matrix</h2>
-                    <i class="fas fa-times" style="cursor:pointer; font-size:1.5rem;" onclick="toggleOverlay('gif-view')"></i>
-                </div>
-                <input type="text" id="gif-search" placeholder="Search Giphy..." class="input-liquid" style="margin-bottom:0;" onkeypress="if(event.key==='Enter') searchGifs()">
-                <div id="gif-grid"></div>
-            </div>
-
-            <div class="chat-header">
-                <span id="chat-title" style="color: var(--accent);">GENERAL FLOW</span>
-                <div class="back-btn" id="dm-back" onclick="closeDM()"><i class="fas fa-arrow-left"></i> BACK TO MAIN</div>
-            </div>
-
-            <div id="view" style="flex:1; overflow-y:auto; padding:30px; display:flex; flex-direction:column;"></div>
+            
+            <div id="view"></div>
             
             <div id="typing-indicator"></div>
 
-            <div style="padding: 20px 30px; background: rgba(0,0,0,0.2); box-shadow: inset 0 5px 20px rgba(0,0,0,0.3);">
-                <div style="background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.2); border-radius: 100px; padding: 8px; display: flex; gap: 8px; box-shadow: inset 0 2px 10px rgba(255,255,255,0.1);">
-                    <input type="text" id="msg-input" placeholder="Initiate transmission..." style="flex:1; background:transparent; border:none; padding:10px 20px; color:var(--text); outline:none; font-size:1rem; font-weight:600;" onkeypress="if(event.key==='Enter') push()" oninput="sendTyping()">
-                    
-                    <button class="media-btn" onclick="toggleOverlay('gif-view')" title="Send GIF"><i class="fas fa-photo-video"></i></button>
-                    <button class="announce-btn" id="announce-btn" onclick="sendAnnouncement()" title="Global Announcement"><i class="fas fa-bullhorn"></i></button>
-                    
-                    <button onclick="push()" style="background:var(--text); color:var(--bg); border:none; padding:0 35px; border-radius:100px; font-weight:900; box-shadow: 0 5px 15px rgba(0,0,0,0.3); cursor:pointer;">SEND</button>
+            <div class="input-dock">
+                <div class="input-pill">
+                    <button class="announce-btn" id="announce-btn" onclick="sendAnnouncement()"><i class="fas fa-bullhorn"></i></button>
+                    <input type="text" id="msg-input" placeholder="Ripple your thoughts..." onkeypress="if(event.key==='Enter') push()" oninput="sendTyping()">
+                    <button class="send-btn" onclick="push()"><i class="fas fa-arrow-up"></i></button>
                 </div>
             </div>
         </main>
 
-        <aside class="glass-panel">
-            <div style="padding:25px 30px; font-weight:900; border-bottom:1.5px solid var(--border);">NETWORK</div>
-            <div style="padding:30px; display:flex; flex-direction:column; gap:20px; flex:1; overflow-y:auto;">
-                <div style="text-align:center; margin-bottom: 10px;">
-                    <img id="local-pfp" src="" style="width:70px; height:70px; border-radius:50%; object-fit:cover; border:2px solid var(--accent); box-shadow: 0 0 30px var(--accent-strong); margin: 0 auto 15px; display:none;">
-                    <div id="local-orb" style="width:20px; height:20px; border-radius:50%; background:var(--accent); box-shadow: 0 0 30px var(--accent-strong); margin: 0 auto 15px;"></div>
-                    <div id="user-display" style="font-weight:800; text-transform:uppercase; font-size:1.1rem; letter-spacing:1px;"></div>
-                </div>
-                <div style="font-size:0.75rem; font-weight:800; opacity:0.5; text-transform:uppercase; letter-spacing:1px;">Live Presence (Click to DM)</div>
-                <div id="online-list" style="display:flex; flex-direction:column;"></div>
+        <aside class="ios-panel">
+            <div class="profile-card">
+                <img id="local-pfp" class="main-pfp" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23ffffff' opacity='0.1'/></svg>">
+                <h2 id="user-display" style="font-weight: 800; letter-spacing: -0.5px;"></h2>
+                <div style="color: #34C759; font-size: 0.8rem; font-weight: 700; margin-top: 8px;"><i class="fas fa-shield-check"></i> Encrypted Sync</div>
             </div>
+            <div class="panel-header" style="border:none; padding-bottom: 0;">Active Devices</div>
+            <div class="presence-list" id="online-list"></div>
         </aside>
     </div>
 
-    <div class="dock" id="dock">
-        <div class="dock-tool active" onclick="setMode('computer', this)"><i class="fas fa-desktop"></i></div>
-        <div class="dock-tool" onclick="setMode('mobile', this)"><i class="fas fa-mobile-alt"></i></div>
-        <div class="dock-tool" onclick="setMode('watch', this)"><i class="fas fa-clock"></i></div>
-        <div style="width:2px; background:rgba(255,255,255,0.2); margin:5px 0;"></div>
-        <div class="dock-tool" onclick="document.getElementById('bg-up').click()" title="Change Background"><i class="fas fa-image"></i></div>
-        <div class="dock-tool" onclick="toggleTheme()" title="Toggle Light/Dark"><i class="fas fa-sun"></i></div>
-        <div class="dock-tool" onclick="toggleOverlay('settings-view')" title="Settings"><i class="fas fa-sliders-h"></i></div>
-        <div class="dock-tool" onclick="toggleStealth()" title="Hide Dock"><i class="fas fa-eye-slash"></i></div>
-        <div style="width:2px; background:rgba(255,255,255,0.2); margin:5px 0;"></div>
-        <div class="dock-tool" onclick="panicProtocol()" title="Panic Button" style="color:#ff4757;"><i class="fas fa-running"></i></div>
+    <div class="dock-wrapper" id="dock">
+        <div class="dock-icon active" onclick="setMode('computer', this)"><i class="fas fa-desktop"></i></div>
+        <div class="dock-icon" onclick="setMode('mobile', this)"><i class="fas fa-mobile-alt"></i></div>
+        <div class="dock-icon" onclick="setMode('watch', this)"><i class="fas fa-stopwatch"></i></div>
+        <div class="dock-divider"></div>
+        <div class="dock-icon" onclick="document.getElementById('bg-up').click()"><i class="fas fa-image"></i></div>
+        <div class="dock-icon" onclick="toggleTheme()"><i class="fas fa-moon"></i></div>
+        <div class="dock-icon" onclick="toggleCC()"><i class="fas fa-sliders-h"></i></div>
+        <div class="dock-icon" onclick="toggleStealth()"><i class="fas fa-eye-slash"></i></div>
+        <div class="dock-divider"></div>
+        <div class="dock-icon" onclick="panic()" style="color: #FF3B30;"><i class="fas fa-bolt"></i></div>
     </div>
-    <div id="dock-reveal" onclick="toggleStealth()"><i class="fas fa-chevron-up"></i> REVEAL</div>
+    <div class="stealth-trigger" id="dock-reveal" onclick="toggleStealth()"></div>
+
+    <div id="control-center" onclick="if(event.target === this) toggleCC()">
+        <div class="cc-panel" id="cc-panel">
+            <h2 style="margin-bottom: 24px; font-weight: 800; letter-spacing: -1px;">Control Center</h2>
+            
+            <div class="cc-group">
+                <span class="cc-label">Identity Badge</span>
+                <button class="btn-ios" style="width:100%; margin:0; background:rgba(255,255,255,0.1);" onclick="document.getElementById('pfp-up').click()"><i class="fas fa-camera"></i> Update Photo</button>
+                <input type="file" id="pfp-up" hidden accept="image/*" onchange="handlePfp(this)">
+            </div>
+
+            <div class="cc-group">
+                <span class="cc-label">Aura Color</span>
+                <div class="cc-color-grid">
+                    <div class="color-dot active" style="background:#0A84FF;" onclick="setAccent('#0A84FF', this)"></div>
+                    <div class="color-dot" style="background:#FF2D55;" onclick="setAccent('#FF2D55', this)"></div>
+                    <div class="color-dot" style="background:#5E5CE6;" onclick="setAccent('#5E5CE6', this)"></div>
+                    <div class="color-dot" style="background:#30D158;" onclick="setAccent('#30D158', this)"></div>
+                    <div class="color-dot" style="background:#FF9F0A;" onclick="setAccent('#FF9F0A', this)"></div>
+                    <div class="color-dot" style="background:#FFFFFF;" onclick="setAccent('#FFFFFF', this)"></div>
+                </div>
+            </div>
+
+            <div class="cc-group" style="display: flex; gap: 20px;">
+                <div style="flex: 1;">
+                    <span class="cc-label">Glass Blur</span>
+                    <input type="range" min="10" max="150" value="60" oninput="document.documentElement.style.setProperty('--glass-blur', this.value+'px')">
+                </div>
+                <div style="flex: 1;">
+                    <span class="cc-label">Audio Haptics</span>
+                    <button id="snd-btn" class="btn-ios" style="width:100%; margin:0; padding:10px; background:var(--accent); color:white;" onclick="toggleAudio()">ON</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <input type="file" id="bg-up" hidden accept="image/*" onchange="handleBg(this)">
 
     <script>
+        // CORE VARIABLES
         let client, chanMain, chanDM, user, receivedIds = new Set();
         let activeDM = null; 
         let unreadDMs = new Set();
-        const secret = "v31_sonic_hologram";
-        const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
-        let drawing = false, typingTimeout;
-
-        // SONIC ENGINE
+        const secret = "v32_ios26_liquid";
         let soundEnabled = true;
-        const sndSend = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3'); // Water drop
-        const sndRecv = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3'); // Water plop
-        sndSend.volume = 0.5; sndRecv.volume = 0.5;
+        let typingTimeout;
+
+        // AUDIO ENGINE
+        const sndSend = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3');
+        const sndRecv = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3');
+        sndSend.volume = 0.4; sndRecv.volume = 0.4;
         
-        function playSnd(type) {
+        function playHaptic(type) {
             if(!soundEnabled) return;
-            if(type === 'send') { sndSend.currentTime = 0; sndSend.play().catch(e=>{}); }
-            if(type === 'recv') { sndRecv.currentTime = 0; sndRecv.play().catch(e=>{}); }
+            if(type === 'out') { sndSend.currentTime = 0; sndSend.play().catch(()=>{}); }
+            if(type === 'in') { sndRecv.currentTime = 0; sndRecv.play().catch(()=>{}); }
         }
-        function toggleAudio(btn) {
+
+        function toggleAudio() {
             soundEnabled = !soundEnabled;
-            btn.innerText = soundEnabled ? "SOUND: ON" : "SOUND: OFF";
+            const btn = document.getElementById('snd-btn');
+            btn.innerText = soundEnabled ? "ON" : "OFF";
             btn.style.background = soundEnabled ? "var(--accent)" : "rgba(255,255,255,0.1)";
-            btn.style.color = soundEnabled ? "black" : "white";
+            btn.style.color = soundEnabled ? "white" : "inherit";
             localStorage.setItem('nx_snd', soundEnabled);
         }
 
-        // LINK PARSER
-        function parseLinks(text) {
-            const urlRegex = /(https?:\/\/[^\s]+)/g;
-            return text.replace(urlRegex, url => {
-                return `<div class="link-preview"><a href="${url}" target="_blank"><i class="fas fa-link"></i> ${url}</a></div>`;
-            });
-        }
-
-        // GIF ENGINE (Using Giphy Public Beta Key)
-        async function searchGifs() {
-            const q = document.getElementById('gif-search').value;
-            if(!q) return;
-            const grid = document.getElementById('gif-grid');
-            grid.innerHTML = '<p style="text-align:center; width:100%; grid-column: span 3;">Searching matrix...</p>';
-            try {
-                const res = await fetch(`https://api.giphy.com/v1/gifs/search?q=${encodeURIComponent(q)}&api_key=dc6zaTOxFJmzC&limit=12`);
-                const data = await res.json();
-                grid.innerHTML = '';
-                data.data.forEach(gif => {
-                    const url = gif.images.fixed_height.url;
-                    grid.innerHTML += `<img src="${url}" class="gif-item" onclick="sendGif('${url}')">`;
-                });
-            } catch (err) {
-                grid.innerHTML = '<p style="text-align:center; width:100%; grid-column: span 3; color:#ff4757;">Matrix connection failed.</p>';
-            }
-        }
-        function sendGif(url) {
-            toggleOverlay('gif-view');
-            const id = 'msg_' + Date.now();
-            const myPfp = localStorage.getItem('nx_pfp');
-            const t = Date.now();
-            const data = { id, u: user, c: enc(""), img: url, pfp: myPfp, t: t };
-            
-            if (activeDM) {
-                client.channels.get('v31-dm-' + activeDM).publish('msg', data);
-                render("", 'me', 'You', url, id, myPfp, t); saveDM(activeDM, data);
-            } else {
-                chanMain.publish('msg', data);
-                render("", 'me', 'You', url, id, myPfp, t); savePublic(data, 'msg');
-            }
-            playSnd('send'); receivedIds.add(id);
-        }
-
-        function updateBrightness(val) {
-            const opacity = val / 10;
-            document.documentElement.style.setProperty('--bg-bright', opacity);
-            localStorage.setItem('nx_bright', opacity);
-        }
-
-        function panicProtocol() { window.location.href = "https://google.com"; }
+        // PARALLAX
         function handleMove(e) {
-            const px = (window.innerWidth / 2 - e.clientX) / 40, py = (window.innerHeight / 2 - e.clientY) / 40;
-            document.documentElement.style.setProperty('--tx', px + 'px'); document.documentElement.style.setProperty('--ty', py + 'px');
+            const px = (window.innerWidth / 2 - e.clientX) / 50;
+            const py = (window.innerHeight / 2 - e.clientY) / 50;
+            document.documentElement.style.setProperty('--tx', px + 'px');
+            document.documentElement.style.setProperty('--ty', py + 'px');
         }
 
-        function handlePfp(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const cvs = document.createElement('canvas'); const c = cvs.getContext('2d');
-                        cvs.width = 100; cvs.height = 100; c.drawImage(img, 0, 0, 100, 100);
-                        const b64 = cvs.toDataURL('image/jpeg', 0.5);
-                        localStorage.setItem('nx_pfp', b64);
-                        updateLocalPfpDisplay(b64);
-                        if(chanMain) chanMain.presence.update({ pfp: b64 });
-                    };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-        function updateLocalPfpDisplay(src) {
-            if(!src) return;
-            document.getElementById('local-pfp').src = src; document.getElementById('local-pfp').style.display = 'block';
-            document.getElementById('local-orb').style.display = 'none';
-        }
+        // BOOT SEQUENCE
+        window.onload = () => {
+            let saved = localStorage.getItem('nx_user');
+            if(saved) { user = saved; igniteSystem(); }
+            loadSettings();
+        };
 
         async function boot() {
             let email = document.getElementById('email-in').value.trim().toLowerCase();
-            if(!email.endsWith('@ballardschool.co.uk')) return alert("Access Denied: School email required.");
+            if(!email.endsWith('@ballardschool.co.uk')) {
+                const btn = document.querySelector('.gate-card .btn-ios');
+                btn.style.background = "#FF3B30"; btn.innerText = "Invalid Domain";
+                setTimeout(() => { btn.style.background = "var(--accent)"; btn.innerText = "Authenticate"; }, 2000);
+                return;
+            }
             let firstName = email.split('@')[0].split('.')[0];
             user = firstName.charAt(0).toUpperCase() + firstName.slice(1);
             localStorage.setItem('nx_user', user);
-            initNexus();
+            igniteSystem();
         }
 
-        window.onload = () => {
-            let saved = localStorage.getItem('nx_user');
-            if(saved) { user = saved; initNexus(); }
-            restoreSettings();
-        }
-
-        function initNexus() {
-            document.getElementById('gate').style.display = 'none';
-            const ui = document.getElementById('ui'); ui.style.opacity = '1'; ui.style.pointerEvents = 'all';
+        function igniteSystem() {
+            const gateCard = document.getElementById('gate-card');
+            gateCard.style.animation = "vacuumGate 0.6s var(--spring) forwards";
             
-            let myPfp = localStorage.getItem('nx_pfp');
-            if(myPfp) updateLocalPfpDisplay(myPfp);
+            setTimeout(() => {
+                document.getElementById('gate').style.display = 'none';
+                const ui = document.getElementById('ui');
+                ui.style.opacity = '1'; ui.style.pointerEvents = 'all';
+                
+                initNetwork();
+            }, 500);
+        }
+
+        // ABLY NETWORK
+        function initNetwork() {
+            document.getElementById('user-display').innerText = user;
+            const pfp = localStorage.getItem('nx_pfp');
+            if(pfp) document.getElementById('local-pfp').src = pfp;
 
             client = new Ably.Realtime({ key: 'fVAQIA.kFtCvw:X6QXTzbh4Tbi1HUBiOQMlReiyw0uwkbOnEibDEM_VdA', clientId: user });
-            document.getElementById('user-display').innerText = user;
-
-            // MAIN CHANNEL
-            chanMain = client.channels.get('v31-flow');
-            chanMain.subscribe('msg', p => handleIncoming(p.data, false));
-            chanMain.subscribe('announce', p => { if(activeDM === null && !receivedIds.has(p.data.id)) { receivedIds.add(p.data.id); playSnd('recv'); renderAnnounce(dec(p.data.c), p.data.u, p.data.t); } });
-            chanMain.subscribe('del', p => document.getElementById(p.data.id)?.remove());
-            chanMain.subscribe('typing', p => {
-                if(p.data.u !== user && activeDM === null) {
-                    const ind = document.getElementById('typing-indicator'); ind.innerText = `${p.data.u} is transmitting...`; ind.style.opacity = '1';
-                    clearTimeout(typingTimeout); typingTimeout = setTimeout(() => ind.style.opacity = '0', 2000);
-                }
-            });
-            chanMain.presence.subscribe(['enter', 'present', 'leave', 'update'], () => updatePresence());
-            chanMain.presence.enter({ pfp: myPfp });
-
-            // DM CHANNEL
-            chanDM = client.channels.get('v31-dm-' + user);
-            chanDM.subscribe('msg', p => handleIncoming(p.data, true));
-
-            initCanvas(); loadGeneralHistory(); checkCooldown();
             
-            // Load trending gifs on start
-            fetch(`https://api.giphy.com/v1/gifs/trending?api_key=dc6zaTOxFJmzC&limit=6`)
-            .then(r=>r.json()).then(d=>{
-                const grid = document.getElementById('gif-grid');
-                d.data.forEach(g => { grid.innerHTML += `<img src="${g.images.fixed_height.url}" class="gif-item" onclick="sendGif('${g.images.fixed_height.url}')">`; });
-            }).catch(e=>console.log(e));
+            chanMain = client.channels.get('v32-flow');
+            chanMain.subscribe('msg', p => ingestData(p.data, false));
+            chanMain.subscribe('announce', p => { if(!activeDM && !receivedIds.has(p.data.id)) { receivedIds.add(p.data.id); renderAnnounce(dec(p.data.c), p.data.u, p.data.t); playHaptic('in'); } });
+            chanMain.subscribe('del', p => document.getElementById(p.data.id)?.remove());
+            chanMain.subscribe('typing', p => handleTyping(p.data.u));
+            
+            chanMain.presence.subscribe(() => syncPresence());
+            chanMain.presence.enter({ pfp: pfp });
+
+            chanDM = client.channels.get('v32-dm-' + user);
+            chanDM.subscribe('msg', p => ingestData(p.data, true));
+
+            initCanvas(); loadHistoryGlobal(); verifyCooldown();
         }
 
-        function updatePresence() {
+        function syncPresence() {
             chanMain.presence.get((err, members) => {
                 if(err) return;
                 const list = document.getElementById('online-list'); list.innerHTML = '';
                 let uniqueMap = new Map();
                 members.forEach(m => uniqueMap.set(m.clientId, m.data));
 
-                uniqueMap.forEach((data, clientId) => {
-                    let pfpHtml = '';
-                    if(data && data.pfp) pfpHtml = `<img src="${data.pfp}" class="pfp-mini">`;
-                    let hasDot = unreadDMs.has(clientId) ? 'has-dm' : '';
-                    let action = clientId !== user ? `onclick="openDM('${clientId}')"` : '';
-                    list.innerHTML += `<div class="online-user ${clientId===user?'me':''} ${hasDot}" id="user-node-${clientId}" ${action}>${pfpHtml} ${clientId} <div class="notify-dot"></div></div>`;
+                uniqueMap.forEach((data, id) => {
+                    let img = data?.pfp ? `<img src="${data.pfp}" style="width:30px; height:30px; border-radius:50%; object-fit:cover; border:1px solid var(--accent);">` : `<div class="status-dot"></div>`;
+                    let alert = unreadDMs.has(id) ? 'has-unread' : '';
+                    let click = id !== user ? `onclick="openDM('${id}')"` : '';
+                    list.innerHTML += `<div class="user-node ${id===user?'me':''} ${alert}" ${click}>${img} ${id} <div class="dm-alert"></div></div>`;
                 });
             });
         }
 
-        function openDM(targetUser) {
-            activeDM = targetUser; unreadDMs.delete(targetUser); updatePresence();
-            document.getElementById('chat-title').innerText = "PRIVATE: " + targetUser.toUpperCase();
+        // DM ROUTING
+        function openDM(target) {
+            activeDM = target; unreadDMs.delete(target); syncPresence();
+            document.getElementById('chat-title').innerText = "Private: " + target;
             document.getElementById('dm-back').style.display = 'block';
             document.getElementById('announce-btn').style.display = 'none';
             document.getElementById('view').innerHTML = '';
-            loadDMHistory(targetUser);
+            loadHistoryDM(target);
         }
-
         function closeDM() {
             activeDM = null;
-            document.getElementById('chat-title').innerText = "GENERAL FLOW";
+            document.getElementById('chat-title').innerText = "Global Flow";
             document.getElementById('dm-back').style.display = 'none';
-            document.getElementById('announce-btn').style.display = 'block';
+            document.getElementById('announce-btn').style.display = 'flex';
             document.getElementById('view').innerHTML = '';
-            loadGeneralHistory();
+            loadHistoryGlobal();
         }
 
-        function handleIncoming(data, isDM) {
-            if(receivedIds.has(data.id)) return;
-            receivedIds.add(data.id);
-            playSnd('recv');
-            if (isDM) {
-                if (activeDM === data.u) {
-                    render(dec(data.c), 'them', data.u, data.img, data.id, data.pfp, data.t); saveDM(data.u, data);
-                } else {
-                    saveDM(data.u, data); unreadDMs.add(data.u); updatePresence();
-                }
+        function ingestData(d, isDM) {
+            if(receivedIds.has(d.id)) return;
+            receivedIds.add(d.id); playHaptic('in');
+            
+            if(isDM) {
+                if(activeDM === d.u) { renderBubble(d); saveLocal('dm_'+d.u, d); }
+                else { unreadDMs.add(d.u); syncPresence(); saveLocal('dm_'+d.u, d); }
             } else {
-                if (activeDM === null && data.u !== user) render(dec(data.c), 'them', data.u, data.img, data.id, data.pfp, data.t);
+                if(!activeDM && d.u !== user) renderBubble(d);
+                if(!isDM) saveLocal('global', d);
             }
         }
 
-        function sendTyping() { if(activeDM === null) chanMain.publish('typing', { u: user }); }
+        function handleTyping(sender) {
+            if(activeDM) return;
+            const ind = document.getElementById('typing-indicator');
+            ind.innerText = `${sender} is typing...`; ind.style.opacity = '1';
+            clearTimeout(typingTimeout); typingTimeout = setTimeout(() => ind.style.opacity = '0', 2000);
+        }
+        function sendTyping() { if(!activeDM) chanMain.publish('typing', { u: user }); }
 
+        // OUTBOUND
         function push() {
             const i = document.getElementById('msg-input'); if(!i.value) return;
-            const id = 'msg_' + Date.now();
-            const myPfp = localStorage.getItem('nx_pfp');
-            const t = Date.now();
-            const data = { id, u: user, c: enc(i.value), pfp: myPfp, t: t };
+            const id = 'msg_' + Date.now(); const t = Date.now(); const pfp = localStorage.getItem('nx_pfp');
+            const payload = { id, u: user, c: enc(i.value), pfp, t };
             
-            if (activeDM) {
-                client.channels.get('v31-dm-' + activeDM).publish('msg', data);
-                render(i.value, 'me', 'You', null, id, myPfp, t); saveDM(activeDM, data);
-            } else {
-                chanMain.publish('msg', data);
-                render(i.value, 'me', 'You', null, id, myPfp, t); savePublic(data, 'msg');
-            }
-            playSnd('send');
-            receivedIds.add(id); i.value = '';
+            if(activeDM) { client.channels.get('v32-dm-'+activeDM).publish('msg', payload); saveLocal('dm_'+activeDM, payload); }
+            else { chanMain.publish('msg', payload); saveLocal('global', payload); }
+            
+            renderBubble(payload); receivedIds.add(id); i.value = ''; playHaptic('out');
         }
 
         function sendAnnouncement() {
-            const i = document.getElementById('msg-input'); if(!i.value || activeDM !== null) return;
-            const lastAnnounce = localStorage.getItem('nx_last_announce');
-            if (lastAnnounce && Date.now() - parseInt(lastAnnounce) < 60000) return alert("Cooling down.");
+            const i = document.getElementById('msg-input'); if(!i.value || activeDM) return;
+            if(localStorage.getItem('nx_cd') && Date.now() - parseInt(localStorage.getItem('nx_cd')) < 60000) return;
 
             const id = 'ann_' + Date.now(); const t = Date.now();
-            const data = { id, u: user, c: enc(i.value), t: t };
-            receivedIds.add(id); chanMain.publish('announce', data);
-            renderAnnounce(i.value, 'You', t); savePublic(data, 'announce'); i.value = ''; playSnd('send');
-            localStorage.setItem('nx_last_announce', t); checkCooldown();
+            const payload = { id, u: user, c: enc(i.value), t, type: 'ann' };
+            chanMain.publish('announce', payload); saveLocal('global', payload);
+            renderAnnounce(i.value, 'You', t); i.value = ''; playHaptic('out');
+            localStorage.setItem('nx_cd', t); verifyCooldown();
         }
 
-        function checkCooldown() {
+        function verifyCooldown() {
             const btn = document.getElementById('announce-btn');
-            const lastAnnounce = localStorage.getItem('nx_last_announce');
-            if (lastAnnounce && (Date.now() - parseInt(lastAnnounce) < 60000)) {
-                btn.classList.add('cooldown'); setTimeout(checkCooldown, 1000); return;
-            }
-            btn.classList.remove('cooldown');
+            const last = localStorage.getItem('nx_cd');
+            if(last && Date.now() - parseInt(last) < 60000) { btn.classList.add('cooling'); setTimeout(verifyCooldown, 1000); }
+            else { btn.classList.remove('cooling'); }
         }
 
-        function render(txt, type, s, img, id, pfpStr, timestamp) {
-            if(document.getElementById(id)) return;
-            const v = document.getElementById('view'), b = document.createElement('div');
-            b.className = `bubble ${type}`; b.id = id;
-            b.setAttribute('data-text', txt.toLowerCase()); 
+        // RENDERING
+        function renderBubble(d) {
+            if(document.getElementById(d.id)) return;
+            const isMe = d.u === user;
+            const time = new Date(d.t).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const txt = dec(d.c);
             
-            let pfpHtml = ''; if(pfpStr) pfpHtml = `<img src="${pfpStr}" class="pfp-mini">`;
-            let timeStr = timestamp ? new Date(timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const div = document.createElement('div');
+            div.className = `bubble-wrap ${isMe ? 'me' : 'them'}`; div.id = d.id;
             
-            let parsedText = parseLinks(txt);
-
-            b.innerHTML = `
-                <div class="bubble-header">
-                    ${pfpHtml}
-                    <small style="opacity:0.7; font-weight:900;">${s}</small>
-                    <span class="msg-time">${timeStr}</span>
-                </div>
-                <span>${parsedText}</span>
-                ${img ? `<img src="${img}" class="media-attachment">` : ''}
-                ${type === 'me' ? `<div class="action-btn del-btn" onclick="deleteLocal('${id}')"><i class="fas fa-times"></i></div>` : ''}
-            `;
-            v.appendChild(b); v.scrollTop = v.scrollHeight;
+            let html = `<div class="bubble-meta">`;
+            if(!isMe && d.pfp) html += `<img src="${d.pfp}" class="meta-pfp">`;
+            html += `<span class="meta-name">${isMe ? 'You' : d.u}</span><span class="meta-time">${time}</span></div>
+                     <div class="bubble">${parseLinks(txt)}`;
+            if(d.img) html += `<img src="${d.img}">`;
+            if(isMe) html += `<div class="del-msg" onclick="nukeMsg('${d.id}')"><i class="fas fa-times"></i></div>`;
+            html += `</div>`;
+            
+            div.innerHTML = html;
+            const view = document.getElementById('view'); view.appendChild(div); view.scrollTop = view.scrollHeight;
         }
 
-        function renderAnnounce(txt, s, timestamp) {
-            const v = document.getElementById('view'), b = document.createElement('div');
-            b.className = `announcement`; b.setAttribute('data-text', txt.toLowerCase());
-            let timeStr = timestamp ? new Date(timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            b.innerHTML = `
-                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                    <small style="opacity:0.7;font-size:0.7rem;font-weight:900;"><i class="fas fa-bullhorn"></i> BROADCAST FROM ${s}</small>
-                    <span class="msg-time" style="font-size:0.6rem; opacity:0.5;">${timeStr}</span>
-                </div>
-                ${parseLinks(txt)}
-            `;
-            v.appendChild(b); v.scrollTop = v.scrollHeight;
+        function renderAnnounce(txt, sender, t) {
+            const time = new Date(t).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const div = document.createElement('div'); div.className = 'announcement';
+            div.innerHTML = `<div style="font-size:0.75rem; opacity:0.7; margin-bottom:8px;"><i class="fas fa-broadcast-tower"></i> ${sender} • ${time}</div>${parseLinks(txt)}`;
+            const view = document.getElementById('view'); view.appendChild(div); view.scrollTop = view.scrollHeight;
         }
 
-        function deleteLocal(id) {
+        function parseLinks(t) { return t.replace(/(https?:\/\/[^\s]+)/g, url => `<a href="${url}" target="_blank" style="color:inherit; text-decoration:underline;">${url.substring(0,30)}...</a>`); }
+
+        function nukeMsg(id) {
             document.getElementById(id)?.remove();
-            if(activeDM === null) chanMain.publish('del', {id});
-            if(activeDM) {
-                let h = JSON.parse(localStorage.getItem('nx31_dm_' + activeDM)) || [];
-                localStorage.setItem('nx31_dm_' + activeDM, JSON.stringify(h.filter(m => m.id !== id)));
-            } else {
-                let h = JSON.parse(localStorage.getItem('nx31_public')) || [];
-                localStorage.setItem('nx31_public', JSON.stringify(h.filter(m => m.id !== id)));
-            }
+            if(!activeDM) chanMain.publish('del', {id});
+            let key = activeDM ? 'nx32_dm_'+activeDM : 'nx32_global';
+            let h = JSON.parse(localStorage.getItem(key)) || [];
+            localStorage.setItem(key, JSON.stringify(h.filter(m => m.id !== id)));
         }
 
-        function savePublic(d, type) { let h = JSON.parse(localStorage.getItem('nx31_public')) || []; d.type = type; h.push(d); localStorage.setItem('nx31_public', JSON.stringify(h.slice(-50))); }
-        function loadGeneralHistory() { let h = JSON.parse(localStorage.getItem('nx31_public')) || []; h.forEach(d => { receivedIds.add(d.id); if (d.type === 'announce') renderAnnounce(dec(d.c), d.u === user ? 'You' : d.u, d.t); else render(dec(d.c), d.u === user ? 'me' : 'them', d.u === user ? 'You' : d.u, d.img, d.id, d.pfp, d.t); }); }
-        function saveDM(target, d) { let h = JSON.parse(localStorage.getItem('nx31_dm_' + target)) || []; h.push(d); localStorage.setItem('nx31_dm_' + target, JSON.stringify(h.slice(-50))); }
-        function loadDMHistory(target) { let h = JSON.parse(localStorage.getItem('nx31_dm_' + target)) || []; h.forEach(d => { receivedIds.add(d.id); render(dec(d.c), d.u === user ? 'me' : 'them', d.u === user ? 'You' : d.u, d.img, d.id, d.pfp, d.t); }); }
+        // STORAGE
+        function saveLocal(key, payload) { let h = JSON.parse(localStorage.getItem('nx32_'+key)) || []; h.push(payload); localStorage.setItem('nx32_'+key, JSON.stringify(h.slice(-50))); }
+        function loadHistoryGlobal() { let h = JSON.parse(localStorage.getItem('nx32_global')) || []; h.forEach(d => { receivedIds.add(d.id); if(d.type==='ann') renderAnnounce(dec(d.c), d.u===user?'You':d.u, d.t); else renderBubble(d); }); }
+        function loadHistoryDM(t) { let h = JSON.parse(localStorage.getItem('nx32_dm_'+t)) || []; h.forEach(d => { receivedIds.add(d.id); renderBubble(d); }); }
 
-        // STEALTH FIX - ONLY AFFECTS DOCK CLASSES
-        function toggleStealth() { document.getElementById('dock').classList.toggle('hidden'); document.getElementById('dock-reveal').classList.toggle('visible'); }
+        // SKETCH
+        const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
+        let drawing = false;
+        function initCanvas() { const w = document.getElementById('sketch-wrap'); canvas.width = w.clientWidth; canvas.height = w.clientHeight; ctx.strokeStyle = '#fff'; ctx.lineWidth = 4; ctx.lineCap = 'round'; canvas.onmousedown = e => { drawing=true; ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); }; canvas.onmousemove = e => { if(drawing){ctx.lineTo(e.offsetX,e.offsetY); ctx.stroke();} }; window.addEventListener('mouseup', ()=>drawing=false); canvas.ontouchstart = e => { drawing=true; ctx.beginPath(); const r=canvas.getBoundingClientRect(); ctx.moveTo(e.touches[0].clientX-r.left, e.touches[0].clientY-r.top); }; canvas.ontouchmove = e => { if(drawing){const r=canvas.getBoundingClientRect(); ctx.lineTo(e.touches[0].clientX-r.left, e.touches[0].clientY-r.top); ctx.stroke();} }; window.addEventListener('touchend', ()=>drawing=false); }
+        function broadcastSketch() { const id = 'sk_'+Date.now(); const t = Date.now(); const pfp = localStorage.getItem('nx_pfp'); const payload = { id, u: user, c: enc("[Sketch Data]"), img: canvas.toDataURL(), pfp, t }; if(activeDM){client.channels.get('v32-dm-'+activeDM).publish('msg', payload); saveLocal('dm_'+activeDM, payload);} else{chanMain.publish('msg', payload); saveLocal('global', payload);} renderBubble(payload); receivedIds.add(id); playHaptic('out'); ctx.clearRect(0,0,canvas.width,canvas.height); }
+
+        // UI & SETTINGS
+        function toggleStealth() { document.getElementById('dock').classList.toggle('stealth'); document.getElementById('dock-reveal').classList.toggle('visible'); }
+        function toggleCC() { const cc = document.getElementById('control-center'), p = document.getElementById('cc-panel'); if(cc.style.display === 'flex') { p.style.transform='translateY(100%)'; cc.style.opacity='0'; setTimeout(()=>cc.style.display='none',400); } else { cc.style.display='flex'; setTimeout(()=>{cc.style.opacity='1'; p.style.transform='translateY(0)';},10); } }
+        function setMode(m, b) { document.getElementById('ui').className = 'nexus-wrapper mode-'+m; document.querySelectorAll('.dock-icon').forEach(t=>t.classList.remove('active')); b.classList.add('active'); setTimeout(initCanvas, 400); }
+        function toggleTheme() { const b = document.body; b.setAttribute('data-theme', b.getAttribute('data-theme')==='light'?'dark':'light'); localStorage.setItem('nx_theme', b.getAttribute('data-theme')); }
+        function panic() { window.location.href = "https://google.com"; }
         
-        function injectColor(hex, el) {
+        function setAccent(hex, el) {
             document.documentElement.style.setProperty('--accent', hex);
-            let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-            if(result) {
-                let r = parseInt(result[1], 16), g = parseInt(result[2], 16), b = parseInt(result[3], 16);
-                document.documentElement.style.setProperty('--accent-glow', `rgba(${r}, ${g}, ${b}, 0.2)`);
-                document.documentElement.style.setProperty('--accent-strong', `rgba(${r}, ${g}, ${b}, 0.6)`);
-            }
-            document.querySelectorAll('.drop').forEach(d => { d.style.border = '3px solid transparent'; d.style.transform = 'scale(1)'; });
-            if(el) { el.style.border = '2px solid white'; el.style.transform = 'scale(1.15)'; }
+            let r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            if(r) { document.documentElement.style.setProperty('--accent-glow', `rgba(${parseInt(r[1],16)}, ${parseInt(r[2],16)}, ${parseInt(r[3],16)}, 0.4)`); }
+            document.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('active')); if(el) el.classList.add('active');
             localStorage.setItem('nx_color', hex);
         }
-        
-        function restoreSettings() {
-            const bg = localStorage.getItem('nx_bg'); if(bg) document.getElementById('bg-layer').style.backgroundImage = `url(${bg})`;
-            if(localStorage.getItem('nx_theme') === 'light') document.body.setAttribute('data-brightness', 'light');
-            const col = localStorage.getItem('nx_color');
-            if(col) { const drops = document.querySelectorAll('.drop'); let matched = Array.from(drops).find(d => d.style.background.includes(col)); injectColor(col, matched || drops[0]); }
-            const font = localStorage.getItem('nx_font'); if(font) document.documentElement.style.setProperty('--font-main', font);
-            const snd = localStorage.getItem('nx_snd'); if(snd !== null) { soundEnabled = snd === 'true'; const btn = document.getElementById('audio-btn'); btn.innerText = soundEnabled ? "SOUND: ON" : "SOUND: OFF"; btn.style.background = soundEnabled ? "var(--accent)" : "rgba(255,255,255,0.1)"; btn.style.color = soundEnabled ? "black" : "white"; }
-            const bright = localStorage.getItem('nx_bright'); if(bright) { document.documentElement.style.setProperty('--bg-bright', bright); document.getElementById('bg-bright-slider').value = bright * 10; }
+
+        function handleBg(i) { if(i.files[0]) { const r = new FileReader(); r.onload = e => { document.getElementById('bg-canvas').style.backgroundImage = `url(${e.target.result})`; localStorage.setItem('nx_bg', e.target.result); }; r.readAsDataURL(i.files[0]); } }
+        function handlePfp(i) { if(i.files[0]) { const r = new FileReader(); r.onload = e => { const img = new Image(); img.onload = () => { const c = document.createElement('canvas'), ctx = c.getContext('2d'); c.width=100; c.height=100; ctx.drawImage(img,0,0,100,100); const b64 = c.toDataURL('image/jpeg', 0.5); localStorage.setItem('nx_pfp', b64); document.getElementById('local-pfp').src=b64; if(chanMain) chanMain.presence.update({pfp: b64}); }; img.src=e.target.result; }; r.readAsDataURL(i.files[0]); } }
+
+        function loadSettings() {
+            const bg = localStorage.getItem('nx_bg'); if(bg) document.getElementById('bg-canvas').style.backgroundImage = `url(${bg})`;
+            if(localStorage.getItem('nx_theme') === 'light') document.body.setAttribute('data-theme', 'light');
+            const col = localStorage.getItem('nx_color'); if(col) { const dots = document.querySelectorAll('.color-dot'); let match = Array.from(dots).find(d=>d.style.background.includes(col)); setAccent(col, match||dots[0]); }
+            const snd = localStorage.getItem('nx_snd'); if(snd !== null) { soundEnabled = snd === 'true'; document.getElementById('snd-btn').innerText = soundEnabled?'ON':'OFF'; document.getElementById('snd-btn').style.background = soundEnabled?'var(--accent)':'rgba(255,255,255,0.1)'; document.getElementById('snd-btn').style.color = soundEnabled?'white':'inherit'; }
         }
 
-        function setMode(m, btn) { document.getElementById('ui').className = 'nexus-wrapper mode-'+m; document.querySelectorAll('.dock-tool').forEach(t=>t.classList.remove('active')); btn.classList.add('active'); setTimeout(initCanvas, 500); }
-        function toggleTheme() { const b = document.body; b.setAttribute('data-brightness', b.getAttribute('data-brightness')==='light'?'dark':'light'); localStorage.setItem('nx_theme', b.getAttribute('data-brightness')); }
-        function toggleOverlay(id) { const el = document.getElementById(id); el.style.display = el.style.display === 'flex' ? 'none' : 'flex'; }
-        
+        // CRYPTO
         function enc(t) { return CryptoJS.AES.encrypt(t, secret).toString(); }
         function dec(c) { try { return CryptoJS.AES.decrypt(c, secret).toString(CryptoJS.enc.Utf8); } catch { return "[Encrypted]"; } }
-        
-        function initCanvas() { const w = document.getElementById('sketch-wrap'); canvas.width = w.clientWidth; canvas.height = w.clientHeight; ctx.strokeStyle = '#fff'; ctx.lineWidth = 4; ctx.lineCap = 'round'; canvas.onmousedown = e => { drawing = true; ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); }; canvas.onmousemove = e => { if(drawing) { ctx.lineTo(e.offsetX, e.offsetY); ctx.stroke(); } }; window.onmouseup = () => drawing = false; }
-        function broadcastSketch() { const id = 'sk_'+Date.now(); const myPfp = localStorage.getItem('nx_pfp'); const t = Date.now(); const data = { id, u: user, c: enc("[Sketch]"), img: canvas.toDataURL(), pfp: myPfp, t: t }; receivedIds.add(id); if(activeDM) { client.channels.get('v31-dm-'+activeDM).publish('msg', data); render("[Sketch]", 'me', 'You', data.img, id, myPfp, t); saveDM(activeDM, data); } else { chanMain.publish('msg', data); render("[Sketch]", 'me', 'You', data.img, id, myPfp, t); savePublic(data, 'msg'); } playSnd('send'); ctx.clearRect(0,0,canvas.width,canvas.height); }
-        function handleBg(input) { if(input.files[0]) { const r = new FileReader(); r.onload = e => { document.getElementById('bg-layer').style.backgroundImage = `url(${e.target.result})`; localStorage.setItem('nx_bg', e.target.result); }; r.readAsDataURL(input.files[0]); } }
     </script>
 </body>
 </html>
