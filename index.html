@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Nexus v11.1 | Specular Horizon</title>
+    <title>Nexus v13.1 | Haptic Ripple</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap" rel="stylesheet">
@@ -26,141 +26,153 @@
             --text: #1a1c20;
             --glass: rgba(255, 255, 255, 0.55);
             --border: rgba(0, 0, 0, 0.1);
-            --accent: #007aff;
-            --accent-glow: rgba(0, 122, 255, 0.3);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.5s var(--spring); }
         body { background: var(--bg); height: 100dvh; display: flex; align-items: center; justify-content: center; overflow: hidden; color: var(--text); }
 
-        .liquid-env { position: fixed; inset: 0; z-index: -1; filter: blur(100px) contrast(1.3); }
+        /* RIPPLE ANIMATION */
+        .ripple-effect { animation: ripple-vibe 0.6s ease-out; }
+        @keyframes ripple-vibe {
+            0% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(0.98); filter: brightness(1.5); }
+            100% { transform: scale(1); filter: brightness(1); }
+        }
+
+        .liquid-env { position: fixed; inset: 0; z-index: -2; filter: blur(100px) contrast(1.3); }
         .orb { position: absolute; width: 65vh; height: 65vh; background: var(--accent); border-radius: 50%; opacity: 0.35; animation: drift 20s infinite alternate ease-in-out; }
         @keyframes drift { 0% { transform: translate(-15%, -15%); } 100% { transform: translate(30%, 30%); } }
 
-        /* DOCK - NOW COLOR SYNCED */
+        /* DOCK */
         .dock {
-            position: fixed; bottom: 35px; left: 50%; transform: translateX(-50%);
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
             background: rgba(255,255,255,0.12); backdrop-filter: blur(25px);
             padding: 10px 20px; border-radius: 100px; display: flex; gap: 14px;
-            z-index: 9999; border: 1.5px solid var(--accent); box-shadow: 0 15px 45px rgba(0,0,0,0.3), 0 0 20px var(--accent-glow);
+            z-index: 9999; border: 1.5px solid var(--accent); box-shadow: 0 15px 45px rgba(0,0,0,0.3);
         }
-        .mode-watch ~ .dock { bottom: auto; top: 15px; transform: translateX(-50%) scale(0.75); }
+        .mode-watch ~ .dock { bottom: auto; top: 12px; transform: translateX(-50%) scale(0.7); }
 
-        .dock-tool { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; background: rgba(255,255,255,0.06); font-size: 1.1rem; color: var(--text); }
+        .dock-tool { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; background: rgba(255,255,255,0.06); color: var(--text); }
         .dock-tool.active { background: var(--accent); color: white; box-shadow: 0 0 25px var(--accent-glow); }
 
-        /* PILL LAYOUTS */
+        /* WRAPPER */
         .nexus-wrapper { display: grid; gap: 20px; position: relative; margin: auto; max-width: 100%; width: 100%; justify-content: center; }
-        
-        /* PC VERSION - FIXED ROUNDING */
-        .mode-computer { 
-            width: 92vw; 
-            height: 80dvh; 
-            grid-template-columns: 1fr 260px; 
-            padding: 20px;
-        }
-        .mode-computer .glass-panel { border-radius: 80px !important; }
-
-        .mode-mobile { width: 400px; height: 80dvh; grid-template-columns: 1fr; }
-        .mode-mobile .glass-panel { border-radius: 60px !important; }
-
-        .mode-watch { width: 380px; height: 380px; aspect-ratio: 1/1; border-radius: 50% !important; border: 10px solid var(--border); overflow: hidden; }
+        .mode-computer { width: 94vw; height: 78dvh; grid-template-columns: 1fr 260px; padding: 20px; }
+        .mode-mobile { width: 400px; height: 80dvh; grid-template-columns: 1fr; border-radius: 60px; }
+        .mode-watch { width: 380px; height: 380px; aspect-ratio: 1/1; border-radius: 50% !important; border: 10px solid var(--border); grid-template-columns: 1fr; overflow: hidden; }
         .mode-watch aside { display: none; }
+        .mode-watch .scroll-flow { padding: 80px 50px 70px; text-align: center; }
 
         /* GLASS CORE */
-        .glass-panel { background: var(--glass); backdrop-filter: blur(var(--blur)) saturate(190%); border: 1.5px solid var(--border); overflow: hidden; display: flex; flex-direction: column; }
-        .scroll-flow { flex: 1; overflow-y: auto; padding: 35px; display: flex; flex-direction: column; gap: 20px; scroll-behavior: smooth; }
+        .glass-panel { background: var(--glass); backdrop-filter: blur(var(--blur)) saturate(190%); border: 1.5px solid var(--border); overflow: hidden; display: flex; flex-direction: column; border-radius: 60px; }
+        .scroll-flow { flex: 1; overflow-y: auto; padding: 30px; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; }
 
-        .bubble { padding: 18px 26px; border-radius: 40px; font-size: 1rem; animation: liquid-pop 0.6s var(--spring); position: relative; }
-        .bubble.me { align-self: flex-end; background: linear-gradient(135deg, var(--accent), #fff); color: #000; font-weight: 700; border-bottom-right-radius: 10px; }
-        .bubble.them { align-self: flex-start; background: rgba(255,255,255,0.12); color: var(--text); border: 1px solid var(--border); border-bottom-left-radius: 10px; }
+        .bubble { padding: 16px 24px; border-radius: 35px; font-size: 0.95rem; animation: pop 0.6s var(--spring); position: relative; }
+        .bubble.me { align-self: flex-end; background: linear-gradient(135deg, var(--accent), #fff); color: #000; font-weight: 700; }
+        .bubble.them { align-self: flex-start; background: rgba(255,255,255,0.12); color: var(--text); border: 1px solid var(--border); }
+        @keyframes pop { 0% { transform: scale(0.7) translateY(30px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
 
-        /* AUTH GATE */
+        /* SETTINGS DROPS */
+        .overlay { position: absolute; inset: 20px; background: rgba(0,0,0,0.95); backdrop-filter: blur(40px); z-index: 5000; padding: 40px; display: none; flex-direction: column; border-radius: 60px; color: white; border: 1px solid var(--accent); }
+        .palette { display: flex; gap: 15px; flex-wrap: wrap; margin: 20px 0; }
+        .drop { width: 45px; height: 45px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: 0.3s; }
+        .drop.active { border-color: white; transform: scale(1.1); }
+
+        /* AUTH */
         #gate { position: fixed; inset: 0; z-index: 9000; background: var(--bg); display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .login-card { background: var(--glass); padding: 50px; border-radius: 80px; border: 2px solid var(--accent); text-align: center; max-width: 420px; width: 100%; backdrop-filter: blur(35px); box-shadow: 0 0 40px var(--accent-glow); }
+        .login-card { background: var(--glass); padding: 50px; border-radius: 80px; border: 2.5px solid var(--accent); text-align: center; max-width: 400px; width: 100%; backdrop-filter: blur(35px); }
         .input-pill { width: 100%; padding: 18px; border-radius: 40px; border: 1.5px solid var(--border); background: rgba(0,0,0,0.1); color: var(--text); margin-bottom: 22px; text-align: center; outline: none; font-size: 1.2rem; }
-        .btn-pill { width: 100%; padding: 18px; border-radius: 40px; border: none; background: var(--text); color: var(--bg); font-weight: 800; cursor: pointer; text-transform: uppercase; }
-
-        /* SETTINGS */
-        .overlay { position: absolute; inset: 30px; background: rgba(0,0,0,0.92); backdrop-filter: blur(30px); z-index: 5000; padding: 40px; display: none; flex-direction: column; border-radius: 60px; color: white; border: 1px solid var(--accent); }
-        .mode-watch .overlay { inset: 0; border-radius: 50%; padding: 70px 40px; }
-
-        @keyframes liquid-pop { 0% { transform: scale(0.7) translateY(40px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
     </style>
 </head>
 <body data-brightness="dark">
     <div class="liquid-env"><div class="orb"></div></div>
 
     <div id="gate">
-        <div class="login-card">
-            <h1 style="margin-bottom: 10px; letter-spacing: -3px; font-size: 3rem; font-weight: 800;">NEXUS</h1>
-            <input type="text" id="username-in" placeholder="Username" class="input-pill" autocomplete="off">
-            <button onclick="boot()" id="boot-btn" class="btn-pill">ENGAGE</button>
+        <div class="login-card" id="login-pill">
+            <h1 style="margin-bottom: 15px; letter-spacing: -3px; font-size: 3rem; font-weight: 800;">NEXUS</h1>
+            <input type="text" id="user-in" placeholder="Username" class="input-pill" autocomplete="off">
+            <button onclick="boot()" id="boot-btn" style="width:100%; padding:18px; border-radius:40px; border:none; background:var(--text); color:var(--bg); font-weight:800; cursor:pointer;">ENGAGE</button>
         </div>
     </div>
 
     <div class="nexus-wrapper mode-computer" id="ui">
-        <main class="glass-panel">
+        <main class="glass-panel" id="main-panel">
             <div id="settings-view" class="overlay">
-                <h2 style="margin-bottom: 30px;">Specular Engine</h2>
-                <div style="margin-bottom:20px;">
-                    <label>Glass Frost</label>
-                    <input type="range" min="0" max="100" value="50" oninput="document.documentElement.style.setProperty('--blur', this.value+'px')" style="width:100%; accent-color:var(--accent); margin:15px 0;">
-                    <label>Liquid Intensity</label>
-                    <input type="range" min="10" max="100" value="35" oninput="document.querySelector('.orb').style.opacity = this.value/100" style="width:100%; accent-color:var(--accent); margin:15px 0;">
+                <h2>Liquid Customization</h2>
+                <p style="margin-top:20px; opacity:0.6;">Haptic Drops</p>
+                <div class="palette">
+                    <div class="drop active" style="background:#00f2ff; box-shadow: 0 0 15px #00f2ff66;" onclick="injectColor('#00f2ff', this)"></div>
+                    <div class="drop" style="background:#ff007f; box-shadow: 0 0 15px #ff007f66;" onclick="injectColor('#ff007f', this)"></div>
+                    <div class="drop" style="background:#a29bfe; box-shadow: 0 0 15px #a29bfe66;" onclick="injectColor('#a29bfe', this)"></div>
+                    <div class="drop" style="background:#00ff88; box-shadow: 0 0 15px #00ff8866;" onclick="injectColor('#00ff88', this)"></div>
+                    <div class="drop" style="background:#f9ca24; box-shadow: 0 0 15px #f9ca2466;" onclick="injectColor('#f9ca24', this)"></div>
+                    <div class="drop" style="background:#ffffff; box-shadow: 0 0 15px #ffffff66;" onclick="injectColor('#ffffff', this)"></div>
                 </div>
-                <button onclick="toggleOverlay('settings-view')" class="btn-pill" style="margin-top:auto;">SAVE TRANSITION</button>
+                <button onclick="toggleOverlay('settings-view')" style="margin-top:auto; padding:18px; border-radius:40px; border:none; background:var(--accent); color:black; font-weight:800; cursor:pointer;">SAVE ARCHITECTURE</button>
             </div>
 
             <div class="scroll-flow" id="view"></div>
             
-            <div style="padding: 25px; background: rgba(0,0,0,0.1);">
+            <div style="padding: 25px; background: rgba(0,0,0,0.15);">
                 <div style="background: rgba(255,255,255,0.06); border: 1.5px solid var(--border); border-radius: 100px; padding: 8px; display: flex; gap: 10px;">
-                    <input type="text" id="msg-input" placeholder="Ripple..." style="flex:1; background:transparent; border:none; padding:12px 20px; color:var(--text); outline:none;" onkeypress="if(event.key==='Enter') push()">
+                    <input type="text" id="msg-input" placeholder="Transmit thought..." style="flex:1; background:transparent; border:none; padding:12px 20px; color:var(--text); outline:none;" onkeypress="if(event.key==='Enter') push()">
                     <button onclick="push()" style="background:var(--text); color:var(--bg); border:none; padding:0 30px; border-radius:100px; font-weight:800; cursor:pointer;">SEND</button>
                 </div>
             </div>
         </main>
 
-        <aside class="glass-panel">
-            <div style="padding:35px; font-weight:800; border-bottom:1px solid var(--border); text-align:center; letter-spacing:1px;">ONLINE</div>
+        <aside class="glass-panel" id="side-panel">
+            <div style="padding:35px; font-weight:800; border-bottom:1.5px solid var(--border); text-align:center;">ONLINE</div>
             <div style="padding:30px; display:flex; flex-direction:column; align-items:center;">
                 <div style="width:14px; height:14px; border-radius:50%; background:var(--accent); box-shadow: 0 0 20px var(--accent-glow);"></div>
-                <div id="user-display" style="margin-top:25px; font-weight: 700; opacity: 0.8; font-size:1.1rem;"></div>
+                <div id="user-tag" style="margin-top:25px; font-weight: 700; opacity: 0.8; font-size:1.1rem; text-transform: uppercase;"></div>
             </div>
         </aside>
     </div>
 
-    <div class="dock">
+    <div class="dock" id="control-dock">
         <div class="dock-tool active" onclick="setMode('computer', this)"><i class="fas fa-desktop"></i></div>
         <div class="dock-tool" onclick="setMode('mobile', this)"><i class="fas fa-mobile-alt"></i></div>
         <div class="dock-tool" onclick="setMode('watch', this)"><i class="fas fa-clock"></i></div>
         <div style="width:1px; background:var(--border); margin:5px 0;"></div>
         <div class="dock-tool" onclick="toggleTheme()"><i class="fas fa-adjust"></i></div>
-        <div class="dock-tool" onclick="toggleOverlay('settings-view')"><i class="fas fa-sliders-h"></i></div>
+        <div class="dock-tool" onclick="toggleOverlay('settings-view')"><i class="fas fa-palette"></i></div>
         <div class="dock-tool" onclick="toggleFS()"><i class="fas fa-expand"></i></div>
     </div>
 
     <script>
-        let client, chan, user, secret = "v11.1_specular_horizon";
+        let client, chan, user, secret = "v13.1_haptic_ripple";
 
         async function boot() {
-            user = document.getElementById('username-in').value.trim();
+            user = document.getElementById('user-in').value.trim();
             if(!user) return;
             document.getElementById('boot-btn').innerText = "Syncing...";
-            
-            client = new Ably.Realtime({ 
-                key: 'fVAQIA.kFtCvw:X6QXTzbh4Tbi1HUBiOQMlReiyw0uwkbOnEibDEM_VdA',
-                transports: ['xhr_streaming', 'xhr_polling', 'web_socket']
-            });
-
+            client = new Ably.Realtime({ key: 'fVAQIA.kFtCvw:X6QXTzbh4Tbi1HUBiOQMlReiyw0uwkbOnEibDEM_VdA', transports: ['xhr_streaming', 'xhr_polling', 'web_socket'] });
             client.connection.on('connected', () => {
                 document.getElementById('gate').style.display = 'none';
-                document.getElementById('user-display').innerText = user.toUpperCase();
-                chan = client.channels.get('v11-flow');
+                document.getElementById('user-tag').innerText = user;
+                chan = client.channels.get('general-v13');
                 chan.subscribe('msg', p => { if(p.data.u !== user) renderMsg(dec(p.data.c), 'them', p.data.u); });
-                loadHistory();
+                load();
             });
+        }
+
+        function injectColor(hex, el) {
+            // Trigger Ripple Animation on major UI parts
+            const parts = ['main-panel', 'side-panel', 'control-dock', 'login-pill'];
+            parts.forEach(id => {
+                const item = document.getElementById(id);
+                if(item) {
+                    item.classList.remove('ripple-effect');
+                    void item.offsetWidth; // Force reflow
+                    item.classList.add('ripple-effect');
+                }
+            });
+
+            document.documentElement.style.setProperty('--accent', hex);
+            document.documentElement.style.setProperty('--accent-glow', hex + '66');
+            document.querySelectorAll('.drop').forEach(d => d.classList.remove('active'));
+            el.classList.add('active');
         }
 
         function setMode(m, btn) {
@@ -180,13 +192,10 @@
         }
 
         function push() {
-            const i = document.getElementById('msg-input');
-            if(!i.value) return;
+            const i = document.getElementById('msg-input'); if(!i.value) return;
             const data = { u: user, c: enc(i.value), t: Date.now() };
             chan.publish('msg', data);
-            saveMsg(data);
-            renderMsg(i.value, 'me', 'You');
-            i.value = '';
+            save(data); renderMsg(i.value, 'me', 'You'); i.value = '';
         }
 
         function renderMsg(txt, type, s) {
@@ -198,14 +207,13 @@
             v.scrollTop = v.scrollHeight;
         }
 
-        function saveMsg(data) {
-            let h = JSON.parse(localStorage.getItem('nx111_hist')) || [];
-            h.push(data);
-            localStorage.setItem('nx111_hist', JSON.stringify(h.slice(-50)));
+        function save(d) {
+            let h = JSON.parse(localStorage.getItem('nx13_hist')) || [];
+            h.push(d); localStorage.setItem('nx13_hist', JSON.stringify(h.slice(-50)));
         }
 
-        function loadHistory() {
-            let h = JSON.parse(localStorage.getItem('nx111_hist')) || [];
+        function load() {
+            let h = JSON.parse(localStorage.getItem('nx13_hist')) || [];
             h.forEach(d => renderMsg(dec(d.c), d.u === user ? 'me' : 'them', d.u === user ? 'You' : d.u));
         }
 
@@ -214,8 +222,8 @@
             else document.exitFullscreen();
         }
 
-            function enc(t) { return CryptoJS.AES.encrypt(t, secret).toString(); }
-            function dec(c) { try { return CryptoJS.AES.decrypt(c, secret).toString(CryptoJS.enc.Utf8); } catch { return "[Encrypted]"; } }
+        function enc(t) { return CryptoJS.AES.encrypt(t, secret).toString(); }
+        function dec(c) { try { return CryptoJS.AES.decrypt(c, secret).toString(CryptoJS.enc.Utf8); } catch { return "[Encrypted]"; } }
     </script>
 </body>
 </html>
