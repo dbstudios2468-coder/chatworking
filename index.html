@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Nexus v33</title>
+    <title>Nexus v34 | Orbital Ping</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@400;700&family=Plus+Jakarta+Sans:wght@400;700;800&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
@@ -165,7 +165,7 @@
         <div class="gate-card" id="gate-card">
             <i class="fas fa-fingerprint" style="font-size: 3.5rem; color: var(--accent); margin-bottom: 20px; filter: drop-shadow(0 0 20px var(--accent-glow));"></i>
             <h1 style="font-weight: 900; font-size: 3rem; letter-spacing: -2px; margin-bottom: 10px; color: white;">NEXUS</h1>
-            <p style="opacity: 0.6; font-size: 0.85rem; margin-bottom: 30px; font-weight: 700; letter-spacing: 2px;">V33 DEEP-FLUID PARADIGM</p>
+            <p style="opacity: 0.6; font-size: 0.85rem; margin-bottom: 30px; font-weight: 700; letter-spacing: 2px;">V34 ORBITAL PING</p>
             <input type="email" id="email-in" class="gate-input" placeholder="firstname.surname@ballardschool.co.uk" autocomplete="off">
             <button class="btn-liquid" style="width: 100%; margin: 0;" onclick="bootSequence()">AUTHENTICATE</button>
         </div>
@@ -295,26 +295,41 @@
         // GLOBALS
         let client, chanMain, chanDM, user, receivedIds = new Set();
         let activeDM = null, unreadDMs = new Set();
-        const secret = "v33_deep_fluid";
+        const secret = "v34_orbital_ping";
         let soundEnabled = true, typingTimeout;
 
-        // AUDIO
+        // AUDIO & NOTIFICATIONS
         const sndOut = new Audio('https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3'); sndOut.volume = 0.4;
         const sndIn = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3'); sndIn.volume = 0.4;
+        
         function playSnd(t) { if(!soundEnabled) return; if(t==='out'){sndOut.currentTime=0;sndOut.play().catch(()=>{});} else{sndIn.currentTime=0;sndIn.play().catch(()=>{});} }
         function toggleSnd() { soundEnabled = !soundEnabled; const b = document.getElementById('snd-btn'); b.innerText = soundEnabled ? "ON" : "OFF"; b.style.background = soundEnabled ? "var(--accent)" : "rgba(255,255,255,0.1)"; b.style.color = soundEnabled ? "black" : "white"; localStorage.setItem('nx_snd', soundEnabled); }
+
+        function sendDesktopNotification(title, body, icon) {
+            if ("Notification" in window && Notification.permission === "granted" && document.hidden) {
+                new Notification(title, { body: body, icon: icon || 'https://cdn-icons-png.flaticon.com/512/3114/3114883.png' });
+            }
+        }
 
         // PARALLAX
         function handleParallax(e) { const px = (window.innerWidth/2 - e.clientX)/60, py = (window.innerHeight/2 - e.clientY)/60; document.documentElement.style.setProperty('--tx', px+'px'); document.documentElement.style.setProperty('--ty', py+'px'); }
 
         // BOOT
         window.onload = () => { let s = localStorage.getItem('nx_user'); if(s) { user = s; ignite(); } loadSettings(); };
+        
         function bootSequence() {
             let email = document.getElementById('email-in').value.trim().toLowerCase();
             if(!email.endsWith('@ballardschool.co.uk')) { alert("School email required."); return; }
             user = email.split('@')[0].split('.')[0]; user = user.charAt(0).toUpperCase() + user.slice(1);
-            localStorage.setItem('nx_user', user); ignite();
+            localStorage.setItem('nx_user', user); 
+            
+            // Request Notification Permission on first interaction
+            if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+                Notification.requestPermission();
+            }
+            ignite();
         }
+        
         function ignite() {
             document.getElementById('gate-card').style.animation = "vacuumGate 0.5s var(--spring) forwards";
             setTimeout(() => { document.getElementById('gate').style.display = 'none'; document.getElementById('ui').style.opacity = '1'; document.getElementById('ui').style.pointerEvents = 'all'; initNetwork(); }, 400);
@@ -325,18 +340,24 @@
             document.getElementById('user-display').innerText = user;
             const pfp = localStorage.getItem('nx_pfp'); if(pfp) document.getElementById('local-pfp').src = pfp;
 
-            // XHR fallback explicitly defined for aggressive school networks
             client = new Ably.Realtime({ key: 'fVAQIA.kFtCvw:X6QXTzbh4Tbi1HUBiOQMlReiyw0uwkbOnEibDEM_VdA', clientId: user, transports: ['xhr_streaming', 'xhr_polling', 'web_socket'] });
             
-            chanMain = client.channels.get('v33-flow');
+            chanMain = client.channels.get('v34-flow');
             chanMain.subscribe('msg', p => ingest(p.data, false));
-            chanMain.subscribe('announce', p => { if(!activeDM && p.data.u !== user && !receivedIds.has(p.data.id)) { receivedIds.add(p.data.id); renderAnnounce(dec(p.data.c), p.data.u, p.data.t); playSnd('in'); } });
+            chanMain.subscribe('announce', p => { 
+                if(!activeDM && p.data.u !== user && !receivedIds.has(p.data.id)) { 
+                    receivedIds.add(p.data.id); 
+                    renderAnnounce(dec(p.data.c), p.data.u, p.data.t); 
+                    playSnd('in'); 
+                    sendDesktopNotification(`📢 BROADCAST: ${p.data.u}`, dec(p.data.c));
+                } 
+            });
             chanMain.subscribe('del', p => document.getElementById(p.data.id)?.remove());
             chanMain.subscribe('typing', p => { if(!activeDM && p.data.u !== user) { const ind = document.getElementById('typing-indicator'); ind.innerText = `${p.data.u} is transmitting...`; ind.style.opacity = '1'; clearTimeout(typingTimeout); typingTimeout = setTimeout(() => ind.style.opacity = '0', 2000); } });
             
             chanMain.presence.subscribe(() => syncPres()); chanMain.presence.enter({ pfp: pfp });
 
-            chanDM = client.channels.get('v33-dm-' + user);
+            chanDM = client.channels.get('v34-dm-' + user);
             chanDM.subscribe('msg', p => ingest(p.data, true));
 
             initCanvas(); loadH(); checkCD();
@@ -360,8 +381,19 @@
 
         function ingest(d, isDM) {
             if(receivedIds.has(d.id)) return; receivedIds.add(d.id); playSnd('in');
-            if(isDM) { if(activeDM === d.u) { renBub(d); saveL('dm_'+d.u, d); } else { unreadDMs.add(d.u); syncPres(); saveL('dm_'+d.u, d); } } 
-            else { if(!activeDM && d.u !== user) renBub(d); if(!isDM) saveL('global', d); }
+            
+            let messageText = dec(d.c);
+            if (messageText === "[Sketch Data]") messageText = "sent a drawing.";
+
+            if(isDM) { 
+                if(activeDM === d.u) { renBub(d); saveL('dm_'+d.u, d); } 
+                else { unreadDMs.add(d.u); syncPres(); saveL('dm_'+d.u, d); sendDesktopNotification(`Private Message from ${d.u}`, messageText, d.pfp); } 
+            } 
+            else { 
+                if(!activeDM && d.u !== user) renBub(d); 
+                if(!isDM) saveL('global', d); 
+                if(d.u !== user) sendDesktopNotification(`New Message from ${d.u}`, messageText, d.pfp);
+            }
         }
 
         function sendTyping() { if(!activeDM) chanMain.publish('typing', { u: user }); }
@@ -370,8 +402,8 @@
             const i = document.getElementById('msg-input'); if(!i.value) return;
             const id = 'msg_' + Date.now(); const t = Date.now(); const pfp = localStorage.getItem('nx_pfp');
             const pld = { id, u: user, c: enc(i.value), pfp, t };
-            receivedIds.add(id); // Block echo instantly
-            if(activeDM) { client.channels.get('v33-dm-'+activeDM).publish('msg', pld); saveL('dm_'+activeDM, pld); }
+            receivedIds.add(id);
+            if(activeDM) { client.channels.get('v34-dm-'+activeDM).publish('msg', pld); saveL('dm_'+activeDM, pld); }
             else { chanMain.publish('msg', pld); saveL('global', pld); }
             renBub(pld); i.value = ''; playSnd('out');
         }
@@ -381,7 +413,7 @@
             if(localStorage.getItem('nx_cd') && Date.now() - parseInt(localStorage.getItem('nx_cd')) < 60000) return;
             const id = 'ann_' + Date.now(); const t = Date.now();
             const pld = { id, u: user, c: enc(i.value), t, type: 'ann' };
-            receivedIds.add(id); // Block echo
+            receivedIds.add(id); 
             chanMain.publish('announce', pld); saveL('global', pld);
             renderAnnounce(i.value, 'You', t); i.value = ''; playSnd('out');
             localStorage.setItem('nx_cd', t); checkCD();
@@ -412,15 +444,15 @@
 
         function parseLks(t) { return t.replace(/(https?:\/\/[^\s]+)/g, u => `<a href="${u}" target="_blank" style="color:inherit; text-decoration:underline;">${u.substring(0,35)}...</a>`); }
 
-        function nuke(id) { document.getElementById(id)?.remove(); if(!activeDM) chanMain.publish('del', {id}); let k = activeDM ? 'nx33_dm_'+activeDM : 'nx33_global'; let h = JSON.parse(localStorage.getItem(k)) || []; localStorage.setItem(k, JSON.stringify(h.filter(m => m.id !== id))); }
+        function nuke(id) { document.getElementById(id)?.remove(); if(!activeDM) chanMain.publish('del', {id}); let k = activeDM ? 'nx34_dm_'+activeDM : 'nx34_global'; let h = JSON.parse(localStorage.getItem(k)) || []; localStorage.setItem(k, JSON.stringify(h.filter(m => m.id !== id))); }
 
-        function saveL(k, p) { let h = JSON.parse(localStorage.getItem('nx33_'+k)) || []; h.push(p); localStorage.setItem('nx33_'+k, JSON.stringify(h.slice(-50))); }
-        function loadH() { let k = activeDM ? 'nx33_dm_'+activeDM : 'nx33_global'; let h = JSON.parse(localStorage.getItem(k)) || []; h.forEach(d => { receivedIds.add(d.id); if(d.type==='ann') renderAnnounce(dec(d.c), d.u===user?'You':d.u, d.t); else renBub(d); }); }
+        function saveL(k, p) { let h = JSON.parse(localStorage.getItem('nx34_'+k)) || []; h.push(p); localStorage.setItem('nx34_'+k, JSON.stringify(h.slice(-50))); }
+        function loadH() { let k = activeDM ? 'nx34_dm_'+activeDM : 'nx34_global'; let h = JSON.parse(localStorage.getItem(k)) || []; h.forEach(d => { receivedIds.add(d.id); if(d.type==='ann') renderAnnounce(dec(d.c), d.u===user?'You':d.u, d.t); else renBub(d); }); }
 
         // SKETCH
         const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d'); let drawing = false;
         function initCanvas() { const w = document.getElementById('sketch-wrap'); canvas.width = w.clientWidth; canvas.height = w.clientHeight; ctx.strokeStyle = '#fff'; ctx.lineWidth = 5; ctx.lineCap = 'round'; canvas.onmousedown = e => { drawing=true; ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); }; canvas.onmousemove = e => { if(drawing){ctx.lineTo(e.offsetX,e.offsetY); ctx.stroke();} }; window.addEventListener('mouseup', ()=>drawing=false); canvas.ontouchstart = e => { drawing=true; ctx.beginPath(); const r=canvas.getBoundingClientRect(); ctx.moveTo(e.touches[0].clientX-r.left, e.touches[0].clientY-r.top); }; canvas.ontouchmove = e => { if(drawing){const r=canvas.getBoundingClientRect(); ctx.lineTo(e.touches[0].clientX-r.left, e.touches[0].clientY-r.top); ctx.stroke();} }; window.addEventListener('touchend', ()=>drawing=false); }
-        function broadcastSketch() { const id = 'sk_'+Date.now(); const t = Date.now(); const pfp = localStorage.getItem('nx_pfp'); const pld = { id, u: user, c: enc("[Sketch]"), img: canvas.toDataURL(), pfp, t }; receivedIds.add(id); if(activeDM){client.channels.get('v33-dm-'+activeDM).publish('msg', pld); saveL('dm_'+activeDM, pld);} else{chanMain.publish('msg', pld); saveL('global', pld);} renBub(pld); playSnd('out'); ctx.clearRect(0,0,canvas.width,canvas.height); }
+        function broadcastSketch() { const id = 'sk_'+Date.now(); const t = Date.now(); const pfp = localStorage.getItem('nx_pfp'); const pld = { id, u: user, c: enc("[Sketch Data]"), img: canvas.toDataURL(), pfp, t }; receivedIds.add(id); if(activeDM){client.channels.get('v34-dm-'+activeDM).publish('msg', pld); saveL('dm_'+activeDM, pld);} else{chanMain.publish('msg', pld); saveL('global', pld);} renBub(pld); playSnd('out'); ctx.clearRect(0,0,canvas.width,canvas.height); }
 
         // UI & SETTINGS
         function toggleStealth() { document.getElementById('dock').classList.toggle('hidden'); document.getElementById('dock-reveal').classList.toggle('visible'); }
