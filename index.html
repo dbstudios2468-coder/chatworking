@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Nexus v34.3</title>
+    <title>Nexus v36.2 | Ultimate Architecture</title>
     <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Inter:wght@400;700;900&family=JetBrains+Mono:wght@400;700&family=Plus+Jakarta+Sans:wght@400;700;800&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
@@ -47,114 +47,104 @@
         .mode-computer { grid-template-columns: 320px 1fr 320px; }
         .mode-mobile { width: 400px; grid-template-columns: 1fr; }
         .mode-mobile .side-pill { display: none; }
-        .mode-watch { width: 380px; height: 380px; aspect-ratio: 1/1; border-radius: 50% !important; margin: auto; grid-template-columns: 1fr; }
+        .mode-watch { width: 380px; height: 380px; aspect-ratio: 1/1; border-radius: 50% !important; margin: auto; grid-template-columns: 1fr; overflow: hidden; border: 12px solid var(--border-light); box-shadow: 0 0 50px rgba(0,0,0,0.5); }
         .mode-watch .side-pill { display: none; }
+        .mode-watch .pill-header { padding-top: 45px; justify-content: center; }
+        .mode-watch .input-dock { padding-bottom: 45px; }
 
         /* THE LIQUID PANELS */
         .hyper-pill { 
             background: linear-gradient(145deg, rgba(255,255,255,var(--glass-op)), rgba(255,255,255,calc(var(--glass-op)/4))); 
             backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat)); 
-            border-radius: 50px; 
-            border: 1px solid var(--border-dark); border-top: 1.5px solid var(--border-light); border-left: 1.5px solid var(--border-light);
-            box-shadow: 0 30px 60px rgba(0,0,0,0.5), inset 3px 3px 20px rgba(255,255,255,0.3), inset -5px -5px 30px var(--accent-glow); 
-            display: flex; flex-direction: column; overflow: hidden; position: relative;
+            border-radius: 50px; border: 1px solid var(--border-dark); border-top: 1.5px solid var(--border-light); border-left: 1.5px solid var(--border-light);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5), inset 3px 3px 20px rgba(255,255,255,0.3); display: flex; flex-direction: column; overflow: hidden; position: relative;
             animation: slideUp 0.8s var(--spring) forwards;
         }
-        .hyper-pill:nth-child(1) { animation-delay: 0.1s; }
-        .hyper-pill:nth-child(2) { animation-delay: 0.2s; }
-        .hyper-pill:nth-child(3) { animation-delay: 0.3s; }
         @keyframes slideUp { 0% { transform: translateY(50px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
 
-        .pill-header { padding: 25px 30px; font-weight: 900; font-size: 1.2rem; letter-spacing: -0.5px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-dark); box-shadow: 0 10px 20px rgba(0,0,0,0.1); z-index: 2; }
+        .pill-header { padding: 25px 30px; font-weight: 900; font-size: 1.2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-dark); }
         
         /* SKETCH LAB */
-        #sketch-wrap { flex: 1; margin: 20px; border-radius: 30px; background: rgba(0,0,0,0.2); box-shadow: inset 0 5px 25px rgba(0,0,0,0.4); overflow: hidden; cursor: crosshair; }
+        #sketch-wrap { flex: 1; margin: 20px; border-radius: 30px; background: rgba(0,0,0,0.2); overflow: hidden; cursor: crosshair; }
         canvas { width: 100%; height: 100%; touch-action: none; }
-        .btn-liquid { margin: 0 20px 20px; padding: 18px; border-radius: 30px; background: var(--accent); color: #000; border: none; font-weight: 900; font-size: 1rem; cursor: pointer; transition: 0.3s var(--spring); box-shadow: 0 10px 20px var(--accent-glow); text-transform: uppercase; }
-        .btn-liquid:hover { transform: scale(1.03); box-shadow: 0 15px 30px var(--accent-strong); }
+        .btn-liquid { margin: 0 20px 20px; padding: 18px; border-radius: 30px; background: var(--accent); color: #000; border: none; font-weight: 900; font-size: 1rem; cursor: pointer; transition: 0.3s; text-transform: uppercase; box-shadow: 0 10px 20px var(--accent-glow); }
+        .btn-liquid:hover { transform: scale(1.03); }
 
         /* CHAT CORE */
         #view { flex: 1; padding: 30px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
-        .dm-header { background: var(--accent); color: #000; padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; cursor: pointer; transition: 0.3s; box-shadow: 0 5px 15px var(--accent-glow); display: none; }
-        .dm-header:hover { transform: scale(1.05); }
+        .dm-header { background: var(--accent); color: #000; padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; cursor: pointer; display: none; font-weight: 700; box-shadow: 0 5px 15px var(--accent-glow); }
 
-        .bubble-wrap { display: flex; flex-direction: column; max-width: 80%; animation: bubbleIn 0.5s var(--spring) forwards; }
+        .bubble-wrap { display: flex; flex-direction: column; max-width: 80%; animation: bubbleIn 0.5s var(--spring); }
         .bubble-wrap.me { align-self: flex-end; align-items: flex-end; }
         .bubble-wrap.them { align-self: flex-start; align-items: flex-start; }
         @keyframes bubbleIn { 0% { transform: scale(0.8) translateY(20px); opacity: 0; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
 
-        .bubble-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; opacity: 0.8; font-size: 0.75rem; font-weight: 700; padding: 0 5px; }
+        .bubble-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; font-size: 0.75rem; font-weight: 700; opacity: 0.8; padding: 0 5px; }
         .meta-pfp { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; border: 1px solid var(--accent); }
         .msg-time { font-size: 0.65rem; opacity: 0.5; margin-left: 5px; }
 
-        .bubble { padding: 16px 24px; border-radius: 30px; font-size: 1.05rem; line-height: 1.5; word-wrap: break-word; overflow-wrap: break-word; position: relative; }
-        .bubble-wrap.me .bubble { background: linear-gradient(135deg, var(--accent), var(--accent-strong)); color: #000; border-bottom-right-radius: 8px; box-shadow: inset 2px 2px 10px rgba(255,255,255,0.5), 0 10px 20px var(--accent-glow); }
-        .bubble-wrap.them .bubble { background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); border: 1px solid var(--border-dark); border-top: 1px solid var(--border-light); border-left: 1px solid var(--border-light); border-bottom-left-radius: 8px; box-shadow: inset 2px 2px 15px rgba(255,255,255,0.1), 0 10px 20px rgba(0,0,0,0.2); }
+        .bubble { padding: 16px 24px; border-radius: 30px; font-size: 1.05rem; word-wrap: break-word; overflow-wrap: break-word; position: relative; line-height: 1.4; }
+        .bubble-wrap.me .bubble { background: linear-gradient(135deg, var(--accent), var(--accent-strong)); color: #000; border-bottom-right-radius: 8px; box-shadow: 0 10px 20px var(--accent-glow); }
+        .bubble-wrap.them .bubble { background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); border: 1px solid var(--border-dark); border-top: 1px solid var(--border-light); border-bottom-left-radius: 8px; }
         
-        .bubble img { max-width: 100%; border-radius: 15px; margin-top: 10px; border: 1px solid rgba(255,255,255,0.3); }
+        .bubble img { max-width: 100%; border-radius: 15px; margin-top: 10px; }
+        .del-btn { position: absolute; top: -8px; right: -8px; background: #FF3B30; color: white; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; cursor: pointer; opacity: 0; transition: 0.3s; border: 2px solid var(--bg-color); }
+        .bubble-wrap:hover .del-btn { opacity: 1; }
 
-        .del-btn { position: absolute; top: -8px; right: -8px; background: #FF3B30; color: white; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; cursor: pointer; opacity: 0; transform: scale(0.5); transition: 0.3s var(--spring); box-shadow: 0 5px 15px rgba(255, 59, 48, 0.5); border: 2px solid var(--bg-color); }
-        .bubble-wrap:hover .del-btn { opacity: 1; transform: scale(1); }
-
-        .announcement { align-self: center; background: linear-gradient(135deg, var(--accent), var(--accent-strong)); color: #000; font-weight: 900; text-transform: uppercase; text-align: center; padding: 25px 40px; border-radius: 40px; border: 2px solid white; max-width: 90%; margin: 20px 0; box-shadow: 0 0 50px var(--accent-glow); animation: bubbleIn 0.6s var(--spring); }
+        .announcement { align-self: center; background: linear-gradient(135deg, var(--accent), var(--accent-strong)); color: #000; font-weight: 900; text-transform: uppercase; text-align: center; padding: 25px 40px; border-radius: 40px; border: 2px solid white; max-width: 90%; margin: 20px 0; box-shadow: 0 0 50px var(--accent-glow); }
 
         /* INPUT BAR */
         .input-dock { padding: 20px 30px; background: rgba(0,0,0,0.2); border-top: 1px solid var(--border-dark); display: flex; gap: 15px; }
-        .input-pill { flex: 1; display: flex; align-items: center; background: rgba(255,255,255,0.05); border: 1px solid var(--border-dark); border-top: 1px solid var(--border-light); border-left: 1px solid var(--border-light); border-radius: 100px; padding: 5px 5px 5px 25px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.2); transition: 0.3s; }
-        .input-pill:focus-within { border-color: var(--accent); box-shadow: inset 0 2px 10px rgba(0,0,0,0.2), 0 0 0 2px var(--accent-glow); }
+        .input-pill { flex: 1; display: flex; align-items: center; background: rgba(255,255,255,0.05); border: 1px solid var(--border-dark); border-top: 1px solid var(--border-light); border-radius: 100px; padding: 5px 5px 5px 25px; transition: 0.3s; }
+        .input-pill:focus-within { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
         .input-pill input { flex: 1; background: transparent; border: none; color: var(--text-color); font-size: 1.05rem; outline: none; }
         
-        .action-icon { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; transition: 0.3s var(--spring); color: var(--text-color); opacity: 0.6; }
-        .action-icon:hover { opacity: 1; background: rgba(255,255,255,0.1); transform: scale(1.1); }
-        .action-icon.cooling { opacity: 0.2; pointer-events: none; }
-        .send-btn { width: 45px; height: 45px; border-radius: 50%; background: var(--accent); color: #000; border: none; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; transition: 0.3s var(--spring); box-shadow: 0 5px 15px var(--accent-glow); }
+        .action-icon { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; color: var(--text-color); opacity: 0.6; transition: 0.3s; }
+        .action-icon:hover { opacity: 1; background: rgba(255,255,255,0.1); }
+        .send-btn { width: 45px; height: 45px; border-radius: 50%; background: var(--accent); color: #000; border: none; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; transition: 0.3s; box-shadow: 0 5px 15px var(--accent-glow); }
         .send-btn:hover { transform: scale(1.1) rotate(-10deg); }
-
         #typing-indicator { padding: 10px 35px; font-size: 0.8rem; font-weight: 700; color: var(--accent); opacity: 0; transition: 0.3s; height: 30px; }
 
         /* NETWORK */
         .profile-hero { padding: 40px 20px; text-align: center; border-bottom: 1px solid var(--border-dark); }
-        .main-pfp { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent); box-shadow: 0 10px 30px var(--accent-glow); margin: 0 auto 15px; }
+        .main-pfp { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid var(--accent); box-shadow: 0 10px 30px var(--accent-glow); margin: 0 auto 15px; display: none; }
         .presence-list { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
-        .user-node { display: flex; align-items: center; gap: 15px; padding: 15px 20px; border-radius: 25px; background: rgba(255,255,255,0.03); border: 1px solid transparent; cursor: pointer; transition: 0.3s var(--spring); position: relative; font-weight: 700; }
-        .user-node:hover { background: rgba(255,255,255,0.08); border-color: var(--border-light); transform: translateX(8px); }
+        .user-node { display: flex; align-items: center; gap: 15px; padding: 15px 20px; border-radius: 25px; background: rgba(255,255,255,0.03); cursor: pointer; transition: 0.3s; position: relative; font-weight: 700; }
+        .user-node:hover { background: rgba(255,255,255,0.08); transform: translateX(8px); }
         .user-node.me { cursor: default; opacity: 0.8; }
-        .user-node.me:hover { transform: none; background: rgba(255,255,255,0.03); border-color: transparent; }
-        .status-orb { width: 10px; height: 10px; border-radius: 50%; background: #2ed573; box-shadow: 0 0 10px #2ed573; }
+        .user-node.me:hover { transform: none; background: rgba(255,255,255,0.03); }
+        .status-orb { width: 10px; height: 10px; border-radius: 50%; background: #2ed573; }
         .user-node.me .status-orb { background: var(--accent); box-shadow: 0 0 10px var(--accent); }
         .dm-alert { position: absolute; right: 20px; width: 12px; height: 12px; background: #FF3B30; border-radius: 50%; animation: ping 1.5s infinite; display: none; }
         .user-node.has-unread .dm-alert { display: block; }
-        @keyframes ping { 0% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(255, 59, 48, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); } }
+        @keyframes ping { 0% { box-shadow: 0 0 0 0 rgba(255,59,48,0.7); } 70% { box-shadow: 0 0 0 10px rgba(255,59,48,0); } 100% { box-shadow: 0 0 0 0 rgba(255,59,48,0); } }
 
         /* CONTROL CENTER */
         .cc-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(30px); z-index: 10000; display: none; align-items: center; justify-content: center; opacity: 0; transition: 0.4s; }
-        .cc-panel { background: linear-gradient(135deg, rgba(30,30,30,0.8), rgba(10,10,10,0.8)); border: 1px solid var(--border-light); border-radius: 50px; width: 90%; max-width: 600px; padding: 40px; box-shadow: 0 50px 100px rgba(0,0,0,0.8); transform: scale(0.9); transition: 0.4s var(--spring); max-height: 90dvh; overflow-y: auto; }
+        .cc-panel { background: rgba(30,30,30,0.9); border: 1px solid var(--border-light); border-radius: 50px; width: 90%; max-width: 600px; padding: 40px; box-shadow: 0 50px 100px rgba(0,0,0,0.8); transform: scale(0.9); transition: 0.4s var(--spring); max-height: 90dvh; overflow-y: auto; }
         .cc-group { margin-bottom: 25px; background: rgba(255,255,255,0.03); padding: 20px; border-radius: 30px; border: 1px solid var(--border-dark); }
         .cc-label { display: block; font-size: 0.8rem; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; opacity: 0.6; color: white; }
-        
         .color-grid { display: flex; gap: 12px; flex-wrap: wrap; }
-        .c-dot { width: 36px; height: 36px; border-radius: 50%; cursor: pointer; transition: 0.3s var(--spring); border: 2px solid transparent; box-shadow: inset 0 2px 10px rgba(255,255,255,0.4); }
-        .c-dot.active { border-color: white; transform: scale(1.2); box-shadow: 0 0 20px inherit; }
-        
+        .c-dot { width: 36px; height: 36px; border-radius: 50%; cursor: pointer; transition: 0.3s; border: 2px solid transparent; }
+        .c-dot.active { border-color: white; transform: scale(1.2); box-shadow: 0 0 15px inherit; }
         input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
-        select { width: 100%; padding: 15px 20px; border-radius: 20px; background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--border-dark); outline: none; font-weight: 700; cursor: pointer; }
-        select option { background: #111; color: white; }
+        select { width: 100%; padding: 15px; border-radius: 20px; background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--border-dark); outline: none; cursor: pointer; }
+        select option { background: #111; }
 
         /* STEALTH DOCK */
-        .dock { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; background: rgba(255,255,255,0.1); backdrop-filter: blur(40px) saturate(200%); border: 1px solid var(--border-dark); border-top: 1.5px solid var(--border-light); padding: 10px 20px; border-radius: 100px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); transition: 0.6s var(--spring); z-index: 9000; }
+        .dock { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; background: rgba(255,255,255,0.1); backdrop-filter: blur(40px); border: 1px solid var(--border-dark); border-top: 1.5px solid var(--border-light); padding: 10px 20px; border-radius: 100px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); transition: 0.6s var(--spring); z-index: 9000; }
         .dock.hidden { transform: translate(-50%, 150%); }
-        .dock-btn { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: var(--text-color); cursor: pointer; transition: 0.3s var(--spring); }
-        .dock-btn:hover, .dock-btn.active { background: var(--accent); color: #000; transform: scale(1.15) translateY(-5px); box-shadow: 0 10px 20px var(--accent-glow); }
+        .dock-btn { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: var(--text-color); cursor: pointer; transition: 0.3s; }
+        .dock-btn:hover, .dock-btn.active { background: var(--accent); color: #000; transform: scale(1.15) translateY(-5px); }
         .dock-div { width: 2px; background: var(--border-dark); margin: 5px; border-radius: 2px; }
-        .stealth-pull { position: fixed; bottom: -40px; left: 50%; transform: translateX(-50%); width: 80px; height: 6px; background: var(--border-light); border-radius: 10px; cursor: pointer; transition: 0.4s var(--spring); z-index: 8999; }
+        .stealth-pull { position: fixed; bottom: -40px; left: 50%; transform: translateX(-50%); width: 80px; height: 6px; background: var(--border-light); border-radius: 10px; cursor: pointer; transition: 0.4s; z-index: 8999; }
         .stealth-pull.visible { bottom: 15px; }
-        .stealth-pull:hover { background: var(--accent); height: 8px; box-shadow: 0 0 15px var(--accent-glow); }
 
         /* GATE */
         #gate { position: fixed; inset: 0; background: var(--bg-color); z-index: 20000; display: flex; align-items: center; justify-content: center; }
-        .gate-card { background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02)); backdrop-filter: blur(50px); border: 1px solid var(--border-dark); border-top: 1px solid var(--border-light); border-left: 1px solid var(--border-light); border-radius: 60px; padding: 60px 50px; width: 450px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.5); }
-        .gate-input { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border-dark); color: white; padding: 20px; border-radius: 30px; margin-bottom: 25px; font-size: 1.1rem; text-align: center; outline: none; transition: 0.3s; box-shadow: inset 0 2px 10px rgba(0,0,0,0.2); }
-        .gate-input:focus { border-color: var(--accent); box-shadow: inset 0 2px 10px rgba(0,0,0,0.2), 0 0 0 2px var(--accent-glow); }
+        .gate-card { background: rgba(255,255,255,0.05); backdrop-filter: blur(50px); border: 1px solid var(--border-dark); border-top: 1.5px solid var(--border-light); border-radius: 60px; padding: 60px 50px; width: 450px; text-align: center; box-shadow: 0 30px 60px rgba(0,0,0,0.5); }
+        .gate-input { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border-dark); color: white; padding: 20px; border-radius: 30px; margin-bottom: 25px; font-size: 1.1rem; text-align: center; outline: none; }
+        .gate-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
     </style>
 </head>
 <body onmousemove="handleParallax(event)">
@@ -163,18 +153,18 @@
 
     <div id="gate">
         <div class="gate-card" id="gate-card">
-            <i class="fas fa-fingerprint" style="font-size: 3.5rem; color: var(--accent); margin-bottom: 20px; filter: drop-shadow(0 0 20px var(--accent-glow));"></i>
-            <h1 style="font-weight: 900; font-size: 3rem; letter-spacing: -2px; margin-bottom: 10px; color: white;">NEXUS</h1>
-            <p style="opacity: 0.6; font-size: 0.85rem; margin-bottom: 30px; font-weight: 700; letter-spacing: 2px;">V34.3 ACCESS GATEWAY</p>
+            <i class="fas fa-fingerprint" style="font-size: 3.5rem; color: var(--accent); margin-bottom: 20px;"></i>
+            <h1 style="font-weight: 900; font-size: 3rem; color: white;">NEXUS</h1>
+            <p style="opacity: 0.6; font-size: 0.85rem; margin-bottom: 30px; letter-spacing: 2px;">V36.2 ULTIMATE ARCHITECTURE</p>
             
             <div id="step-login">
                 <input type="email" id="email-in" class="gate-input" placeholder="firstname.surname@ballardschool.co.uk" autocomplete="off">
-                <button class="btn-liquid" style="width: 100%; margin: 0;" onclick="processEmail()">AUTHENTICATE</button>
+                <button class="btn-liquid" id="auth-btn" style="width: 100%; margin: 0;" onclick="processLogin()">AUTHENTICATE</button>
             </div>
 
-            <div id="step-enter" style="display: none; animation: slideUp 0.4s var(--spring);">
-                <h3 id="welcome-msg" style="margin-bottom: 25px; font-size: 1.3rem; font-weight: 800; color: var(--accent);"></h3>
-                <button class="btn-liquid" style="width: 100%; margin: 0; box-shadow: 0 10px 30px var(--accent-glow);" onclick="enterChat()">ENTER CHAT</button>
+            <div id="step-enter" style="display: none;">
+                <h3 id="welcome-msg" style="margin-bottom: 25px; color: var(--accent); font-weight: 800;"></h3>
+                <button class="btn-liquid" style="width: 100%; margin: 0;" onclick="requestAndEnter()">ENTER CHAT</button>
             </div>
         </div>
     </div>
@@ -182,10 +172,7 @@
     <div class="nexus-grid mode-computer" id="ui">
         
         <aside class="hyper-pill side-pill">
-            <div class="pill-header">
-                <span>Sketch Lab</span>
-                <i class="fas fa-eraser" style="cursor: pointer; opacity: 0.5; transition: 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5" onclick="ctx.clearRect(0,0,canvas.width,canvas.height)"></i>
-            </div>
+            <div class="pill-header"><span>Sketch Lab</span><i class="fas fa-eraser" style="cursor:pointer; opacity:0.5;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5" onclick="ctx.clearRect(0,0,canvas.width,canvas.height)"></i></div>
             <div id="sketch-wrap"><canvas id="canvas"></canvas></div>
             <button class="btn-liquid" onclick="broadcastSketch()">TRANSMIT CANVAS</button>
         </aside>
@@ -193,17 +180,16 @@
         <main class="hyper-pill">
             <div class="pill-header">
                 <span id="chat-title" style="color: var(--accent);">Global Flow</span>
-                <div class="dm-header" id="dm-back" onclick="closeDM()"><i class="fas fa-arrow-left"></i> Main Flow</div>
+                <div class="dm-header" id="dm-back" onclick="closeDM()">Main Flow</div>
             </div>
             
             <div id="view"></div>
-            
             <div id="typing-indicator"></div>
 
             <div class="input-dock">
                 <div class="input-pill">
                     <input type="text" id="msg-input" placeholder="Ripple your thoughts..." onkeypress="if(event.key==='Enter') push()" oninput="sendTyping()">
-                    <div class="action-icon" id="announce-btn" onclick="sendAnnounce()" title="Global Broadcast (60s Cooldown)"><i class="fas fa-bullhorn"></i></div>
+                    <div class="action-icon" id="announce-btn" onclick="sendAnnounce()" title="Broadcast"><i class="fas fa-bullhorn"></i></div>
                     <button class="send-btn" onclick="push()"><i class="fas fa-arrow-up"></i></button>
                 </div>
             </div>
@@ -211,7 +197,7 @@
 
         <aside class="hyper-pill side-pill">
             <div class="profile-hero">
-                <img id="local-pfp" class="main-pfp" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23ffffff' opacity='0.1'/></svg>">
+                <img id="local-pfp" class="main-pfp" src="">
                 <h2 id="user-display" style="font-weight: 900; letter-spacing: -0.5px;"></h2>
                 <div style="color: var(--accent); font-size: 0.8rem; font-weight: 800; margin-top: 10px; text-transform: uppercase;"><i class="fas fa-shield-alt"></i> AES-256 Secured</div>
             </div>
@@ -230,13 +216,13 @@
         <div class="dock-btn" onclick="toggleCC()"><i class="fas fa-sliders-h"></i></div>
         <div class="dock-btn" onclick="toggleStealth()"><i class="fas fa-eye-slash"></i></div>
         <div class="dock-div"></div>
-        <div class="dock-btn" onclick="panic()" style="color: #FF3B30;"><i class="fas fa-bolt"></i></div>
+        <div class="dock-btn" onclick="window.location.href='https://google.com'" style="color: #FF3B30;"><i class="fas fa-bolt"></i></div>
     </div>
     <div class="stealth-pull" id="dock-reveal" onclick="toggleStealth()"></div>
 
     <div class="cc-overlay" id="cc" onclick="if(event.target === this) toggleCC()">
         <div class="cc-panel" id="cc-p">
-            <h2 style="margin-bottom: 30px; font-weight: 900; font-size: 2rem; letter-spacing: -1px; color: white;">Architecture</h2>
+            <h2 style="margin-bottom: 30px; font-weight: 900; font-size: 2rem; color: white;">Architecture</h2>
             
             <div class="cc-group">
                 <span class="cc-label">Neural Avatar</span>
@@ -245,7 +231,7 @@
             </div>
 
             <div class="cc-group">
-                <span class="cc-label">Aura Matrix (16 Colors)</span>
+                <span class="cc-label">Aura Matrix</span>
                 <div class="color-grid">
                     <div class="c-dot active" style="background:#00f2ff;" onclick="setCol('#00f2ff', this)"></div>
                     <div class="c-dot" style="background:#0A84FF;" onclick="setCol('#0A84FF', this)"></div>
@@ -296,7 +282,7 @@
 
             <div class="cc-group">
                 <span class="cc-label">Orbital Ping (Notifications)</span>
-                <button id="notif-btn" class="btn-liquid" style="width:100%; margin:0; background:rgba(255,255,255,0.1); color:white; box-shadow:none;" onclick="enterChat()">ENABLE NOTIFS</button>
+                <button id="notif-btn" class="btn-liquid" style="width:100%; margin:0; background:rgba(255,255,255,0.1); color:white; box-shadow:none;" onclick="requestAndEnter()">ENABLE NOTIFS</button>
             </div>
 
             <button class="btn-liquid" style="width: 100%; margin: 0;" onclick="toggleCC()">APPLY ARCHITECTURE</button>
@@ -309,7 +295,7 @@
         // GLOBALS
         let client, chanMain, chanDM, user, receivedIds = new Set();
         let activeDM = null, unreadDMs = new Set();
-        const secret = "v34.3_access_gateway";
+        const secret = "v36.2_ultimate";
         let soundEnabled = true, typingTimeout;
 
         // AUDIO & NOTIFICATIONS
@@ -331,10 +317,9 @@
             }
         }
 
-        // PARALLAX
-        function handleParallax(e) { const px = (window.innerWidth/2 - e.clientX)/60, py = (window.innerHeight/2 - e.clientY)/60; document.documentElement.style.setProperty('--tx', px+'px'); document.documentElement.style.setProperty('--ty', py+'px'); }
+        function handleParallax(e) { document.documentElement.style.setProperty('--tx', (window.innerWidth/2 - e.clientX)/60+'px'); document.documentElement.style.setProperty('--ty', (window.innerHeight/2 - e.clientY)/60+'px'); }
 
-        // BOOT SEQUENCE (INTERCEPT GATEWAY)
+        // BOOT & IDENTITY RESOLUTION
         window.onload = () => { 
             let s = localStorage.getItem('nx_user'); 
             if(s) { 
@@ -347,27 +332,41 @@
             if("Notification" in window) updateNotifUI(Notification.permission);
         };
         
-        function processEmail() {
+        function processLogin() {
             let email = document.getElementById('email-in').value.trim().toLowerCase();
             if(!email.endsWith('@ballardschool.co.uk')) { alert("School email required."); return; }
-            user = email.split('@')[0].split('.')[0]; user = user.charAt(0).toUpperCase() + user.slice(1);
-            localStorage.setItem('nx_user', user); 
             
-            document.getElementById('step-login').style.display = 'none';
-            document.getElementById('welcome-msg').innerText = `Identity Confirmed, ${user}.`;
-            document.getElementById('step-enter').style.display = 'block';
+            const btn = document.getElementById('auth-btn');
+            btn.innerText = "RESOLVING IDENTITY..."; btn.style.opacity = "0.5"; btn.style.pointerEvents = "none";
+
+            let parts = email.split('@')[0].split('.');
+            let fName = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
+            let sInitial = parts[1] ? parts[1].charAt(0).toUpperCase() : "";
+
+            // Temp client to check live network for duplicates
+            const tempClient = new Ably.Realtime({ key: 'fVAQIA.kFtCvw:X6QXTzbh4Tbi1HUBiOQMlReiyw0uwkbOnEibDEM_VdA' });
+            const tempChan = tempClient.channels.get('v36-flow');
+            
+            tempChan.presence.get((err, members) => {
+                let isDuplicate = members.some(m => m.clientId === fName);
+                user = isDuplicate && sInitial ? `${fName} ${sInitial}.` : fName;
+                
+                localStorage.setItem('nx_user', user);
+                tempClient.close();
+                
+                document.getElementById('step-login').style.display = 'none';
+                document.getElementById('welcome-msg').innerText = `Identity Confirmed: ${user}`;
+                document.getElementById('step-enter').style.display = 'block';
+            });
         }
 
         // USER GESTURE CAPTURE FOR NOTIFICATIONS
-        function enterChat() {
+        function requestAndEnter() {
             if ("Notification" in window && Notification.permission === "default") {
                 Notification.requestPermission().then(perm => {
-                    updateNotifUI(perm);
-                    ignite(); 
+                    updateNotifUI(perm); ignite(); 
                 });
-            } else {
-                ignite(); // If already granted or denied, just proceed
-            }
+            } else { ignite(); }
         }
         
         function ignite() {
@@ -375,15 +374,30 @@
             setTimeout(() => { document.getElementById('gate').style.display = 'none'; document.getElementById('ui').style.opacity = '1'; document.getElementById('ui').style.pointerEvents = 'all'; initNetwork(); }, 400);
         }
 
-        // NETWORK
+        // NETWORK & HISTORY
         function initNetwork() {
             document.getElementById('user-display').innerText = user;
-            const pfp = localStorage.getItem('nx_pfp'); if(pfp) document.getElementById('local-pfp').src = pfp;
+            const pfp = localStorage.getItem('nx_pfp'); if(pfp) { document.getElementById('local-pfp').src = pfp; document.getElementById('local-pfp').style.display = 'block'; }
 
-            client = new Ably.Realtime({ key: 'fVAQIA.kFtCvw:X6QXTzbh4Tbi1HUBiOQMlReiyw0uwkbOnEibDEM_VdA', clientId: user, transports: ['xhr_streaming', 'xhr_polling', 'web_socket'] });
+            client = new Ably.Realtime({ key: 'fVAQIA.kFtCvw:X6QXTzbh4Tbi1HUBiOQMlReiyw0uwkbOnEibDEM_VdA', clientId: user });
+            chanMain = client.channels.get('v36-flow');
             
-            chanMain = client.channels.get('v34-flow');
-            chanMain.subscribe('msg', p => ingest(p.data, false));
+            // Ably History Fetch (Requires Persistence enabled in dashboard)
+            chanMain.history({limit: 50}, (err, page) => {
+                if(!err && page.items) {
+                    page.items.reverse().forEach(item => {
+                        if(item.name === 'msg') ingest(item.data, false, true);
+                        if(item.name === 'announce' && !receivedIds.has(item.data.id)) {
+                            receivedIds.add(item.data.id);
+                            renderAnnounce(dec(item.data.c), item.data.u, item.data.t);
+                        }
+                    });
+                } else {
+                    loadLocalHistoryGlobal();
+                }
+            });
+
+            chanMain.subscribe('msg', p => ingest(p.data, false, false));
             chanMain.subscribe('announce', p => { 
                 if(!activeDM && p.data.u !== user && !receivedIds.has(p.data.id)) { 
                     receivedIds.add(p.data.id); renderAnnounce(dec(p.data.c), p.data.u, p.data.t); playSnd('in'); 
@@ -395,10 +409,10 @@
             
             chanMain.presence.subscribe(() => syncPres()); chanMain.presence.enter({ pfp: pfp });
 
-            chanDM = client.channels.get('v34-dm-' + user);
-            chanDM.subscribe('msg', p => ingest(p.data, true));
+            chanDM = client.channels.get('v36-dm-' + user);
+            chanDM.subscribe('msg', p => ingest(p.data, true, false));
 
-            initCanvas(); loadH(); checkCD();
+            initCanvas(); checkCD();
         }
 
         function syncPres() {
@@ -407,29 +421,32 @@
                 let uMap = new Map(); m.forEach(x => uMap.set(x.clientId, x.data));
                 uMap.forEach((d, id) => {
                     let img = d?.pfp ? `<img src="${d.pfp}" style="width:30px; height:30px; border-radius:50%; object-fit:cover; border:1.5px solid var(--accent);">` : `<div class="status-orb"></div>`;
-                    let al = unreadDMs.has(id) ? 'has-unread' : ''; let clk = id !== user ? `onclick="openDM('${id}')"` : '';
-                    l.innerHTML += `<div class="user-node ${id===user?'me':''} ${al}" ${clk}>${img} ${id} <div class="dm-alert"></div></div>`;
+                    let al = unreadDMs.has(id) ? 'display:block;' : ''; let clk = id !== user ? `onclick="openDM('${id}')"` : '';
+                    l.innerHTML += `<div class="user-node ${id===user?'me':''}" ${clk}>${img} ${id} <div class="dm-alert" style="${al}"></div></div>`;
                 });
             });
         }
 
         // DM ROUTING
-        function openDM(t) { activeDM = t; unreadDMs.delete(t); syncPres(); document.getElementById('chat-title').innerText = "PRIVATE: " + t.toUpperCase(); document.getElementById('dm-back').style.display = 'block'; document.getElementById('view').innerHTML = ''; loadH(); }
-        function closeDM() { activeDM = null; document.getElementById('chat-title').innerText = "Global Flow"; document.getElementById('dm-back').style.display = 'none'; document.getElementById('view').innerHTML = ''; loadH(); }
+        function openDM(t) { activeDM = t; unreadDMs.delete(t); syncPres(); document.getElementById('chat-title').innerText = "PRIVATE: " + t.toUpperCase(); document.getElementById('dm-back').style.display = 'block'; document.getElementById('view').innerHTML = ''; loadLocalHistoryDM(t); }
+        function closeDM() { activeDM = null; document.getElementById('chat-title').innerText = "Global Flow"; document.getElementById('dm-back').style.display = 'none'; document.getElementById('view').innerHTML = ''; 
+            // Re-fetch global history upon return
+            chanMain.history({limit: 50}, (err, page) => { if(!err && page.items) { page.items.reverse().forEach(item => { if(item.name === 'msg') ingest(item.data, false, true); if(item.name === 'announce' && !receivedIds.has(item.data.id)) { receivedIds.add(item.data.id); renderAnnounce(dec(item.data.c), item.data.u, item.data.t); } }); } else { loadLocalHistoryGlobal(); } });
+        }
 
-        function ingest(d, isDM) {
-            if(receivedIds.has(d.id)) return; receivedIds.add(d.id); playSnd('in');
-            
-            let messageText = dec(d.c);
-            if (messageText === "[Sketch Data]") messageText = "sent a drawing.";
+        function ingest(d, isDM, isHistory = false) {
+            if(receivedIds.has(d.id)) return; receivedIds.add(d.id);
+            let messageText = dec(d.c); if (messageText === "[Sketch Data]") messageText = "sent a drawing.";
 
             if(isDM) { 
                 if(activeDM === d.u) { renBub(d); saveL('dm_'+d.u, d); } 
-                else { unreadDMs.add(d.u); syncPres(); saveL('dm_'+d.u, d); sendDesktopNotification(`Private from ${d.u}`, messageText, d.pfp); } 
-            } 
-            else { 
-                if(!activeDM && d.u !== user) { renBub(d); sendDesktopNotification(`${d.u} (Global)`, messageText, d.pfp); } if(!isDM) saveL('global', d); 
+                else { unreadDMs.add(d.u); syncPres(); saveL('dm_'+d.u, d); if(!isHistory) sendDesktopNotification(`Private from ${d.u}`, messageText, d.pfp); } 
+            } else { 
+                if(!activeDM) renBub(d); 
+                if(!isDM) saveL('global', d); 
+                if(!isHistory && d.u !== user) sendDesktopNotification(`${d.u} (Global)`, messageText, d.pfp); 
             }
+            if(!isHistory && d.u !== user) playSnd('in');
         }
 
         function sendTyping() { if(!activeDM) chanMain.publish('typing', { u: user }); }
@@ -439,7 +456,7 @@
             const id = 'msg_' + Date.now(); const t = Date.now(); const pfp = localStorage.getItem('nx_pfp');
             const pld = { id, u: user, c: enc(i.value), pfp, t };
             receivedIds.add(id);
-            if(activeDM) { client.channels.get('v34-dm-'+activeDM).publish('msg', pld); saveL('dm_'+activeDM, pld); }
+            if(activeDM) { client.channels.get('v36-dm-'+activeDM).publish('msg', pld); saveL('dm_'+activeDM, pld); }
             else { chanMain.publish('msg', pld); saveL('global', pld); }
             renBub(pld); i.value = ''; playSnd('out');
         }
@@ -454,20 +471,14 @@
             localStorage.setItem('nx_cd', t); checkCD();
         }
 
-        function checkCD() { const b = document.getElementById('announce-btn'); const l = localStorage.getItem('nx_cd'); if(l && Date.now() - parseInt(l) < 60000) { b.classList.add('cooling'); setTimeout(checkCD, 1000); } else b.classList.remove('cooling'); }
+        function checkCD() { const b = document.getElementById('announce-btn'); const l = localStorage.getItem('nx_cd'); if(l && Date.now() - parseInt(l) < 60000) { b.style.opacity='0.2'; b.style.pointerEvents='none'; setTimeout(checkCD, 1000); } else { b.style.opacity='0.6'; b.style.pointerEvents='auto'; } }
 
-        // RENDER
         function renBub(d) {
             if(document.getElementById(d.id)) return;
             const me = d.u === user; const time = new Date(d.t).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}); const txt = dec(d.c);
             const div = document.createElement('div'); div.className = `bubble-wrap ${me ? 'me' : 'them'}`; div.id = d.id;
-            let html = `<div class="bubble-meta">`;
-            if(!me && d.pfp) html += `<img src="${d.pfp}" class="meta-pfp">`;
-            html += `<span class="meta-name">${me ? 'You' : d.u}</span><span class="msg-time">${time}</span></div><div class="bubble">${parseLks(txt)}`;
-            if(d.img) html += `<img src="${d.img}">`;
-            if(me) html += `<div class="del-btn" onclick="nuke('${d.id}')"><i class="fas fa-times"></i></div>`;
-            html += `</div>`; div.innerHTML = html;
-            const v = document.getElementById('view'); v.appendChild(div); v.scrollTop = v.scrollHeight;
+            let html = `<div class="bubble-meta">${!me&&d.pfp?`<img src="${d.pfp}" class="meta-pfp">`:''}<span>${me?'You':d.u}</span><span class="msg-time">${time}</span></div><div class="bubble">${parseLks(txt)}${d.img?`<img src="${d.img}">`:''}${me?`<div class="del-btn" onclick="nuke('${d.id}')"><i class="fas fa-times"></i></div>`:''}</div>`;
+            div.innerHTML = html; const v = document.getElementById('view'); v.appendChild(div); v.scrollTop = v.scrollHeight;
         }
 
         function renderAnnounce(txt, s, t) {
@@ -479,26 +490,27 @@
 
         function parseLks(t) { return t.replace(/(https?:\/\/[^\s]+)/g, u => `<a href="${u}" target="_blank" style="color:inherit; text-decoration:underline;">${u.substring(0,35)}...</a>`); }
 
-        function nuke(id) { document.getElementById(id)?.remove(); if(!activeDM) chanMain.publish('del', {id}); let k = activeDM ? 'nx34_dm_'+activeDM : 'nx34_global'; let h = JSON.parse(localStorage.getItem(k)) || []; localStorage.setItem(k, JSON.stringify(h.filter(m => m.id !== id))); }
+        function nuke(id) { document.getElementById(id)?.remove(); if(!activeDM) chanMain.publish('del', {id}); let k = activeDM ? 'nx36_dm_'+activeDM : 'nx36_global'; let h = JSON.parse(localStorage.getItem(k)) || []; localStorage.setItem(k, JSON.stringify(h.filter(m => m.id !== id))); }
 
-        function saveL(k, p) { let h = JSON.parse(localStorage.getItem('nx34_'+k)) || []; h.push(p); localStorage.setItem('nx34_'+k, JSON.stringify(h.slice(-50))); }
-        function loadH() { let k = activeDM ? 'nx34_dm_'+activeDM : 'nx34_global'; let h = JSON.parse(localStorage.getItem(k)) || []; h.forEach(d => { receivedIds.add(d.id); if(d.type==='ann') renderAnnounce(dec(d.c), d.u===user?'You':d.u, d.t); else renBub(d); }); }
+        // LOCAL STORAGE BACKUPS
+        function saveL(k, p) { let h = JSON.parse(localStorage.getItem('nx36_'+k)) || []; h.push(p); localStorage.setItem('nx36_'+k, JSON.stringify(h.slice(-50))); }
+        function loadLocalHistoryGlobal() { let h = JSON.parse(localStorage.getItem('nx36_global')) || []; h.forEach(d => { receivedIds.add(d.id); if(d.type==='ann') renderAnnounce(dec(d.c), d.u===user?'You':d.u, d.t); else renBub(d); }); }
+        function loadLocalHistoryDM(t) { let h = JSON.parse(localStorage.getItem('nx36_dm_'+t)) || []; h.forEach(d => { receivedIds.add(d.id); renBub(d); }); }
 
         // SKETCH
         const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d'); let drawing = false;
         function initCanvas() { const w = document.getElementById('sketch-wrap'); canvas.width = w.clientWidth; canvas.height = w.clientHeight; ctx.strokeStyle = '#fff'; ctx.lineWidth = 5; ctx.lineCap = 'round'; canvas.onmousedown = e => { drawing=true; ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); }; canvas.onmousemove = e => { if(drawing){ctx.lineTo(e.offsetX,e.offsetY); ctx.stroke();} }; window.addEventListener('mouseup', ()=>drawing=false); canvas.ontouchstart = e => { drawing=true; ctx.beginPath(); const r=canvas.getBoundingClientRect(); ctx.moveTo(e.touches[0].clientX-r.left, e.touches[0].clientY-r.top); }; canvas.ontouchmove = e => { if(drawing){const r=canvas.getBoundingClientRect(); ctx.lineTo(e.touches[0].clientX-r.left, e.touches[0].clientY-r.top); ctx.stroke();} }; window.addEventListener('touchend', ()=>drawing=false); }
-        function broadcastSketch() { const id = 'sk_'+Date.now(); const t = Date.now(); const pfp = localStorage.getItem('nx_pfp'); const pld = { id, u: user, c: enc("[Sketch Data]"), img: canvas.toDataURL(), pfp, t }; receivedIds.add(id); if(activeDM){client.channels.get('v34-dm-'+activeDM).publish('msg', pld); saveL('dm_'+activeDM, pld);} else{chanMain.publish('msg', pld); saveL('global', pld);} renBub(pld); playSnd('out'); ctx.clearRect(0,0,canvas.width,canvas.height); }
+        function broadcastSketch() { const id = 'sk_'+Date.now(); const t = Date.now(); const pfp = localStorage.getItem('nx_pfp'); const pld = { id, u: user, c: enc("[Sketch Data]"), img: canvas.toDataURL(), pfp, t }; receivedIds.add(id); if(activeDM){client.channels.get('v36-dm-'+activeDM).publish('msg', pld); saveL('dm_'+activeDM, pld);} else{chanMain.publish('msg', pld); saveL('global', pld);} renBub(pld); playSnd('out'); ctx.clearRect(0,0,canvas.width,canvas.height); }
 
         // UI & SETTINGS
         function toggleStealth() { document.getElementById('dock').classList.toggle('hidden'); document.getElementById('dock-reveal').classList.toggle('visible'); }
         function toggleCC() { const cc = document.getElementById('cc'), p = document.getElementById('cc-p'); if(cc.style.display === 'flex') { p.style.transform='scale(0.9) translateY(50px)'; cc.style.opacity='0'; setTimeout(()=>cc.style.display='none',400); } else { cc.style.display='flex'; setTimeout(()=>{cc.style.opacity='1'; p.style.transform='scale(1) translateY(0)';},10); } }
         function setMode(m, b) { document.getElementById('ui').className = 'nexus-grid mode-'+m; document.querySelectorAll('.dock-btn').forEach(t=>t.classList.remove('active')); b.classList.add('active'); setTimeout(initCanvas, 500); }
         function toggleTheme() { const b = document.body; b.setAttribute('data-theme', b.getAttribute('data-theme')==='light'?'dark':'light'); localStorage.setItem('nx_theme', b.getAttribute('data-theme')); }
-        function panic() { window.location.href = "https://google.com"; }
         
         function setCol(h, el) { document.documentElement.style.setProperty('--accent', h); let r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(h); if(r) { document.documentElement.style.setProperty('--accent-glow', `rgba(${parseInt(r[1],16)}, ${parseInt(r[2],16)}, ${parseInt(r[3],16)}, 0.3)`); document.documentElement.style.setProperty('--accent-strong', `rgba(${parseInt(r[1],16)}, ${parseInt(r[2],16)}, ${parseInt(r[3],16)}, 0.7)`); } document.querySelectorAll('.c-dot').forEach(d=>d.classList.remove('active')); if(el) el.classList.add('active'); localStorage.setItem('nx_color', h); }
         function handleBg(i) { if(i.files[0]) { const r = new FileReader(); r.onload = e => { document.getElementById('bg-canvas').style.backgroundImage = `url(${e.target.result})`; localStorage.setItem('nx_bg', e.target.result); }; r.readAsDataURL(i.files[0]); } }
-        function handlePfp(i) { if(i.files[0]) { const r = new FileReader(); r.onload = e => { const img = new Image(); img.onload = () => { const c = document.createElement('canvas'), ctx = c.getContext('2d'); c.width=100; c.height=100; ctx.drawImage(img,0,0,100,100); const b64 = c.toDataURL('image/jpeg', 0.5); localStorage.setItem('nx_pfp', b64); document.getElementById('local-pfp').src=b64; if(chanMain) chanMain.presence.update({pfp: b64}); }; img.src=e.target.result; }; r.readAsDataURL(i.files[0]); } }
+        function handlePfp(i) { if(i.files[0]) { const r = new FileReader(); r.onload = e => { const img = new Image(); img.onload = () => { const c = document.createElement('canvas'), ctx = c.getContext('2d'); c.width=100; c.height=100; ctx.drawImage(img,0,0,100,100); const b64 = c.toDataURL('image/jpeg', 0.5); localStorage.setItem('nx_pfp', b64); document.getElementById('local-pfp').src=b64; document.getElementById('local-pfp').style.display='block'; if(chanMain) chanMain.presence.update({pfp: b64}); }; img.src=e.target.result; }; r.readAsDataURL(i.files[0]); } }
 
         function loadSettings() {
             const bg = localStorage.getItem('nx_bg'); if(bg) document.getElementById('bg-canvas').style.backgroundImage = `url(${bg})`;
